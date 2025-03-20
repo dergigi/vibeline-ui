@@ -7,10 +7,10 @@ const VOICE_MEMOS_DIR = path.join(os.homedir(), 'Vibe', 'VoiceMemos');
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
-) {
+  context: { params: { filename: string } }
+): Promise<NextResponse> {
   try {
-    const filename = decodeURIComponent(params.filename);
+    const filename = decodeURIComponent(await Promise.resolve(context.params.filename));
     const filePath = path.join(VOICE_MEMOS_DIR, filename);
     
     // Verify file exists and is within the voice memos directory

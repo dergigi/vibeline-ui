@@ -12,7 +12,7 @@ export default async function Home() {
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ggpt-ass-t</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Gigi&apos;s personal transcription assistant thing
+            Gigi&apos;s personal transcription assistant thingy
           </p>
         </header>
 
