@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 
 interface VoiceMemoCardProps {
@@ -12,6 +12,7 @@ interface VoiceMemoCardProps {
 
 export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlayPause = (): void => {
@@ -27,11 +28,23 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   const formatDate = (date: Date): string => {
     return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
       hour: 'numeric',
       minute: 'numeric',
     }).format(date);
+  };
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    return `${Math.floor(diffInDays / 30)} months ago`;
   };
 
   return (
@@ -43,10 +56,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {memo.filename.replace('.m4a', '')}
+            {formatDate(memo.createdAt)}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {formatDate(memo.createdAt)}
+            {formatTimeAgo(memo.createdAt)}
           </p>
         </div>
         <button
@@ -73,8 +86,22 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
         {memo.transcript && (
           <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transcript</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{memo.transcript}</p>
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Transcript</h4>
+              <button
+                onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
+                className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                {isTranscriptExpanded ? (
+                  <ChevronUpIcon className="w-4 h-4" />
+                ) : (
+                  <ChevronDownIcon className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+            <p className={`text-sm text-gray-600 dark:text-gray-400 ${isTranscriptExpanded ? '' : 'line-clamp-3'}`}>
+              {memo.transcript}
+            </p>
           </div>
         )}
 
