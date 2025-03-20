@@ -43,7 +43,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {memo.filename.replace('.json', '')}
+            {memo.filename.replace('.m4a', '')}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {formatDate(memo.createdAt)}
@@ -62,15 +62,21 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       </div>
 
       <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Summary</h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{memo.summary}</p>
-        </div>
+        {memo.summary && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Summary</h4>
+            <pre className="text-sm font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap">
+              {memo.summary}
+            </pre>
+          </div>
+        )}
 
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transcript</h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{memo.transcript}</p>
-        </div>
+        {memo.transcript && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transcript</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{memo.transcript}</p>
+          </div>
+        )}
 
         <audio
           ref={audioRef}
