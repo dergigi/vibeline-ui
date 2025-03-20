@@ -78,9 +78,15 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         {memo.summary && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Summary</h4>
-            <pre className="text-sm font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap">
-              {memo.summary}
-            </pre>
+            <div className="relative">
+              <pre className="text-sm font-mono bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap break-words border border-gray-100 dark:border-gray-700">
+                <code className="text-gray-800 dark:text-gray-200">
+                  {memo.summary.trim()}
+                </code>
+              </pre>
+              <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-gray-50 dark:from-gray-900" />
+              <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-gray-50 dark:from-gray-900" />
+            </div>
           </div>
         )}
 
