@@ -4,6 +4,16 @@ import { VoiceMemo } from '@/types/VoiceMemo';
 import os from 'os';
 
 const VOICE_MEMOS_DIR = path.join(os.homedir(), 'Vibe', 'VoiceMemos');
+const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
+const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
+
+async function readFileIfExists(filePath: string): Promise<string> {
+  try {
+    return await fs.readFile(filePath, 'utf-8');
+  } catch {
+    return '';
+  }
+}
 
 export async function getVoiceMemos(): Promise<VoiceMemo[]> {
   try {
@@ -11,29 +21,28 @@ export async function getVoiceMemos(): Promise<VoiceMemo[]> {
     const memos: VoiceMemo[] = [];
 
     for (const file of files) {
-      if (file.endsWith('.json')) {
-        const filePath = path.join(VOICE_MEMOS_DIR, file);
-        const content = await fs.readFile(filePath, 'utf-8');
-        const data = JSON.parse(content);
+      if (file.endsWith('.m4a')) {
+        const baseFilename = path.basename(file, '.m4a');
+        const transcriptPath = path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`);
+        const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}.txt`);
         
-        const audioFile = file.replace('.json', '.m4a');
-        const audioPath = path.join(VOICE_MEMOS_DIR, audioFile);
+        // Read transcript and summary if they exist
+        const [transcript, summary] = await Promise.all([
+          readFileIfExists(transcriptPath),
+          readFileIfExists(summaryPath)
+        ]);
+
+        const stats = await fs.stat(path.join(VOICE_MEMOS_DIR, file));
         
-        // Check if audio file exists
-        try {
-          await fs.access(audioPath);
-          memos.push({
-            id: path.basename(file, '.json'),
-            filename: file,
-            path: filePath,
-            transcript: data.transcript || '',
-            summary: data.summary || '',
-            audioUrl: `/api/audio/${encodeURIComponent(audioFile)}`,
-            createdAt: new Date(data.createdAt || Date.now())
-          });
-        } catch {
-          console.warn(`Audio file not found for ${file}`);
-        }
+        memos.push({
+          id: baseFilename,
+          filename: file,
+          path: path.join(VOICE_MEMOS_DIR, file),
+          transcript,
+          summary,
+          audioUrl: `/api/audio/${encodeURIComponent(file)}`,
+          createdAt: stats.mtime
+        });
       }
     }
 
