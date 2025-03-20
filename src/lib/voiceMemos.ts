@@ -24,7 +24,7 @@ export async function getVoiceMemos(): Promise<VoiceMemo[]> {
       if (file.endsWith('.m4a')) {
         const baseFilename = path.basename(file, '.m4a');
         const transcriptPath = path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`);
-        const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}.txt`);
+        const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}_summary.txt`);
         
         // Read transcript and summary if they exist
         const [transcript, summary] = await Promise.all([
