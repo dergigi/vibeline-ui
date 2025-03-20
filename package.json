@@ -6,22 +6,32 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint --dir src",
+    "lint:fix": "next lint --dir src --fix",
+    "type-check": "tsc --noEmit",
+    "lint:all": "npm run type-check && npm run lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "framer-motion": "^12.5.0",
+    "next": "15.2.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.2.3"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
+    "@types/node": "^20.17.24",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.27.0",
+    "@typescript-eslint/parser": "^8.27.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
-    "@eslint/eslintrc": "^3"
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
