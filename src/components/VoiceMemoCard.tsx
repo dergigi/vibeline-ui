@@ -118,7 +118,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           className="hidden"
         />
 
-        <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex gap-2 mt-4 pt-4">
           <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             share with friend
           </button>
