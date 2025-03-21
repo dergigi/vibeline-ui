@@ -13,6 +13,7 @@ interface VoiceMemoCardProps {
 export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
+  const [duration, setDuration] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlayPause = (): void => {
@@ -23,6 +24,18 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         audioRef.current.play();
       }
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleLoadedMetadata = (): void => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
     }
   };
 
@@ -64,6 +77,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {formatTimeAgo(memo.createdAt)}
+            {duration && ` · ${formatDuration(duration)}`}
+            {memo.transcript && ` · ${countWords(memo.transcript)} words`}
           </p>
         </div>
         <button
@@ -91,7 +106,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           <div>
             <div className="flex items-center justify-between mb-1">
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Transcript ({countWords(memo.transcript)} words)
+                Transcript
               </h4>
               <button
                 onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
@@ -114,6 +129,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           ref={audioRef}
           src={memo.audioUrl}
           onEnded={() => setIsPlaying(false)}
+          onLoadedMetadata={handleLoadedMetadata}
           className="hidden"
         />
 
