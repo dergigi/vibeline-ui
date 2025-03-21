@@ -71,12 +71,49 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     return text.trim().split(/\s+/).length;
   };
 
+  const extractHashtags = (text: string): string[] => {
+    // Common words to filter out
+    const stopWords = new Set([
+      'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
+      'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
+      'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
+      'should', 'could', 'was', 'were', 'is', 'am', 'are', 'been', 'being', 'had', 'has', 'did', 'doing', 'does'
+    ]);
+
+    // Split into words, convert to lowercase, remove punctuation
+    const words = text.toLowerCase()
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+      .split(/\s+/)
+      .filter(word => word.length > 3) // Only words longer than 3 characters
+      .filter(word => !stopWords.has(word)); // Remove stop words
+
+    // Count word frequency
+    const wordCount = new Map<string, number>();
+    words.forEach(word => {
+      wordCount.set(word, (wordCount.get(word) || 0) + 1);
+    });
+
+    // Sort by frequency and get top 3
+    return Array.from(wordCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([word]) => word);
+  };
+
   const handleCopyTodos = async (): Promise<void> => {
     if (memo.summary) {
       try {
-        await navigator.clipboard.writeText(memo.summary);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        // Extract only the task lines (lines starting with "- [ ]")
+        const tasks = memo.summary
+          .split('\n')
+          .filter(line => line.trim().startsWith('- [ ]'))
+          .join('\n');
+        
+        if (tasks) {
+          await navigator.clipboard.writeText(tasks);
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000);
+        }
       } catch (err) {
         console.error('Failed to copy text:', err);
       }
@@ -157,29 +194,40 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           className="hidden"
         />
 
-        <div className="flex gap-2 mt-4 pt-4">
-          <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-            share with friend
-          </button>
-          <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-            post to nostr
-          </button>
-          <button 
-            onClick={handleCopyTodos}
-            className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[105px] justify-center"
-          >
-            {isCopied ? (
-              <>
-                <CheckIcon className="w-3 h-3" />
-                <span>copied!</span>
-              </>
-            ) : (
-              <>
-                <ClipboardIcon className="w-3 h-3" />
-                <span>extract TODOs</span>
-              </>
+        <div className="flex flex-col gap-4 mt-4 pt-4">
+          <div className="flex justify-between items-end">
+            <div className="flex gap-2">
+              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                share with friend
+              </button>
+              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                post to nostr
+              </button>
+              <button 
+                onClick={handleCopyTodos}
+                className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+              >
+                {isCopied ? (
+                  <>
+                    <CheckIcon className="w-3 h-3" />
+                    <span>copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <ClipboardIcon className="w-3 h-3" />
+                    <span>TODOs</span>
+                  </>
+                )}
+              </button>
+            </div>
+            {memo.transcript && (
+              <div className="flex gap-1.5 flex-wrap justify-end">
+                {extractHashtags(memo.transcript).map(tag => (
+                  <span key={tag} className="text-xs text-indigo-500 dark:text-indigo-400">#{tag}</span>
+                ))}
+              </div>
             )}
-          </button>
+          </div>
         </div>
       </div>
     </motion.div>
