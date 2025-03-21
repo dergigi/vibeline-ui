@@ -15,7 +15,18 @@ export function ThemeToggle() {
       setTheme(savedTheme);
       applyTheme(savedTheme);
     }
-  }, []);
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (theme === 'system') {
+        document.documentElement.classList.toggle('dark', e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
 
   const applyTheme = (newTheme: Theme) => {
     if (newTheme === 'system') {

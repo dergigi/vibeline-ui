@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import Script from 'next/script';
 
 const jetbrainsMono = JetBrains_Mono({ 
   subsets: ['latin'],
@@ -20,6 +21,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
+            (function() {
+              const theme = localStorage.getItem('theme') || 'system';
+              if (theme === 'system') {
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.classList.toggle('dark', systemTheme === 'dark');
+              } else {
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+              }
+            })();
+          `}
+        </Script>
+      </head>
       <body className={`${jetbrainsMono.className} antialiased`}>
         <ThemeToggle />
         {children}
