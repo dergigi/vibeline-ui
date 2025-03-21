@@ -47,6 +47,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     return `${Math.floor(diffInDays / 30)} months ago`;
   };
 
+  const countWords = (text: string): number => {
+    return text.trim().split(/\s+/).length;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -86,7 +90,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         {memo.transcript && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Transcript</h4>
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Transcript ({countWords(memo.transcript)} words)
+              </h4>
               <button
                 onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
                 className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
