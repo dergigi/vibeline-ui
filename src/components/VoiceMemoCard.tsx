@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, ClipboardIcon, CheckIcon, ShareIcon, DocumentIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 
 interface VoiceMemoCardProps {
@@ -16,6 +16,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [duration, setDuration] = useState<number | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const hasTodos = memo.summary?.split('\n').some(line => line.trim().startsWith('- [ ]')) ?? false;
 
   const togglePlayPause = (): void => {
     if (audioRef.current) {
@@ -197,28 +199,32 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         <div className="flex flex-col gap-4 mt-4 pt-4">
           <div className="flex justify-between items-end">
             <div className="flex gap-2">
-              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                share with friend
+              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
+                <ShareIcon className="w-3 h-3" />
+                <span>share</span>
               </button>
-              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                post to nostr
+              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
+                <DocumentIcon className="w-3 h-3" />
+                <span>draft</span>
               </button>
-              <button 
-                onClick={handleCopyTodos}
-                className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
-              >
-                {isCopied ? (
-                  <>
-                    <CheckIcon className="w-3 h-3" />
-                    <span>copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <ClipboardIcon className="w-3 h-3" />
-                    <span>TODOs</span>
-                  </>
-                )}
-              </button>
+              {hasTodos && (
+                <button 
+                  onClick={handleCopyTodos}
+                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                >
+                  {isCopied ? (
+                    <>
+                      <CheckIcon className="w-3 h-3" />
+                      <span>copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardIcon className="w-3 h-3" />
+                      <span>TODOs</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             {memo.transcript && (
               <div className="flex gap-1.5 flex-wrap justify-end">
