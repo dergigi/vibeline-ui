@@ -7,43 +7,39 @@ type Theme = 'light' | 'dark' | 'system';
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(() => {
+    // Initialize theme from localStorage if available, otherwise use system
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme') as Theme;
-      return savedTheme || 'system';
+      return (localStorage.getItem('theme') as Theme) || 'system';
     }
     return 'system';
   });
 
-  // Apply theme whenever it changes
   useEffect(() => {
-    const root = document.documentElement;
-    
-    // First, remove any existing theme class
-    root.classList.remove('dark');
-    
-    // Then apply the new theme
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else if (theme === 'system') {
-      // Only apply system theme if we're in system mode
+    // Apply theme on mount and when theme changes
+    if (theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       if (systemTheme === 'dark') {
-        root.classList.add('dark');
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } else {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
       }
     }
-  }, [theme]);
 
-  // Handle system theme changes only when in system mode
-  useEffect(() => {
-    if (theme !== 'system') return;
-
+    // Listen for system theme changes only when in system mode
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      const root = document.documentElement;
-      if (e.matches) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
+      if (theme === 'system') {
+        if (e.matches) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
       }
     };
 
