@@ -14,6 +14,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlayPause = (): void => {
@@ -74,6 +75,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     if (memo.summary) {
       try {
         await navigator.clipboard.writeText(memo.summary);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
       } catch (err) {
         console.error('Failed to copy text:', err);
       }
@@ -165,7 +168,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             onClick={handleCopyTodos}
             className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
-            extract TODOs
+            {isCopied ? 'copied!' : 'extract TODOs'}
           </button>
         </div>
       </div>
