@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, ClipboardIcon, CheckIcon, ShareIcon, DocumentIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 import { useSearch } from '@/contexts/SearchContext';
+import { DraftEditor } from './DraftEditor';
 
 interface VoiceMemoCardProps {
   memo: VoiceMemo;
@@ -17,6 +18,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [showDraftEditor, setShowDraftEditor] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const hasTodos = memo.summary?.split('\n').some(line => line.trim().startsWith('- [ ]')) ?? false;
@@ -129,125 +131,136 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {formatTimeAgo(memo.createdAt)}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {formatShortDate(memo.createdAt)}
-            {duration && ` · ${formatDuration(duration)}`}
-            {memo.transcript && ` · ${countWords(memo.transcript)} words`}
-          </p>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+              {formatTimeAgo(memo.createdAt)}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {formatShortDate(memo.createdAt)}
+              {duration && ` · ${formatDuration(duration)}`}
+              {memo.transcript && ` · ${countWords(memo.transcript)} words`}
+            </p>
+          </div>
+          <button
+            onClick={togglePlayPause}
+            className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors duration-200"
+          >
+            {isPlaying ? (
+              <PauseIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            ) : (
+              <PlayIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            )}
+          </button>
         </div>
-        <button
-          onClick={togglePlayPause}
-          className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors duration-200"
-        >
-          {isPlaying ? (
-            <PauseIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          ) : (
-            <PlayIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          )}
-        </button>
-      </div>
 
-      <div className="space-y-4">
-        {memo.summary && (
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
-              {memo.summary.trim()}
-            </p>
-          </div>
-        )}
-
-        {memo.transcript && (
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Transcript
-                </h4>
-                <button className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
-                  <ArrowPathIcon className="w-3 h-3" />
-                </button>
-              </div>
-              <button
-                onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
-                className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                {isTranscriptExpanded ? (
-                  <ChevronUpIcon className="w-4 h-4" />
-                ) : (
-                  <ChevronDownIcon className="w-4 h-4" />
-                )}
-              </button>
+        <div className="space-y-4">
+          {memo.summary && (
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                {memo.summary.trim()}
+              </p>
             </div>
-            <p className={`text-sm text-gray-600 dark:text-gray-400 ${isTranscriptExpanded ? '' : 'line-clamp-3'}`}>
-              {memo.transcript}
-            </p>
-          </div>
-        )}
+          )}
 
-        <audio
-          ref={audioRef}
-          src={memo.audioUrl}
-          onEnded={() => setIsPlaying(false)}
-          onLoadedMetadata={handleLoadedMetadata}
-          className="hidden"
-        />
-
-        <div className="flex flex-col gap-4 mt-4 pt-4">
-          <div className="flex justify-between items-end">
-            <div className="flex gap-2">
-              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
-                <ShareIcon className="w-3 h-3" />
-                <span>share</span>
-              </button>
-              <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
-                <DocumentIcon className="w-3 h-3" />
-                <span>draft</span>
-              </button>
-              {hasTodos && (
-                <button 
-                  onClick={handleCopyTodos}
-                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+          {memo.transcript && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Transcript
+                  </h4>
+                  <button className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                    <ArrowPathIcon className="w-3 h-3" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                  {isCopied ? (
-                    <>
-                      <CheckIcon className="w-3 h-3" />
-                      <span>copied!</span>
-                    </>
+                  {isTranscriptExpanded ? (
+                    <ChevronUpIcon className="w-4 h-4" />
                   ) : (
-                    <>
-                      <ClipboardIcon className="w-3 h-3" />
-                      <span>TODOs</span>
-                    </>
+                    <ChevronDownIcon className="w-4 h-4" />
                   )}
                 </button>
+              </div>
+              <p className={`text-sm text-gray-600 dark:text-gray-400 ${isTranscriptExpanded ? '' : 'line-clamp-3'}`}>
+                {memo.transcript}
+              </p>
+            </div>
+          )}
+
+          <audio
+            ref={audioRef}
+            src={memo.audioUrl}
+            onEnded={() => setIsPlaying(false)}
+            onLoadedMetadata={handleLoadedMetadata}
+            className="hidden"
+          />
+
+          <div className="flex flex-col gap-4 mt-4 pt-4">
+            <div className="flex justify-between items-end">
+              <div className="flex gap-2">
+                <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
+                  <ShareIcon className="w-3 h-3" />
+                  <span>share</span>
+                </button>
+                <button 
+                  onClick={() => setShowDraftEditor(true)}
+                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
+                >
+                  <DocumentIcon className="w-3 h-3" />
+                  <span>draft</span>
+                </button>
+                {hasTodos && (
+                  <button 
+                    onClick={handleCopyTodos}
+                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                  >
+                    {isCopied ? (
+                      <>
+                        <CheckIcon className="w-3 h-3" />
+                        <span>copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardIcon className="w-3 h-3" />
+                        <span>TODOs</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              {memo.transcript && (
+                <div className="flex gap-1.5 flex-wrap justify-end">
+                  {extractHashtags(memo.transcript).map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => handleHashtagClick(tag)}
+                      className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-            {memo.transcript && (
-              <div className="flex gap-1.5 flex-wrap justify-end">
-                {extractHashtags(memo.transcript).map(tag => (
-                  <button
-                    key={tag}
-                    onClick={() => handleHashtagClick(tag)}
-                    className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
-                  >
-                    #{tag}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+      {showDraftEditor && (
+        <DraftEditor
+          initialContent={memo.summary || ''}
+          onClose={() => setShowDraftEditor(false)}
+        />
+      )}
+    </>
   );
 } 
