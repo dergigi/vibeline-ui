@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 
 interface VoiceMemoCardProps {
@@ -102,18 +102,28 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       <div className="space-y-4">
         {memo.summary && (
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
-              {memo.summary.trim()}
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <button className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                <ArrowPathIcon className="w-3 h-3" />
+              </button>
+              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line flex-1">
+                {memo.summary.trim()}
+              </p>
+            </div>
           </div>
         )}
 
         {memo.transcript && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Transcript
-              </h4>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Transcript
+                </h4>
+                <button className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                  <ArrowPathIcon className="w-3 h-3" />
+                </button>
+              </div>
               <button
                 onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
                 className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
