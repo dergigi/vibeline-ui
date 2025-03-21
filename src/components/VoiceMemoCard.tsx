@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 
 interface VoiceMemoCardProps {
@@ -166,9 +166,19 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           </button>
           <button 
             onClick={handleCopyTodos}
-            className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[105px] justify-center"
           >
-            {isCopied ? 'copied!' : 'extract TODOs'}
+            {isCopied ? (
+              <>
+                <CheckIcon className="w-3 h-3" />
+                <span>copied!</span>
+              </>
+            ) : (
+              <>
+                <ClipboardIcon className="w-3 h-3" />
+                <span>extract TODOs</span>
+              </>
+            )}
           </button>
         </div>
       </div>
