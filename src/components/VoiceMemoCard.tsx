@@ -5,12 +5,14 @@ import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
 import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, ClipboardIcon, CheckIcon, ShareIcon, DocumentIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
+import { useSearch } from '@/contexts/SearchContext';
 
 interface VoiceMemoCardProps {
   memo: VoiceMemo;
 }
 
 export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
+  const { setSearchTerm } = useSearch();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
@@ -122,6 +124,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     }
   };
 
+  const handleHashtagClick = (tag: string): void => {
+    setSearchTerm(`#${tag}`);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -229,7 +235,13 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             {memo.transcript && (
               <div className="flex gap-1.5 flex-wrap justify-end">
                 {extractHashtags(memo.transcript).map(tag => (
-                  <span key={tag} className="text-xs text-indigo-500 dark:text-indigo-400">#{tag}</span>
+                  <button
+                    key={tag}
+                    onClick={() => handleHashtagClick(tag)}
+                    className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                  >
+                    #{tag}
+                  </button>
                 ))}
               </div>
             )}
