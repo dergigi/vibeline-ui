@@ -26,11 +26,22 @@ export default function RootLayout({
           {`
             (function() {
               const savedTheme = localStorage.getItem('theme');
-              if (savedTheme === 'dark' || savedTheme === 'light') {
-                document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+              const root = document.documentElement;
+              
+              // First, remove any existing theme class
+              root.classList.remove('dark');
+              
+              // Then apply the appropriate theme
+              if (savedTheme === 'dark') {
+                root.classList.add('dark');
+              } else if (savedTheme === 'light') {
+                // Light theme is the default, no class needed
               } else {
+                // System theme
                 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                document.documentElement.classList.toggle('dark', systemTheme === 'dark');
+                if (systemTheme === 'dark') {
+                  root.classList.add('dark');
+                }
               }
             })();
           `}

@@ -7,39 +7,43 @@ type Theme = 'light' | 'dark' | 'system';
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Initialize theme from localStorage if available, otherwise use system
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') as Theme) || 'system';
+      const savedTheme = localStorage.getItem('theme') as Theme;
+      return savedTheme || 'system';
     }
     return 'system';
   });
 
+  // Apply theme whenever it changes
   useEffect(() => {
-    // Apply theme on mount and when theme changes
-    if (theme === 'system') {
+    const root = document.documentElement;
+    
+    // First, remove any existing theme class
+    root.classList.remove('dark');
+    
+    // Then apply the new theme
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else if (theme === 'system') {
+      // Only apply system theme if we're in system mode
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       if (systemTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    } else {
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
+        root.classList.add('dark');
       }
     }
+  }, [theme]);
 
-    // Listen for system theme changes only when in system mode
+  // Handle system theme changes only when in system mode
+  useEffect(() => {
+    if (theme !== 'system') return;
+
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      if (theme === 'system') {
-        if (e.matches) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+      const root = document.documentElement;
+      if (e.matches) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
       }
     };
 
