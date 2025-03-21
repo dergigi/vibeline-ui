@@ -102,14 +102,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       <div className="space-y-4">
         {memo.summary && (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <button className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
-                <ArrowPathIcon className="w-3 h-3" />
-              </button>
-              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line flex-1">
-                {memo.summary.trim()}
-              </p>
-            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+              {memo.summary.trim()}
+            </p>
           </div>
         )}
 
