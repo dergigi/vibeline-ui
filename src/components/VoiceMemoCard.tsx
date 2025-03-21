@@ -125,7 +125,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   };
 
   const handleHashtagClick = (tag: string): void => {
-    setSearchTerm(`#${tag}`);
+    setSearchTerm(tag);
   };
 
   return (
