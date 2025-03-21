@@ -20,11 +20,7 @@ export function ThemeToggle() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
       if (theme === 'system') {
-        if (e.matches) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+        document.documentElement.classList.toggle('dark', e.matches);
       }
     };
 
@@ -35,12 +31,9 @@ export function ThemeToggle() {
   const applyTheme = (newTheme: Theme) => {
     if (newTheme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      if (systemTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      document.documentElement.classList.toggle('dark', systemTheme === 'dark');
     } else {
+      // Directly set the class instead of toggling
       if (newTheme === 'dark') {
         document.documentElement.classList.add('dark');
       } else {
