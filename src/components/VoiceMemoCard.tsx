@@ -5,7 +5,6 @@ import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
 import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
-import nlp from 'compromise';
 
 interface VoiceMemoCardProps {
   memo: VoiceMemo;
@@ -73,40 +72,29 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   };
 
   const extractHashtags = (text: string): string[] => {
-    const doc = nlp(text);
-    
-    // Get topics using various NLP techniques
-    const topics = new Set<string>();
-    
-    // Extract nouns that aren't in common stopwords
-    doc.nouns().out('array').forEach((noun: string) => {
-      if (noun.length > 3) topics.add(noun.toLowerCase());
-    });
-    
-    // Extract important verbs (actions)
-    doc.verbs().out('array').forEach((verb: string) => {
-      const infinitive = nlp(verb).verbs().toInfinitive().text();
-      if (infinitive && infinitive.length > 3) topics.add(infinitive.toLowerCase());
-    });
-    
-    // Extract organizations and places
-    doc.organizations().out('array').forEach((org: string) => {
-      topics.add(org.toLowerCase());
-    });
-    
-    doc.places().out('array').forEach((place: string) => {
-      topics.add(place.toLowerCase());
+    // Common words to filter out
+    const stopWords = new Set([
+      'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
+      'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
+      'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
+      'should', 'could', 'was', 'were', 'is', 'am', 'are', 'been', 'being', 'had', 'has', 'did', 'doing', 'does'
+    ]);
+
+    // Split into words, convert to lowercase, remove punctuation
+    const words = text.toLowerCase()
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
+      .split(/\s+/)
+      .filter(word => word.length > 3) // Only words longer than 3 characters
+      .filter(word => !stopWords.has(word)); // Remove stop words
+
+    // Count word frequency
+    const wordCount = new Map<string, number>();
+    words.forEach(word => {
+      wordCount.set(word, (wordCount.get(word) || 0) + 1);
     });
 
-    // Sort by frequency in the original text
-    const wordFreq = new Map<string, number>();
-    Array.from(topics).forEach(topic => {
-      const regex = new RegExp(`\\b${topic}\\b`, 'gi');
-      const matches = text.match(regex);
-      wordFreq.set(topic, matches ? matches.length : 0);
-    });
-
-    return Array.from(wordFreq.entries())
+    // Sort by frequency and get top 3
+    return Array.from(wordCount.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([word]) => word);
