@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 const jetbrainsMono = JetBrains_Mono({ 
   subsets: ['latin'],
@@ -19,11 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${jetbrainsMono.className} antialiased`}>
-        <ThemeToggle />
-        {children}
-      </body>
+    <html lang="en" className="dark">
+      <body className={`${jetbrainsMono.className} antialiased`}>{children}</body>
     </html>
   );
 } 
