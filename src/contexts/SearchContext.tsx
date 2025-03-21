@@ -35,13 +35,13 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     const term = searchTerm.toLowerCase();
     
     if (term.startsWith('#')) {
-      // Handle hashtag search
-      const tag = term.slice(1);
+      // Handle hashtag search - extract hashtags without the # symbol
+      const searchTag = term.slice(1);
       return memos.filter(memo => {
         const hashtags = memo.transcript
-          ? memo.transcript.toLowerCase().match(/#\w+/g) || []
+          ? memo.transcript.toLowerCase().match(/#\w+/g)?.map(tag => tag.slice(1)) || []
           : [];
-        return hashtags.includes(`#${tag}`);
+        return hashtags.includes(searchTag);
       });
     }
 
