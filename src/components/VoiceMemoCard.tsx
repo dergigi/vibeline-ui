@@ -130,6 +130,24 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     setSearchTerm(tag);
   };
 
+  const handleShare = async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/open-in-finder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filename: memo.filename }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to open file in Finder');
+      }
+    } catch (error) {
+      console.error('Error opening file in Finder:', error);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -208,7 +226,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           <div className="flex flex-col gap-4 mt-4 pt-4">
             <div className="flex justify-between items-end">
               <div className="flex gap-2">
-                <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
+                <button 
+                  onClick={handleShare}
+                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
+                >
                   <ShareIcon className="w-3 h-3" />
                   <span>share</span>
                 </button>
