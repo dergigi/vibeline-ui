@@ -46,10 +46,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     }
   };
 
-  const formatDate = (date: Date): string => {
+  const formatShortDate = (date: Date): string => {
     return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: 'numeric',
@@ -80,10 +79,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {formatDate(memo.createdAt)}
+            {formatTimeAgo(memo.createdAt)}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {formatTimeAgo(memo.createdAt)}
+            {formatShortDate(memo.createdAt)}
             {duration && ` · ${formatDuration(duration)}`}
             {memo.transcript && ` · ${countWords(memo.transcript)} words`}
           </p>
