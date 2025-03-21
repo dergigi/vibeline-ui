@@ -130,6 +130,23 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     setSearchTerm(tag);
   };
 
+  const handleShare = async (): Promise<void> => {
+    try {
+      // Get the audio file
+      const response = await fetch(memo.audioUrl);
+      const blob = await response.blob();
+      const file = new File([blob], memo.filename, { type: 'audio/mp4' });
+
+      // Share the file
+      await navigator.share({
+        title: `Voice Memo - ${formatShortDate(memo.createdAt)}`,
+        files: [file],
+      });
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -208,7 +225,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           <div className="flex flex-col gap-4 mt-4 pt-4">
             <div className="flex justify-between items-end">
               <div className="flex gap-2">
-                <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1">
+                <button 
+                  onClick={handleShare}
+                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
+                >
                   <ShareIcon className="w-3 h-3" />
                   <span>share</span>
                 </button>
