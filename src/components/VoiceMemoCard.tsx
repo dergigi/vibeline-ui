@@ -70,6 +70,16 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     return text.trim().split(/\s+/).length;
   };
 
+  const handleCopyTodos = async (): Promise<void> => {
+    if (memo.summary) {
+      try {
+        await navigator.clipboard.writeText(memo.summary);
+      } catch (err) {
+        console.error('Failed to copy text:', err);
+      }
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -151,7 +161,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             post to nostr
           </button>
-          <button className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+          <button 
+            onClick={handleCopyTodos}
+            className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
             extract TODOs
           </button>
         </div>
