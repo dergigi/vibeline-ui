@@ -33,7 +33,12 @@ export function ThemeToggle() {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.classList.toggle('dark', systemTheme === 'dark');
     } else {
-      document.documentElement.classList.toggle('dark', newTheme === 'dark');
+      // Directly set the class instead of toggling
+      if (newTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   };
 
