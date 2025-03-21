@@ -25,20 +25,12 @@ export default function RootLayout({
         <Script id="theme-script" strategy="beforeInteractive">
           {`
             (function() {
-              const theme = localStorage.getItem('theme') || 'system';
-              if (theme === 'system') {
-                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                if (systemTheme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
+              const savedTheme = localStorage.getItem('theme');
+              if (savedTheme === 'dark' || savedTheme === 'light') {
+                document.documentElement.classList.toggle('dark', savedTheme === 'dark');
               } else {
-                if (theme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.classList.toggle('dark', systemTheme === 'dark');
               }
             })();
           `}
