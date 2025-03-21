@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+'use client';
+
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
-import FlexSearch from 'flexsearch';
 
 interface SearchContextType {
   searchTerm: string;
@@ -26,39 +27,16 @@ interface SearchProviderProps {
 export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [memos, setMemos] = useState<VoiceMemo[]>([]);
-  
-  // Initialize FlexSearch index
-  const index = useMemo(() => {
-    const idx = new FlexSearch.Document({
-      document: {
-        id: 'id',
-        index: ['transcript', 'summary'],
-        store: true
-      }
-    });
-    return idx;
-  }, []);
-
-  // Update index when memos change
-  const updateMemos = useCallback((newMemos: VoiceMemo[]) => {
-    index.remove();
-    newMemos.forEach(memo => {
-      index.add({
-        id: memo.id,
-        transcript: memo.transcript,
-        summary: memo.summary
-      });
-    });
-    setMemos(newMemos);
-  }, [index]);
 
   // Filter memos based on search term
   const filteredMemos = useMemo(() => {
     if (!searchTerm) return memos;
     
-    if (searchTerm.startsWith('#')) {
+    const term = searchTerm.toLowerCase();
+    
+    if (term.startsWith('#')) {
       // Handle hashtag search
-      const tag = searchTerm.slice(1).toLowerCase();
+      const tag = term.slice(1);
       return memos.filter(memo => {
         const hashtags = memo.transcript
           ? memo.transcript.toLowerCase().match(/#\w+/g) || []
@@ -68,16 +46,18 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     }
 
     // Regular search
-    const results = index.search(searchTerm);
-    const matchedIds = new Set(results.map(r => r.id));
-    return memos.filter(memo => matchedIds.has(memo.id));
-  }, [searchTerm, memos, index]);
+    return memos.filter(memo => {
+      const transcript = memo.transcript?.toLowerCase() || '';
+      const summary = memo.summary?.toLowerCase() || '';
+      return transcript.includes(term) || summary.includes(term);
+    });
+  }, [searchTerm, memos]);
 
   const value = {
     searchTerm,
     setSearchTerm,
     filteredMemos,
-    setMemos: updateMemos
+    setMemos
   };
 
   return (

@@ -1,22 +1,32 @@
+'use client';
+
 import { getVoiceMemos } from '@/lib/voiceMemos';
 import { VoiceMemoCard } from '@/components/VoiceMemoCard';
-import { SearchProvider } from '@/contexts/SearchContext';
+import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 
 export const dynamic = 'force-dynamic';
 
-const MemoList = async () => {
-  const memos = await getVoiceMemos();
+const MemoList = () => {
+  const { setMemos, filteredMemos } = useSearch();
+
+  useEffect(() => {
+    const loadMemos = async () => {
+      const memos = await getVoiceMemos();
+      setMemos(memos);
+    };
+    loadMemos();
+  }, [setMemos]);
   
   return (
     <div className="grid gap-6 md:grid-cols-1">
-      {memos.length === 0 ? (
+      {filteredMemos.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400">No voice memos found</p>
         </div>
       ) : (
-        memos.map((memo) => (
+        filteredMemos.map((memo) => (
           <VoiceMemoCard key={memo.id} memo={memo} />
         ))
       )}
@@ -24,7 +34,7 @@ const MemoList = async () => {
   );
 };
 
-export default async function Home() {
+export default function Home() {
   return (
     <SearchProvider>
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
