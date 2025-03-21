@@ -132,18 +132,56 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   const handleShare = async (): Promise<void> => {
     try {
+      // Check if Web Share API is supported
+      if (!navigator.share) {
+        // Fallback: copy the audio URL to clipboard
+        await navigator.clipboard.writeText(window.location.origin + memo.audioUrl);
+        alert('Audio URL copied to clipboard (Web Share API not supported)');
+        return;
+      }
+
+      // Check if file sharing is supported
+      if (!navigator.canShare) {
+        // Fallback to sharing just the URL
+        await navigator.share({
+          title: `Voice Memo - ${formatShortDate(memo.createdAt)}`,
+          url: window.location.origin + memo.audioUrl
+        });
+        return;
+      }
+
       // Get the audio file
       const response = await fetch(memo.audioUrl);
       const blob = await response.blob();
       const file = new File([blob], memo.filename, { type: 'audio/mp4' });
 
-      // Share the file
-      await navigator.share({
+      // Check if this specific data can be shared
+      const shareData = {
         title: `Voice Memo - ${formatShortDate(memo.createdAt)}`,
-        files: [file],
-      });
+        files: [file]
+      };
+
+      if (!navigator.canShare(shareData)) {
+        // Fallback to sharing just the URL
+        await navigator.share({
+          title: `Voice Memo - ${formatShortDate(memo.createdAt)}`,
+          url: window.location.origin + memo.audioUrl
+        });
+        return;
+      }
+
+      // Share the file
+      await navigator.share(shareData);
     } catch (err) {
       console.error('Error sharing:', err);
+      // If sharing fails, fallback to copying the URL
+      try {
+        await navigator.clipboard.writeText(window.location.origin + memo.audioUrl);
+        alert('Audio URL copied to clipboard');
+      } catch (clipboardErr) {
+        console.error('Error copying to clipboard:', clipboardErr);
+        alert('Unable to share. Please try again.');
+      }
     }
   };
 
