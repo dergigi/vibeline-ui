@@ -30,11 +30,7 @@ export default function RootLayout({
                 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 document.documentElement.classList.toggle('dark', systemTheme === 'dark');
               } else {
-                if (theme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
+                document.documentElement.classList.toggle('dark', theme === 'dark');
               }
             })();
           `}
