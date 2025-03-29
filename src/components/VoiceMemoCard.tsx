@@ -22,6 +22,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const hasTodos = memo.summary?.split('\n').some(line => line.trim().startsWith('- [ ]')) ?? false;
+  const hasImplementationPlan = memo.summary?.toLowerCase().includes('implementation plan') ?? false;
 
   const togglePlayPause = (): void => {
     if (audioRef.current) {
@@ -120,6 +121,18 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           setIsCopied(true);
           setTimeout(() => setIsCopied(false), 2000);
         }
+      } catch (err) {
+        console.error('Failed to copy text:', err);
+      }
+    }
+  };
+
+  const handleCopyImplementationPlan = async (): Promise<void> => {
+    if (memo.summary) {
+      try {
+        await navigator.clipboard.writeText(memo.summary);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
       } catch (err) {
         console.error('Failed to copy text:', err);
       }
@@ -254,6 +267,24 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                       <>
                         <ClipboardIcon className="w-3 h-3" />
                         <span>TODOs</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                {hasImplementationPlan && (
+                  <button 
+                    onClick={handleCopyImplementationPlan}
+                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                  >
+                    {isCopied ? (
+                      <>
+                        <CheckIcon className="w-3 h-3" />
+                        <span>copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardIcon className="w-3 h-3" />
+                        <span>prompt</span>
                       </>
                     )}
                   </button>
