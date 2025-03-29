@@ -5,8 +5,40 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { Suspense, useEffect } from 'react';
+import { DocumentIcon, CheckIcon } from '@heroicons/react/24/solid';
 
 export const dynamic = 'force-dynamic';
+
+const FilterButtons = () => {
+  const { activeFilters, toggleFilter } = useSearch();
+
+  return (
+    <div className="flex gap-2">
+      <button
+        onClick={() => toggleFilter('todos')}
+        className={`p-1.5 rounded-md transition-colors ${
+          activeFilters.has('todos')
+            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+        title="Show TODOs"
+      >
+        <CheckIcon className="w-3 h-3" />
+      </button>
+      <button
+        onClick={() => toggleFilter('prompts')}
+        className={`p-1.5 rounded-md transition-colors ${
+          activeFilters.has('prompts')
+            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+        title="Show prompts"
+      >
+        <DocumentIcon className="w-3 h-3" />
+      </button>
+    </div>
+  );
+};
 
 const MemoList = () => {
   const { setMemos, filteredMemos } = useSearch();
@@ -46,8 +78,11 @@ export default function Home() {
                 Gigi&apos;s personal transcription assistant thingy
               </p>
             </div>
-            <div className="w-64">
-              <SearchBar />
+            <div className="flex items-center gap-4">
+              <FilterButtons />
+              <div className="w-64">
+                <SearchBar />
+              </div>
             </div>
           </div>
 
