@@ -16,6 +16,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const { setSearchTerm } = useSearch();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [showDraftEditor, setShowDraftEditor] = useState(false);
@@ -219,14 +220,6 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         </div>
 
         <div className="space-y-4">
-          {memo.summary && (
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
-                {memo.summary.trim()}
-              </p>
-            </div>
-          )}
-
           {memo.transcript && (
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -249,8 +242,31 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   )}
                 </button>
               </div>
-              <p className={`text-sm text-gray-600 dark:text-gray-400 ${isTranscriptExpanded ? '' : 'line-clamp-3'}`}>
+              <p className={`text-sm text-gray-600 dark:text-gray-400 ${isTranscriptExpanded ? '' : 'line-clamp-5'}`}>
                 {memo.transcript}
+              </p>
+            </div>
+          )}
+
+          {memo.summary && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Summary
+                </h4>
+                <button
+                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  {isSummaryExpanded ? (
+                    <ChevronUpIcon className="w-4 h-4" />
+                  ) : (
+                    <ChevronDownIcon className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line ${isSummaryExpanded ? '' : 'line-clamp-3'}`}>
+                {memo.summary.trim()}
               </p>
             </div>
           )}
