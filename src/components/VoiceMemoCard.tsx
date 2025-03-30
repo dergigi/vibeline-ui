@@ -19,7 +19,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [duration, setDuration] = useState<number | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [showDraftEditor, setShowDraftEditor] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
   const hasTodos = memo.summary?.split('\n').some(line => line.trim().startsWith('- [ ]')) ?? false;
   const hasImplementationPlan = memo.summary?.toLowerCase().includes('implementation plan') ?? false;
@@ -33,6 +36,16 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         audioRef.current.play();
       }
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  const togglePlaybackSpeed = (): void => {
+    if (audioRef.current) {
+      const currentIndex = SPEED_OPTIONS.indexOf(playbackSpeed);
+      const nextIndex = (currentIndex + 1) % SPEED_OPTIONS.length;
+      const newSpeed = SPEED_OPTIONS[nextIndex];
+      audioRef.current.playbackRate = newSpeed;
+      setPlaybackSpeed(newSpeed);
     }
   };
 
@@ -180,16 +193,29 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               {memo.transcript && ` · ${countWords(memo.transcript)} words`}
             </p>
           </div>
-          <button
-            onClick={togglePlayPause}
-            className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors duration-200"
-          >
-            {isPlaying ? (
-              <PauseIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            ) : (
-              <PlayIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            )}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={togglePlaybackSpeed}
+              className={`px-1.5 py-0.5 rounded-md transition-colors text-[10px] ${
+                playbackSpeed > 1
+                  ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+              }`}
+              title="Click to change playback speed"
+            >
+              {playbackSpeed}x
+            </button>
+            <button
+              onClick={togglePlayPause}
+              className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors duration-200"
+            >
+              {isPlaying ? (
+                <PauseIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              ) : (
+                <PlayIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="space-y-4">
