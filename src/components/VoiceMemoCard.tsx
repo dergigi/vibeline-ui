@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, DocumentIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, DocumentIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
@@ -283,7 +283,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                       </>
                     ) : (
                       <>
-                        <CheckIcon className="w-3 h-3" />
+                        <SparklesIcon className="w-3 h-3" />
                         <span>prompt</span>
                       </>
                     )}

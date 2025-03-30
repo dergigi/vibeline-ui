@@ -5,7 +5,7 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { Suspense, useEffect } from 'react';
-import { DocumentIcon, CheckIcon, PencilIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/solid';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +34,7 @@ const FilterButtons = () => {
         }`}
         title="Show prompts"
       >
-        <DocumentIcon className="w-3 h-3" />
+        <SparklesIcon className="w-3 h-3" />
       </button>
       <button
         onClick={() => toggleFilter('drafts')}
