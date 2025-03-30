@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, DocumentIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon } from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
@@ -23,6 +23,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   const hasTodos = memo.summary?.split('\n').some(line => line.trim().startsWith('- [ ]')) ?? false;
   const hasImplementationPlan = memo.summary?.toLowerCase().includes('implementation plan') ?? false;
+  const hasBlogDraft = (memo.summary?.includes('#') || memo.summary?.includes('===')) ?? false;
 
   const togglePlayPause = (): void => {
     if (audioRef.current) {
@@ -246,13 +247,15 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <ShareIcon className="w-3 h-3" />
                   <span>share</span>
                 </button>
-                <button 
-                  onClick={() => setShowDraftEditor(true)}
-                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
-                >
-                  <DocumentIcon className="w-3 h-3" />
-                  <span>draft</span>
-                </button>
+                {hasBlogDraft && (
+                  <button 
+                    onClick={() => setShowDraftEditor(true)}
+                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
+                  >
+                    <PencilSquareIcon className="w-3 h-3" />
+                    <span>draft</span>
+                  </button>
+                )}
                 {hasTodos && (
                   <button 
                     onClick={handleCopyTodos}
@@ -265,7 +268,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                       </>
                     ) : (
                       <>
-                        <CheckIcon className="w-3 h-3" />
+                        <ClipboardDocumentCheckIcon className="w-3 h-3" />
                         <span>TODOs</span>
                       </>
                     )}
