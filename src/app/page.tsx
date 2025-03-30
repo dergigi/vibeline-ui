@@ -84,9 +84,9 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ggpt-ass-t</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Vibeline</h1>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Gigi&apos;s personal transcription assistant thingy
+                Call 555-vibe to vibe it into existence 🤙
               </p>
             </div>
             <div className="flex items-center gap-4">

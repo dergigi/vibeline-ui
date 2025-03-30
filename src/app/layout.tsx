@@ -8,8 +8,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ggpt-ass-t',
-  description: 'Gigi&apos;s personal transcription assistant thingy',
+  title: 'Vibeline',
+  description: 'Call 555-vibe to vibe it into existence 🤙',
 };
 
 export default function RootLayout({
