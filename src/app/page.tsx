@@ -5,7 +5,7 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { Suspense, useEffect } from 'react';
-import { DocumentIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { DocumentIcon, CheckIcon, PencilIcon } from '@heroicons/react/24/solid';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +35,17 @@ const FilterButtons = () => {
         title="Show prompts"
       >
         <DocumentIcon className="w-3 h-3" />
+      </button>
+      <button
+        onClick={() => toggleFilter('drafts')}
+        className={`p-1.5 rounded-md transition-colors ${
+          activeFilters.has('drafts')
+            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+        title="Show blog drafts"
+      >
+        <PencilIcon className="w-3 h-3" />
       </button>
     </div>
   );
