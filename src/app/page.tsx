@@ -5,7 +5,7 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { Suspense, useEffect } from 'react';
-import { CheckIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { PencilIcon, SparklesIcon, ClipboardDocumentCheckIcon, CheckIcon } from '@heroicons/react/24/solid';
 
 export const dynamic = 'force-dynamic';
 
