@@ -25,9 +25,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
-  const hasTodos = memo.summary?.split('\n').some(line => line.trim().startsWith('- [ ]')) ?? false;
-  const hasImplementationPlan = memo.summary?.toLowerCase().includes('implementation plan') ?? false;
-  const hasBlogDraft = (memo.summary?.includes('#') || memo.summary?.includes('===')) ?? false;
+  const hasTodos = memo.todos?.trim().length > 0;
+  const hasActionItems = memo.actionItems?.trim().length > 0;
+  const hasAppIdeas = memo.appIdeas?.trim().length > 0;
+  const hasBlogPost = memo.blogPost?.trim().length > 0;
 
   const togglePlayPause = (): void => {
     if (audioRef.current) {
@@ -123,29 +124,33 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   };
 
   const handleCopyTodos = async (): Promise<void> => {
-    if (memo.summary) {
+    if (memo.todos) {
       try {
-        // Extract only the task lines (lines starting with "- [ ]")
-        const tasks = memo.summary
-          .split('\n')
-          .filter(line => line.trim().startsWith('- [ ]'))
-          .join('\n');
-        
-        if (tasks) {
-          await navigator.clipboard.writeText(tasks);
-          setIsCopied(true);
-          setTimeout(() => setIsCopied(false), 2000);
-        }
+        await navigator.clipboard.writeText(memo.todos);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
       } catch (err) {
         console.error('Failed to copy text:', err);
       }
     }
   };
 
-  const handleCopyImplementationPlan = async (): Promise<void> => {
-    if (memo.summary) {
+  const handleCopyActionItems = async (): Promise<void> => {
+    if (memo.actionItems) {
       try {
-        await navigator.clipboard.writeText(memo.summary);
+        await navigator.clipboard.writeText(memo.actionItems);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy text:', err);
+      }
+    }
+  };
+
+  const handleCopyAppIdeas = async (): Promise<void> => {
+    if (memo.appIdeas) {
+      try {
+        await navigator.clipboard.writeText(memo.appIdeas);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
       } catch (err) {
@@ -289,7 +294,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <ShareIcon className="w-3 h-3" />
                   <span>share</span>
                 </button>
-                {hasBlogDraft && (
+                {hasBlogPost && (
                   <button 
                     onClick={() => setShowDraftEditor(true)}
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
@@ -316,9 +321,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     )}
                   </button>
                 )}
-                {hasImplementationPlan && (
+                {hasActionItems && (
                   <button 
-                    onClick={handleCopyImplementationPlan}
+                    onClick={handleCopyActionItems}
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                   >
                     {isCopied ? (
@@ -329,7 +334,25 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     ) : (
                       <>
                         <SparklesIcon className="w-3 h-3" />
-                        <span>prompt</span>
+                        <span>actions</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                {hasAppIdeas && (
+                  <button 
+                    onClick={handleCopyAppIdeas}
+                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                  >
+                    {isCopied ? (
+                      <>
+                        <CheckIcon className="w-3 h-3" />
+                        <span>copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <SparklesIcon className="w-3 h-3" />
+                        <span>ideas</span>
                       </>
                     )}
                   </button>

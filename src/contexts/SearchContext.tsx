@@ -12,19 +12,19 @@ interface SearchContextType {
   toggleFilter: (filter: string) => void;
 }
 
+interface SearchProviderProps {
+  children: React.ReactNode;
+}
+
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
-export const useSearch = (): SearchContextType => {
+export const useSearch = () => {
   const context = useContext(SearchContext);
   if (!context) {
     throw new Error('useSearch must be used within a SearchProvider');
   }
   return context;
 };
-
-interface SearchProviderProps {
-  children: React.ReactNode;
-}
 
 export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,7 +65,17 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
         filtered = filtered.filter(memo => {
           const transcript = memo.transcript?.toLowerCase() || '';
           const summary = memo.summary?.toLowerCase() || '';
-          return transcript.includes(term) || summary.includes(term);
+          const todos = memo.todos?.toLowerCase() || '';
+          const actionItems = memo.actionItems?.toLowerCase() || '';
+          const appIdeas = memo.appIdeas?.toLowerCase() || '';
+          const blogPost = memo.blogPost?.toLowerCase() || '';
+          
+          return transcript.includes(term) || 
+                 summary.includes(term) || 
+                 todos.includes(term) || 
+                 actionItems.includes(term) || 
+                 appIdeas.includes(term) || 
+                 blogPost.includes(term);
         });
       }
     }
@@ -73,13 +83,15 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     // Apply filters
     if (activeFilters.size > 0) {
       filtered = filtered.filter(memo => {
-        const hasTodos = memo.summary?.split('\n').some(line => line.trim().startsWith('- [ ]')) ?? false;
-        const hasImplementationPlan = memo.summary?.toLowerCase().includes('implementation plan') ?? false;
-        const hasBlogDraft = (memo.summary?.includes('#') || memo.summary?.includes('===')) ?? false;
+        const hasTodos = memo.todos?.trim().length > 0;
+        const hasActionItems = memo.actionItems?.trim().length > 0;
+        const hasAppIdeas = memo.appIdeas?.trim().length > 0;
+        const hasBlogPost = memo.blogPost?.trim().length > 0;
 
         if (activeFilters.has('todos') && !hasTodos) return false;
-        if (activeFilters.has('prompts') && !hasImplementationPlan) return false;
-        if (activeFilters.has('drafts') && !hasBlogDraft) return false;
+        if (activeFilters.has('actions') && !hasActionItems) return false;
+        if (activeFilters.has('ideas') && !hasAppIdeas) return false;
+        if (activeFilters.has('drafts') && !hasBlogPost) return false;
         return true;
       });
     }
