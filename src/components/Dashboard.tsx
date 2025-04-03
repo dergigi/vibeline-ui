@@ -18,7 +18,7 @@ interface Statistics {
 }
 
 export default function Dashboard({ memos }: DashboardProps) {
-  const getRecentOpenTodos = (memos: VoiceMemo[]): TodoItem[] => {
+  const getRecentTodos = (memos: VoiceMemo[], completed: boolean): TodoItem[] => {
     const allTodos: TodoItem[] = [];
     
     memos.forEach(memo => {
@@ -26,7 +26,10 @@ export default function Dashboard({ memos }: DashboardProps) {
       
       const todos = memo.todos
         .split('\n')
-        .filter(line => line.trim().startsWith('- [ ]')) // Only include unchecked TODO items
+        .filter(line => {
+          const trimmed = line.trim();
+          return completed ? trimmed.startsWith('- [x]') : trimmed.startsWith('- [ ]');
+        })
         .map(line => line.trim());
 
       if (todos.length === 0) return;
@@ -47,7 +50,7 @@ export default function Dashboard({ memos }: DashboardProps) {
       });
     });
     
-    return allTodos.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10); // Show top 10 most recent
+    return allTodos.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, completed ? 5 : 10);
   };
 
   const getStatistics = (memos: VoiceMemo[]): { 
@@ -108,7 +111,8 @@ export default function Dashboard({ memos }: DashboardProps) {
     return stats;
   };
 
-  const recentOpenTodos = getRecentOpenTodos(memos);
+  const recentOpenTodos = getRecentTodos(memos, false);
+  const recentCompletedTodos = getRecentTodos(memos, true);
   const stats = getStatistics(memos);
 
   return (
@@ -129,6 +133,22 @@ export default function Dashboard({ memos }: DashboardProps) {
           </div>
         ) : (
           <p className="text-sm text-gray-500 dark:text-gray-400">No open TODOs found</p>
+        )}
+
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 mt-6">
+          Recently Completed TODOs
+        </h3>
+        {recentCompletedTodos.length > 0 ? (
+          <div className="bg-gray-50 dark:bg-gray-750 rounded p-4">
+            <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
+              {recentCompletedTodos.map(todo => todo.text).join('\n')}
+            </pre>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Last completed {formatTimeAgo(recentCompletedTodos[0].date)}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No completed TODOs found</p>
         )}
       </div>
 
