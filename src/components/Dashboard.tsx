@@ -1,3 +1,5 @@
+'use client';
+
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { formatTimeAgo } from '@/utils/date';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
