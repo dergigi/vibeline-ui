@@ -384,13 +384,6 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
             <div className="flex justify-between items-end">
               <div className="flex gap-2">
-                <button 
-                  onClick={handleShare}
-                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
-                >
-                  <ShareIcon className="w-3 h-3" />
-                  <span>share</span>
-                </button>
                 {hasDrafts && (
                   <button 
                     onClick={() => setShowDraftEditor(true)}
@@ -400,6 +393,15 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     <span>draft</span>
                   </button>
                 )}
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleShare}
+                  className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                >
+                  <ShareIcon className="w-3 h-3" />
+                  <span>share</span>
+                </button>
               </div>
               {memo.transcript && (
                 <div className="flex gap-1.5 flex-wrap justify-end">
