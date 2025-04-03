@@ -223,14 +223,21 @@ export default function Dashboard({ memos }: DashboardProps) {
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Daily Activity</h4>
             <div className="h-32">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dailyActivity}>
+                <LineChart 
+                  data={dailyActivity}
+                  margin={{ top: 5, right: 10, bottom: 5, left: -20 }}
+                >
                   <XAxis 
                     dataKey="date" 
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(value) => value.slice(5)}
                   />
-                  <YAxis stroke="#6B7280" fontSize={10} />
+                  <YAxis 
+                    stroke="#6B7280" 
+                    fontSize={10}
+                    width={25}
+                  />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#1F2937',
