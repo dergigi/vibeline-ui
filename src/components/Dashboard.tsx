@@ -3,6 +3,8 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { formatTimeAgo } from '@/utils/date';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useState } from 'react';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 interface DashboardProps {
   memos: VoiceMemo[];
@@ -31,8 +33,14 @@ interface DailyActivity {
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EC4899'];
 
 export default function Dashboard({ memos }: DashboardProps) {
-  const getRecentTodos = (memos: VoiceMemo[], completed: boolean): TodoItem[] => {
+  const [isCompletedExpanded, setIsCompletedExpanded] = useState(false);
+  const [isOpenExpanded, setIsOpenExpanded] = useState(false);
+
+  const getRecentTodos = (memos: VoiceMemo[], completed: boolean, expanded: boolean): TodoItem[] => {
     const allTodos: TodoItem[] = [];
+    const now = new Date();
+    const twentyOneDaysAgo = new Date(now);
+    twentyOneDaysAgo.setDate(now.getDate() - 21);
     
     memos.forEach(memo => {
       if (!memo.todos) return;
@@ -54,16 +62,20 @@ export default function Dashboard({ memos }: DashboardProps) {
                           memo.filename.slice(11, 13) + ':' + 
                           memo.filename.slice(13, 15));
       
-      todos.forEach(todo => {
-        allTodos.push({
-          text: todo,
-          date,
-          memoId: memo.filename
+      // Only include TODOs from the last 21 days
+      if (date >= twentyOneDaysAgo) {
+        todos.forEach(todo => {
+          allTodos.push({
+            text: todo,
+            date,
+            memoId: memo.filename
+          });
         });
-      });
+      }
     });
     
-    return allTodos.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, completed ? 5 : 10);
+    const sortedTodos = allTodos.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return expanded ? sortedTodos : sortedTodos.slice(0, 5);
   };
 
   const getStatistics = (memos: VoiceMemo[]): { 
@@ -169,8 +181,8 @@ export default function Dashboard({ memos }: DashboardProps) {
     ];
   };
 
-  const recentOpenTodos = getRecentTodos(memos, false);
-  const recentCompletedTodos = getRecentTodos(memos, true);
+  const recentOpenTodos = getRecentTodos(memos, false, isOpenExpanded);
+  const recentCompletedTodos = getRecentTodos(memos, true, isCompletedExpanded);
   const stats = getStatistics(memos);
   const dailyActivity = getDailyActivity(memos);
   const contentDistribution = getContentDistribution(stats);
@@ -179,9 +191,21 @@ export default function Dashboard({ memos }: DashboardProps) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
       {/* TODOs Widget */}
       <div className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-          Recently Completed TODOs
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            Recently DONE
+          </h3>
+          <button 
+            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            {isCompletedExpanded ? (
+              <ChevronUpIcon className="h-5 w-5" />
+            ) : (
+              <ChevronDownIcon className="h-5 w-5" />
+            )}
+          </button>
+        </div>
         {recentCompletedTodos.length > 0 ? (
           <div className="bg-gray-50 dark:bg-gray-750 rounded p-4">
             <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
@@ -189,15 +213,30 @@ export default function Dashboard({ memos }: DashboardProps) {
             </pre>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Last completed {formatTimeAgo(recentCompletedTodos[0].date)}
+              {!isCompletedExpanded && recentCompletedTodos.length === 5 && (
+                <span className="ml-2">• Click expand to see more</span>
+              )}
             </p>
           </div>
         ) : (
           <p className="text-sm text-gray-500 dark:text-gray-400">No completed TODOs found</p>
         )}
 
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 mt-6">
-          Open TODOs
-        </h3>
+        <div className="flex items-center justify-between mb-3 mt-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            Open TODOs
+          </h3>
+          <button 
+            onClick={() => setIsOpenExpanded(!isOpenExpanded)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            {isOpenExpanded ? (
+              <ChevronUpIcon className="h-5 w-5" />
+            ) : (
+              <ChevronDownIcon className="h-5 w-5" />
+            )}
+          </button>
+        </div>
         {recentOpenTodos.length > 0 ? (
           <div className="bg-gray-50 dark:bg-gray-750 rounded p-4">
             <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
@@ -205,6 +244,9 @@ export default function Dashboard({ memos }: DashboardProps) {
             </pre>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Last updated {formatTimeAgo(recentOpenTodos[0].date)}
+              {!isOpenExpanded && recentOpenTodos.length === 5 && (
+                <span className="ml-2">• Click expand to see more</span>
+              )}
             </p>
           </div>
         ) : (
