@@ -243,7 +243,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         <div className="space-y-4">
           {memo.transcript && (
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div 
+                className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
+              >
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Transcript
@@ -252,16 +255,13 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     <ArrowPathIcon className="w-3 h-3" />
                   </button>
                 </div>
-                <button
-                  onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
-                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
+                <div className="text-gray-500 dark:text-gray-400">
                   {isTranscriptExpanded ? (
                     <ChevronUpIcon className="w-4 h-4" />
                   ) : (
                     <ChevronDownIcon className="w-4 h-4" />
                   )}
-                </button>
+                </div>
               </div>
               <p className={`text-sm text-gray-600 dark:text-gray-400 ${isTranscriptExpanded ? '' : 'line-clamp-5'}`}>
                 {memo.transcript}
@@ -271,20 +271,20 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
           {memo.summary && (
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div 
+                className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+              >
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Summary
                 </h4>
-                <button
-                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
+                <div className="text-gray-500 dark:text-gray-400">
                   {isSummaryExpanded ? (
                     <ChevronUpIcon className="w-4 h-4" />
                   ) : (
                     <ChevronDownIcon className="w-4 h-4" />
                   )}
-                </button>
+                </div>
               </div>
               <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line`}>
                 {isSummaryExpanded ? memo.summary.trim() : getLastParagraph(memo.summary)}
@@ -303,23 +303,26 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           <div className="flex flex-col gap-4 mt-4 pt-4">
             {hasTodos && (
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div 
+                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                  onClick={() => setIsTodosExpanded(!isTodosExpanded)}
+                >
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     TODOs ({memo.todos ? countTodos(memo.todos) : 0})
                   </h4>
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setIsTodosExpanded(!isTodosExpanded)}
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
+                    <div className="text-gray-500 dark:text-gray-400">
                       {isTodosExpanded ? (
                         <ChevronUpIcon className="w-4 h-4" />
                       ) : (
                         <ChevronDownIcon className="w-4 h-4" />
                       )}
-                    </button>
+                    </div>
                     <button 
-                      onClick={handleCopyTodos}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyTodos();
+                      }}
                       className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                     >
                       {isTodosCopied ? (
@@ -346,23 +349,26 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
             {hasPrompts && (
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div 
+                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                  onClick={() => setIsPromptsExpanded(!isPromptsExpanded)}
+                >
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Prompt
                   </h4>
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setIsPromptsExpanded(!isPromptsExpanded)}
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
+                    <div className="text-gray-500 dark:text-gray-400">
                       {isPromptsExpanded ? (
                         <ChevronUpIcon className="w-4 h-4" />
                       ) : (
                         <ChevronDownIcon className="w-4 h-4" />
                       )}
-                    </button>
+                    </div>
                     <button 
-                      onClick={handleCopyPrompts}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyPrompts();
+                      }}
                       className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                     >
                       {isPromptsCopied ? (
@@ -389,23 +395,26 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
             {hasDrafts && (
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div 
+                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                  onClick={() => setIsDraftsExpanded(!isDraftsExpanded)}
+                >
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Draft
                   </h4>
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setIsDraftsExpanded(!isDraftsExpanded)}
-                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
+                    <div className="text-gray-500 dark:text-gray-400">
                       {isDraftsExpanded ? (
                         <ChevronUpIcon className="w-4 h-4" />
                       ) : (
                         <ChevronDownIcon className="w-4 h-4" />
                       )}
-                    </button>
+                    </div>
                     <button 
-                      onClick={() => setShowDraftEditor(true)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDraftEditor(true);
+                      }}
                       className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                     >
                       <PencilSquareIcon className="w-3 h-3" />
