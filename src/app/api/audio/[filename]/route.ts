@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
 
-const VOICE_MEMOS_DIR = path.join(os.homedir(), 'Vibe', 'VoiceMemos');
+const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 
 export async function GET(
   request: NextRequest,

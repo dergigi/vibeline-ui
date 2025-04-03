@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
-import os from 'os';
 
 const execAsync = promisify(exec);
-const VOICE_MEMOS_DIR = path.join(os.homedir(), 'Vibe', 'VoiceMemos');
+const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {

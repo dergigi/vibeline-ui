@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
 import { VoiceMemo } from '@/types/VoiceMemo';
 
-const VOICE_MEMOS_DIR = path.join(os.homedir(), 'Vibe', 'VoiceMemos');
+const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
 const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
 
