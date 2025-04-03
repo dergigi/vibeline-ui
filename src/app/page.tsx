@@ -5,7 +5,9 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { Suspense, useEffect } from 'react';
-import { PencilIcon, SparklesIcon, ClipboardDocumentCheckIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { PencilIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/solid';
+import Dashboard from '@/components/Dashboard';
+import { VoiceMemo } from '@/types/VoiceMemo';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,7 +79,10 @@ const MemoList = () => {
   );
 };
 
-export default function Home() {
+export default async function Home() {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/memos`, { cache: 'no-store' });
+  const memos: VoiceMemo[] = await response.json();
+
   return (
     <SearchProvider>
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -96,6 +101,8 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          <Dashboard memos={memos} />
 
           <Suspense fallback={<div>Loading...</div>}>
             <MemoList />
