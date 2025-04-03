@@ -18,7 +18,13 @@ export default function Dashboard({ memos }: DashboardProps) {
     memos.forEach(memo => {
       if (!memo.todos) return;
       
-      const todos = memo.todos.split('\n').filter(line => line.trim().length > 0);
+      const todos = memo.todos
+        .split('\n')
+        .filter(line => line.trim().startsWith('- [ ]')) // Only include unchecked TODO items
+        .map(line => line.trim());
+
+      if (todos.length === 0) return;
+
       const date = new Date(memo.filename.slice(0, 4) + '-' + 
                           memo.filename.slice(4, 6) + '-' + 
                           memo.filename.slice(6, 8) + ' ' + 
@@ -27,22 +33,22 @@ export default function Dashboard({ memos }: DashboardProps) {
                           memo.filename.slice(13, 15));
       
       todos.forEach(todo => {
-        if (!todo.toLowerCase().includes('done') && !todo.toLowerCase().includes('✓')) {
-          allTodos.push({
-            text: todo,
-            date,
-            memoId: memo.filename
-          });
-        }
+        allTodos.push({
+          text: todo,
+          date,
+          memoId: memo.filename
+        });
       });
     });
     
-    return allTodos.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5);
+    return allTodos.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10); // Show top 10 most recent
   };
 
   const recentOpenTodos = getRecentOpenTodos(memos);
   const totalMemos = memos.length;
-  const memosWithTodos = memos.filter(memo => memo.todos?.trim().length > 0).length;
+  const memosWithTodos = memos.filter(memo => 
+    memo.todos?.split('\n').some(line => line.trim().startsWith('- [ ]'))
+  ).length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -51,21 +57,18 @@ export default function Dashboard({ memos }: DashboardProps) {
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
           Recent Open TODOs
         </h3>
-        <div className="space-y-2">
-          {recentOpenTodos.map((todo, index) => (
-            <div key={index} className="flex items-start gap-3 p-2 rounded bg-gray-50 dark:bg-gray-750">
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300">{todo.text}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {formatTimeAgo(todo.date)}
-                </p>
-              </div>
-            </div>
-          ))}
-          {recentOpenTodos.length === 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">No open TODOs found</p>
-          )}
-        </div>
+        {recentOpenTodos.length > 0 ? (
+          <div className="bg-gray-50 dark:bg-gray-750 rounded p-4">
+            <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
+              {recentOpenTodos.map(todo => todo.text).join('\n')}
+            </pre>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Last updated {formatTimeAgo(recentOpenTodos[0].date)}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No open TODOs found</p>
+        )}
       </div>
 
       {/* Stats Widget */}
