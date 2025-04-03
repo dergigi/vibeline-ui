@@ -1,87 +1,20 @@
-'use client';
-
-import { getVoiceMemos } from '@/lib/voiceMemos';
-import { VoiceMemoCard } from '@/components/VoiceMemoCard';
-import { SearchProvider, useSearch } from '@/contexts/SearchContext';
-import { SearchBar } from '@/components/SearchBar';
-import { Suspense, useEffect } from 'react';
-import { PencilIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { Suspense } from 'react';
 import Dashboard from '@/components/Dashboard';
 import { VoiceMemo } from '@/types/VoiceMemo';
+import { SearchProvider } from '@/contexts/SearchContext';
+import { SearchBar } from '@/components/SearchBar';
+import { MemoList } from '@/components/MemoList';
+import { FilterButtons } from '@/components/FilterButtons';
 
 export const dynamic = 'force-dynamic';
 
-const FilterButtons = () => {
-  const { activeFilters, toggleFilter } = useSearch();
-
-  return (
-    <div className="flex gap-2">
-      <button
-        onClick={() => toggleFilter('todos')}
-        className={`p-1.5 rounded-md transition-colors ${
-          activeFilters.has('todos')
-            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-        }`}
-        title="Show TODOs"
-      >
-        <CheckIcon className="w-3 h-3" />
-      </button>
-      <button
-        onClick={() => toggleFilter('prompts')}
-        className={`p-1.5 rounded-md transition-colors ${
-          activeFilters.has('prompts')
-            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-        }`}
-        title="Show prompts"
-      >
-        <SparklesIcon className="w-3 h-3" />
-      </button>
-      <button
-        onClick={() => toggleFilter('drafts')}
-        className={`p-1.5 rounded-md transition-colors ${
-          activeFilters.has('drafts')
-            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-        }`}
-        title="Show blog drafts"
-      >
-        <PencilIcon className="w-3 h-3" />
-      </button>
-    </div>
-  );
-};
-
-const MemoList = () => {
-  const { setMemos, filteredMemos } = useSearch();
-
-  useEffect(() => {
-    const loadMemos = async () => {
-      const memos = await getVoiceMemos();
-      setMemos(memos);
-    };
-    loadMemos();
-  }, [setMemos]);
-  
-  return (
-    <div className="grid gap-6 md:grid-cols-1">
-      {filteredMemos.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">No voice memos found</p>
-        </div>
-      ) : (
-        filteredMemos.map((memo) => (
-          <VoiceMemoCard key={memo.id} memo={memo} />
-        ))
-      )}
-    </div>
-  );
-};
+async function getData() {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/memos`, { cache: 'no-store' });
+  return response.json();
+}
 
 export default async function Home() {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/memos`, { cache: 'no-store' });
-  const memos: VoiceMemo[] = await response.json();
+  const memos: VoiceMemo[] = await getData();
 
   return (
     <SearchProvider>
@@ -105,7 +38,7 @@ export default async function Home() {
           <Dashboard memos={memos} />
 
           <Suspense fallback={<div>Loading...</div>}>
-            <MemoList />
+            <MemoList initialMemos={memos} />
           </Suspense>
         </div>
       </main>
