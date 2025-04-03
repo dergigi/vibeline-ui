@@ -10,6 +10,24 @@ const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
 const PROMPTS_DIR = path.join(VOICE_MEMOS_DIR, 'app_ideas');
 const DRAFTS_DIR = path.join(VOICE_MEMOS_DIR, 'blog_posts');
 
+function parseTimestampFromFilename(filename: string): Date {
+  // Extract YYYYMMDD_HHMMSS from the filename
+  const match = filename.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+  if (!match) {
+    return new Date(); // Fallback to current time if pattern doesn't match
+  }
+  
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(
+    parseInt(year),
+    parseInt(month) - 1, // JavaScript months are 0-based
+    parseInt(day),
+    parseInt(hour),
+    parseInt(minute),
+    parseInt(second)
+  );
+}
+
 async function readFileIfExists(filePath: string): Promise<string> {
   try {
     return await fs.readFile(filePath, 'utf-8');
@@ -40,8 +58,6 @@ export async function GET(): Promise<NextResponse> {
           readFileIfExists(promptsPath),
           readFileIfExists(draftsPath)
         ]);
-
-        const stats = await fs.stat(path.join(VOICE_MEMOS_DIR, file));
         
         memos.push({
           id: baseFilename,
@@ -53,7 +69,7 @@ export async function GET(): Promise<NextResponse> {
           prompts,
           drafts,
           audioUrl: `/api/audio/${encodeURIComponent(file)}`,
-          createdAt: stats.mtime
+          createdAt: parseTimestampFromFilename(baseFilename)
         });
       }
     }
