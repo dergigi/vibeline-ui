@@ -176,9 +176,9 @@ export default function Dashboard({ memos }: DashboardProps) {
   const contentDistribution = getContentDistribution(stats);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
       {/* TODOs Widget */}
-      <div className="col-span-1 md:col-span-2 lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <div className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
           Recently Completed TODOs
         </h3>
@@ -213,15 +213,15 @@ export default function Dashboard({ memos }: DashboardProps) {
       </div>
 
       {/* Stats Widget */}
-      <div className="col-span-1 md:col-span-2 lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
           Statistics
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
           {/* Activity Chart */}
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Daily Activity</h4>
-            <div className="h-48">
+            <div className="h-32">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dailyActivity}>
                   <XAxis 
@@ -247,38 +247,20 @@ export default function Dashboard({ memos }: DashboardProps) {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <div className="grid grid-cols-4 gap-2 mt-2">
-              <div className="text-center">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mb-1"></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Memos</p>
-              </div>
-              <div className="text-center">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full mx-auto mb-1"></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
-              </div>
-              <div className="text-center">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mx-auto mb-1"></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
-              </div>
-              <div className="text-center">
-                <div className="w-2 h-2 bg-pink-500 rounded-full mx-auto mb-1"></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
-              </div>
-            </div>
           </div>
 
           {/* Content Distribution Chart */}
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Content Distribution</h4>
-            <div className="h-48">
+            <div className="h-32">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={contentDistribution}
                     cx="50%"
                     cy="50%"
-                    innerRadius={40}
-                    outerRadius={60}
+                    innerRadius={30}
+                    outerRadius={50}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -298,38 +280,22 @@ export default function Dashboard({ memos }: DashboardProps) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              <div className="text-center">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mb-1"></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
-              </div>
-              <div className="text-center">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full mx-auto mb-1"></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
-              </div>
-              <div className="text-center">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mx-auto mb-1"></div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
-              </div>
-            </div>
           </div>
-        </div>
 
-        <div className="mt-6 space-y-6">
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Voice Memos</h4>
             <div className="grid grid-cols-3 gap-2">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.memos.total}</p>
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">This Week</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.memos.thisWeek}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Week</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.memos.thisWeek}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.memos.thisMonth}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.memos.thisMonth}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.memos.total}</p>
               </div>
             </div>
           </div>
@@ -337,17 +303,17 @@ export default function Dashboard({ memos }: DashboardProps) {
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">TODOs</h4>
             <div className="grid grid-cols-3 gap-2">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.todos.total}</p>
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">This Week</p>
+                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.todos.thisWeek}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Week</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.todos.thisWeek}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.todos.thisMonth}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.todos.thisMonth}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.todos.total}</p>
               </div>
             </div>
           </div>
@@ -355,17 +321,17 @@ export default function Dashboard({ memos }: DashboardProps) {
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Blog Drafts</h4>
             <div className="grid grid-cols-3 gap-2">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.drafts.total}</p>
+              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">This Week</p>
+                <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.drafts.thisWeek}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Week</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.drafts.thisWeek}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.drafts.thisMonth}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.drafts.thisMonth}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.drafts.total}</p>
               </div>
             </div>
           </div>
@@ -373,17 +339,17 @@ export default function Dashboard({ memos }: DashboardProps) {
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">App Ideas</h4>
             <div className="grid grid-cols-3 gap-2">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.prompts.total}</p>
+              <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-pink-600 dark:text-pink-400">This Week</p>
+                <p className="text-2xl font-bold text-pink-700 dark:text-pink-300">{stats.prompts.thisWeek}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Week</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.prompts.thisWeek}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.prompts.thisMonth}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-800 dark:text-gray-200">{stats.prompts.thisMonth}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.prompts.total}</p>
               </div>
             </div>
           </div>
