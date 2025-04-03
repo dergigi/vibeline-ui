@@ -18,7 +18,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
+  const [isTodosCopied, setIsTodosCopied] = useState(false);
+  const [isPromptsCopied, setIsPromptsCopied] = useState(false);
   const [showDraftEditor, setShowDraftEditor] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -126,8 +127,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     if (memo.todos) {
       try {
         await navigator.clipboard.writeText(memo.todos);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        setIsTodosCopied(true);
+        setTimeout(() => setIsTodosCopied(false), 2000);
       } catch (err) {
         console.error('Failed to copy text:', err);
       }
@@ -138,8 +139,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     if (memo.prompts) {
       try {
         await navigator.clipboard.writeText(memo.prompts);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        setIsPromptsCopied(true);
+        setTimeout(() => setIsPromptsCopied(false), 2000);
       } catch (err) {
         console.error('Failed to copy text:', err);
       }
@@ -295,7 +296,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     onClick={handleCopyTodos}
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                   >
-                    {isCopied ? (
+                    {isTodosCopied ? (
                       <>
                         <CheckIcon className="w-3 h-3" />
                         <span>copied!</span>
@@ -313,7 +314,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     onClick={handleCopyPrompts}
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                   >
-                    {isCopied ? (
+                    {isPromptsCopied ? (
                       <>
                         <CheckIcon className="w-3 h-3" />
                         <span>copied!</span>
