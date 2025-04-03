@@ -214,14 +214,14 @@ export default function Dashboard({ memos }: DashboardProps) {
 
       {/* Stats Widget */}
       <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
           Statistics
         </h3>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Activity Chart */}
           <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Daily Activity</h4>
-            <div className="h-32">
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Daily Activity</h4>
+            <div className="h-28">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart 
                   data={dailyActivity}
@@ -256,18 +256,36 @@ export default function Dashboard({ memos }: DashboardProps) {
             </div>
           </div>
 
+          <div>
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Voice Memos</h4>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">This Week</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.memos.thisWeek}</p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.memos.thisMonth}</p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
+                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.memos.total}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Content Distribution Chart */}
           <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Content Distribution</h4>
-            <div className="h-32">
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Content Distribution</h4>
+            <div className="h-28">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={contentDistribution}
                     cx="50%"
                     cy="50%"
-                    innerRadius={30}
-                    outerRadius={50}
+                    innerRadius={25}
+                    outerRadius={40}
                     paddingAngle={5}
                     dataKey="value"
                   >
@@ -290,25 +308,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Voice Memos</h4>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">This Week</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.memos.thisWeek}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.memos.thisMonth}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.memos.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">TODOs</h4>
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TODOs</h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
                 <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">This Week</p>
@@ -326,7 +326,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Blog Drafts</h4>
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Blog Drafts</h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
                 <p className="text-xs font-medium text-amber-600 dark:text-amber-400">This Week</p>
@@ -344,7 +344,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">App Ideas</h4>
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">App Ideas</h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg p-2">
                 <p className="text-xs font-medium text-pink-600 dark:text-pink-400">This Week</p>
