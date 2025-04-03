@@ -177,103 +177,6 @@ export default function Dashboard({ memos }: DashboardProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-      {/* Charts Widget */}
-      <div className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-          Activity Overview
-        </h3>
-        <div className="h-64 mb-6">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dailyActivity}>
-              <XAxis 
-                dataKey="date" 
-                stroke="#6B7280"
-                fontSize={12}
-                tickFormatter={(value) => value.slice(5)} // Show only MM-DD
-              />
-              <YAxis stroke="#6B7280" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1F2937',
-                  border: 'none',
-                  borderRadius: '0.375rem',
-                  color: '#E5E7EB'
-                }}
-              />
-              <Line type="monotone" dataKey="memos" stroke="#3B82F6" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="todos" stroke="#10B981" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="drafts" stroke="#F59E0B" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="prompts" stroke="#EC4899" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="text-center">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mx-auto mb-1"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Memos</p>
-          </div>
-          <div className="text-center">
-            <div className="w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
-          </div>
-          <div className="text-center">
-            <div className="w-3 h-3 bg-amber-500 rounded-full mx-auto mb-1"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
-          </div>
-          <div className="text-center">
-            <div className="w-3 h-3 bg-pink-500 rounded-full mx-auto mb-1"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
-          </div>
-        </div>
-
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-          Content Distribution
-        </h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={contentDistribution}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {contentDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1F2937',
-                  border: 'none',
-                  borderRadius: '0.375rem',
-                  color: '#E5E7EB'
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mx-auto mb-1"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
-          </div>
-          <div className="text-center">
-            <div className="w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
-          </div>
-          <div className="text-center">
-            <div className="w-3 h-3 bg-amber-500 rounded-full mx-auto mb-1"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
-          </div>
-        </div>
-      </div>
-
       {/* TODOs Widget */}
       <div className="col-span-1 md:col-span-2 lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
@@ -310,11 +213,109 @@ export default function Dashboard({ memos }: DashboardProps) {
       </div>
 
       {/* Stats Widget */}
-      <div className="col-span-1 md:col-span-2 lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <div className="col-span-1 md:col-span-2 lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
           Statistics
         </h3>
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Activity Chart */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Daily Activity</h4>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dailyActivity}>
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#6B7280"
+                    fontSize={10}
+                    tickFormatter={(value) => value.slice(5)}
+                  />
+                  <YAxis stroke="#6B7280" fontSize={10} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      color: '#E5E7EB',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Line type="monotone" dataKey="memos" stroke="#3B82F6" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="todos" stroke="#10B981" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="drafts" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="prompts" stroke="#EC4899" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              <div className="text-center">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mb-1"></div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Memos</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full mx-auto mb-1"></div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 bg-amber-500 rounded-full mx-auto mb-1"></div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 bg-pink-500 rounded-full mx-auto mb-1"></div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Distribution Chart */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Content Distribution</h4>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={contentDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={60}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {contentDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      color: '#E5E7EB',
+                      fontSize: '12px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="text-center">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mx-auto mb-1"></div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full mx-auto mb-1"></div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
+              </div>
+              <div className="text-center">
+                <div className="w-2 h-2 bg-amber-500 rounded-full mx-auto mb-1"></div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-6">
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Voice Memos</h4>
             <div className="grid grid-cols-3 gap-2">
