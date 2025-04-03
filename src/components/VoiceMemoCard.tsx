@@ -33,6 +33,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const hasPrompts = memo.prompts?.trim().length > 0;
   const hasDrafts = memo.drafts?.trim().length > 0;
 
+  const countTodos = (todos: string): number => {
+    return todos.trim().split('\n').filter(line => line.trim().length > 0).length;
+  };
+
   const togglePlayPause = (): void => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -301,7 +305,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    TODOs
+                    TODOs ({memo.todos ? countTodos(memo.todos) : 0})
                   </h4>
                   <div className="flex items-center gap-1">
                     <button
