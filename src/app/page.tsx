@@ -9,7 +9,8 @@ import { FilterButtons } from '@/components/FilterButtons';
 export const dynamic = 'force-dynamic';
 
 async function getData() {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/memos`, { cache: 'no-store' });
+  const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.NEXT_PUBLIC_API_URL;
+  const response = await fetch(`${baseUrl}/api/memos`, { cache: 'no-store' });
   return response.json();
 }
 
