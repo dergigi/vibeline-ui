@@ -8,5 +8,5 @@ export interface VoiceMemo {
   prompts: string;
   drafts: string;
   audioUrl: string;
-  createdAt: Date;
+  createdAt: Date | string;
 } 

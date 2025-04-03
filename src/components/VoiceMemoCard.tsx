@@ -77,30 +77,22 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     }
   };
 
-  const formatShortDate = (date: Date): string => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-    }).format(date);
-  };
-
-  const formatTimeAgo = (date: Date): string => {
+  const formatTimeAgo = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
     
     // If years are different, return the formatted date with year
-    if (date.getFullYear() !== now.getFullYear()) {
+    if (dateObj.getFullYear() !== now.getFullYear()) {
       return new Intl.DateTimeFormat('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
-      }).format(date);
+      }).format(dateObj);
     }
 
     // For same year, check if it's today/yesterday
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const compareDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const compareDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
     const diffInDays = Math.floor((today.getTime() - compareDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffInDays === 0) return 'Today';
@@ -110,7 +102,17 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric'
-    }).format(date);
+    }).format(dateObj);
+  };
+
+  const formatShortDate = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    }).format(dateObj);
   };
 
   const countWords = (text: string): number => {
