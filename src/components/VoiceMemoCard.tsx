@@ -394,7 +394,20 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   </button>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                {memo.transcript && (
+                  <div className="flex gap-1.5 flex-wrap justify-end">
+                    {extractHashtags(memo.transcript).map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => handleHashtagClick(tag)}
+                        className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
+                      >
+                        #{tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <button 
                   onClick={handleShare}
                   className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
@@ -403,19 +416,6 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <span>share</span>
                 </button>
               </div>
-              {memo.transcript && (
-                <div className="flex gap-1.5 flex-wrap justify-end">
-                  {extractHashtags(memo.transcript).map(tag => (
-                    <button
-                      key={tag}
-                      onClick={() => handleHashtagClick(tag)}
-                      className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors"
-                    >
-                      #{tag}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
