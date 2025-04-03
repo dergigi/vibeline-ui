@@ -96,6 +96,11 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     return text.trim().split(/\s+/).length;
   };
 
+  const getLastParagraph = (text: string): string => {
+    const paragraphs = text.trim().split(/\n\s*\n/);
+    return paragraphs[paragraphs.length - 1];
+  };
+
   const extractHashtags = (text: string): string[] => {
     // Common words to filter out
     const stopWords = new Set([
@@ -260,8 +265,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   )}
                 </button>
               </div>
-              <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line ${isSummaryExpanded ? '' : 'line-clamp-3'}`}>
-                {memo.summary.trim()}
+              <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line`}>
+                {isSummaryExpanded ? memo.summary.trim() : getLastParagraph(memo.summary)}
               </p>
             </div>
           )}
