@@ -207,7 +207,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           </button>
         </div>
         {recentCompletedTodos.length > 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-750 rounded p-4">
+          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4">
             <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
               {recentCompletedTodos.map(todo => todo.text).join('\n')}
             </pre>
@@ -238,7 +238,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           </button>
         </div>
         {recentOpenTodos.length > 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-750 rounded p-4">
+          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4">
             <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
               {recentOpenTodos.map(todo => todo.text).join('\n')}
             </pre>
