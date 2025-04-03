@@ -17,6 +17,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [isTodosExpanded, setIsTodosExpanded] = useState(false);
+  const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
   const [isTodosCopied, setIsTodosCopied] = useState(false);
   const [isPromptsCopied, setIsPromptsCopied] = useState(false);
@@ -273,6 +275,92 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           />
 
           <div className="flex flex-col gap-4 mt-4 pt-4">
+            {hasTodos && (
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    TODOs
+                  </h4>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsTodosExpanded(!isTodosExpanded)}
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {isTodosExpanded ? (
+                        <ChevronUpIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronDownIcon className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button 
+                      onClick={handleCopyTodos}
+                      className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                    >
+                      {isTodosCopied ? (
+                        <>
+                          <CheckIcon className="w-3 h-3" />
+                          <span>copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ClipboardDocumentCheckIcon className="w-3 h-3" />
+                          <span>copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                {isTodosExpanded && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                    {memo.todos.trim()}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {hasPrompts && (
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Prompt
+                  </h4>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsPromptsExpanded(!isPromptsExpanded)}
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {isPromptsExpanded ? (
+                        <ChevronUpIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronDownIcon className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button 
+                      onClick={handleCopyPrompts}
+                      className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                    >
+                      {isPromptsCopied ? (
+                        <>
+                          <CheckIcon className="w-3 h-3" />
+                          <span>copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-3 h-3" />
+                          <span>copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                {isPromptsExpanded && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                    {memo.prompts.trim()}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-between items-end">
               <div className="flex gap-2">
                 <button 
@@ -289,42 +377,6 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   >
                     <PencilSquareIcon className="w-3 h-3" />
                     <span>draft</span>
-                  </button>
-                )}
-                {hasTodos && (
-                  <button 
-                    onClick={handleCopyTodos}
-                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
-                  >
-                    {isTodosCopied ? (
-                      <>
-                        <CheckIcon className="w-3 h-3" />
-                        <span>copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <ClipboardDocumentCheckIcon className="w-3 h-3" />
-                        <span>TODOs</span>
-                      </>
-                    )}
-                  </button>
-                )}
-                {hasPrompts && (
-                  <button 
-                    onClick={handleCopyPrompts}
-                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
-                  >
-                    {isPromptsCopied ? (
-                      <>
-                        <CheckIcon className="w-3 h-3" />
-                        <span>copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <SparklesIcon className="w-3 h-3" />
-                        <span>prompt</span>
-                      </>
-                    )}
                   </button>
                 )}
               </div>
