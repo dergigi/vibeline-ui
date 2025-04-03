@@ -1,5 +1,6 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { formatTimeAgo } from '@/utils/date';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 interface DashboardProps {
   memos: VoiceMemo[];
@@ -16,6 +17,16 @@ interface Statistics {
   thisWeek: number;
   thisMonth: number;
 }
+
+interface DailyActivity {
+  date: string;
+  memos: number;
+  todos: number;
+  drafts: number;
+  prompts: number;
+}
+
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EC4899'];
 
 export default function Dashboard({ memos }: DashboardProps) {
   const getRecentTodos = (memos: VoiceMemo[], completed: boolean): TodoItem[] => {
@@ -111,14 +122,158 @@ export default function Dashboard({ memos }: DashboardProps) {
     return stats;
   };
 
+  const getDailyActivity = (memos: VoiceMemo[]): DailyActivity[] => {
+    const activityMap = new Map<string, DailyActivity>();
+    
+    memos.forEach(memo => {
+      const date = memo.filename.slice(0, 4) + '-' + 
+                  memo.filename.slice(4, 6) + '-' + 
+                  memo.filename.slice(6, 8);
+      
+      if (!activityMap.has(date)) {
+        activityMap.set(date, {
+          date,
+          memos: 0,
+          todos: 0,
+          drafts: 0,
+          prompts: 0
+        });
+      }
+      
+      const activity = activityMap.get(date)!;
+      activity.memos++;
+      
+      if (memo.todos?.split('\n').some(line => line.trim().startsWith('- [ ]'))) {
+        activity.todos++;
+      }
+      if (memo.drafts?.trim()) {
+        activity.drafts++;
+      }
+      if (memo.prompts?.trim()) {
+        activity.prompts++;
+      }
+    });
+    
+    return Array.from(activityMap.values())
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-7); // Last 7 days
+  };
+
+  const getContentDistribution = (stats: ReturnType<typeof getStatistics>) => {
+    return [
+      { name: 'TODOs', value: stats.todos.total },
+      { name: 'Drafts', value: stats.drafts.total },
+      { name: 'Prompts', value: stats.prompts.total }
+    ];
+  };
+
   const recentOpenTodos = getRecentTodos(memos, false);
   const recentCompletedTodos = getRecentTodos(memos, true);
   const stats = getStatistics(memos);
+  const dailyActivity = getDailyActivity(memos);
+  const contentDistribution = getContentDistribution(stats);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-      {/* Recent Open TODOs Widget */}
+      {/* Charts Widget */}
       <div className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+          Activity Overview
+        </h3>
+        <div className="h-64 mb-6">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dailyActivity}>
+              <XAxis 
+                dataKey="date" 
+                stroke="#6B7280"
+                fontSize={12}
+                tickFormatter={(value) => value.slice(5)} // Show only MM-DD
+              />
+              <YAxis stroke="#6B7280" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1F2937',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  color: '#E5E7EB'
+                }}
+              />
+              <Line type="monotone" dataKey="memos" stroke="#3B82F6" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="todos" stroke="#10B981" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="drafts" stroke="#F59E0B" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="prompts" stroke="#EC4899" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="text-center">
+            <div className="w-3 h-3 bg-blue-500 rounded-full mx-auto mb-1"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Memos</p>
+          </div>
+          <div className="text-center">
+            <div className="w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
+          </div>
+          <div className="text-center">
+            <div className="w-3 h-3 bg-amber-500 rounded-full mx-auto mb-1"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
+          </div>
+          <div className="text-center">
+            <div className="w-3 h-3 bg-pink-500 rounded-full mx-auto mb-1"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
+          </div>
+        </div>
+
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+          Content Distribution
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={contentDistribution}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {contentDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#1F2937',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  color: '#E5E7EB'
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="w-3 h-3 bg-blue-500 rounded-full mx-auto mb-1"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">TODOs</p>
+          </div>
+          <div className="text-center">
+            <div className="w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Drafts</p>
+          </div>
+          <div className="text-center">
+            <div className="w-3 h-3 bg-amber-500 rounded-full mx-auto mb-1"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Prompts</p>
+          </div>
+        </div>
+      </div>
+
+      {/* TODOs Widget */}
+      <div className="col-span-1 md:col-span-2 lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
           Recently Completed TODOs
         </h3>
@@ -153,7 +308,7 @@ export default function Dashboard({ memos }: DashboardProps) {
       </div>
 
       {/* Stats Widget */}
-      <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <div className="col-span-1 md:col-span-2 lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
           Statistics
         </h3>
