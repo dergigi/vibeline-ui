@@ -5,9 +5,8 @@ export interface VoiceMemo {
   transcript: string;
   summary: string;
   todos: string;
-  actionItems: string;
-  appIdeas: string;
-  blogPost: string;
+  prompts: string;
+  drafts: string;
   audioUrl: string;
   createdAt: Date;
 } 

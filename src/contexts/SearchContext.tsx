@@ -66,16 +66,14 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
           const transcript = memo.transcript?.toLowerCase() || '';
           const summary = memo.summary?.toLowerCase() || '';
           const todos = memo.todos?.toLowerCase() || '';
-          const actionItems = memo.actionItems?.toLowerCase() || '';
-          const appIdeas = memo.appIdeas?.toLowerCase() || '';
-          const blogPost = memo.blogPost?.toLowerCase() || '';
+          const prompts = memo.prompts?.toLowerCase() || '';
+          const drafts = memo.drafts?.toLowerCase() || '';
           
           return transcript.includes(term) || 
                  summary.includes(term) || 
                  todos.includes(term) || 
-                 actionItems.includes(term) || 
-                 appIdeas.includes(term) || 
-                 blogPost.includes(term);
+                 prompts.includes(term) || 
+                 drafts.includes(term);
         });
       }
     }
@@ -84,14 +82,12 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     if (activeFilters.size > 0) {
       filtered = filtered.filter(memo => {
         const hasTodos = memo.todos?.trim().length > 0;
-        const hasActionItems = memo.actionItems?.trim().length > 0;
-        const hasAppIdeas = memo.appIdeas?.trim().length > 0;
-        const hasBlogPost = memo.blogPost?.trim().length > 0;
+        const hasPrompts = memo.prompts?.trim().length > 0;
+        const hasDrafts = memo.drafts?.trim().length > 0;
 
         if (activeFilters.has('todos') && !hasTodos) return false;
-        if (activeFilters.has('actions') && !hasActionItems) return false;
-        if (activeFilters.has('ideas') && !hasAppIdeas) return false;
-        if (activeFilters.has('drafts') && !hasBlogPost) return false;
+        if (activeFilters.has('prompts') && !hasPrompts) return false;
+        if (activeFilters.has('drafts') && !hasDrafts) return false;
         return true;
       });
     }

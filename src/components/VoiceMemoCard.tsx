@@ -26,9 +26,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
   const hasTodos = memo.todos?.trim().length > 0;
-  const hasActionItems = memo.actionItems?.trim().length > 0;
-  const hasAppIdeas = memo.appIdeas?.trim().length > 0;
-  const hasBlogPost = memo.blogPost?.trim().length > 0;
+  const hasPrompts = memo.prompts?.trim().length > 0;
+  const hasDrafts = memo.drafts?.trim().length > 0;
 
   const togglePlayPause = (): void => {
     if (audioRef.current) {
@@ -135,22 +134,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     }
   };
 
-  const handleCopyActionItems = async (): Promise<void> => {
-    if (memo.actionItems) {
+  const handleCopyPrompts = async (): Promise<void> => {
+    if (memo.prompts) {
       try {
-        await navigator.clipboard.writeText(memo.actionItems);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      } catch (err) {
-        console.error('Failed to copy text:', err);
-      }
-    }
-  };
-
-  const handleCopyAppIdeas = async (): Promise<void> => {
-    if (memo.appIdeas) {
-      try {
-        await navigator.clipboard.writeText(memo.appIdeas);
+        await navigator.clipboard.writeText(memo.prompts);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
       } catch (err) {
@@ -294,7 +281,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <ShareIcon className="w-3 h-3" />
                   <span>share</span>
                 </button>
-                {hasBlogPost && (
+                {hasDrafts && (
                   <button 
                     onClick={() => setShowDraftEditor(true)}
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
@@ -321,9 +308,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     )}
                   </button>
                 )}
-                {hasActionItems && (
+                {hasPrompts && (
                   <button 
-                    onClick={handleCopyActionItems}
+                    onClick={handleCopyPrompts}
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                   >
                     {isCopied ? (
@@ -334,25 +321,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     ) : (
                       <>
                         <SparklesIcon className="w-3 h-3" />
-                        <span>actions</span>
-                      </>
-                    )}
-                  </button>
-                )}
-                {hasAppIdeas && (
-                  <button 
-                    onClick={handleCopyAppIdeas}
-                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
-                  >
-                    {isCopied ? (
-                      <>
-                        <CheckIcon className="w-3 h-3" />
-                        <span>copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <SparklesIcon className="w-3 h-3" />
-                        <span>ideas</span>
+                        <span>prompt</span>
                       </>
                     )}
                   </button>
@@ -377,7 +346,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       </motion.div>
       {showDraftEditor && (
         <DraftEditor
-          initialContent={memo.summary || ''}
+          initialContent={memo.drafts || ''}
           onClose={() => setShowDraftEditor(false)}
         />
       )}

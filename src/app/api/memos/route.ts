@@ -7,9 +7,8 @@ const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
 const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
 const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
-const ACTION_ITEMS_DIR = path.join(VOICE_MEMOS_DIR, 'action_items');
-const APP_IDEAS_DIR = path.join(VOICE_MEMOS_DIR, 'app_ideas');
-const BLOG_POSTS_DIR = path.join(VOICE_MEMOS_DIR, 'blog_posts');
+const PROMPTS_DIR = path.join(VOICE_MEMOS_DIR, 'app_ideas');
+const DRAFTS_DIR = path.join(VOICE_MEMOS_DIR, 'blog_posts');
 
 async function readFileIfExists(filePath: string): Promise<string> {
   try {
@@ -28,20 +27,18 @@ export async function GET(): Promise<NextResponse> {
       if (file.endsWith('.m4a')) {
         const baseFilename = path.basename(file, '.m4a');
         const transcriptPath = path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`);
-        const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}_summary.txt`);
+        const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}.txt`);
         const todosPath = path.join(TODOS_DIR, `${baseFilename}.txt`);
-        const actionItemsPath = path.join(ACTION_ITEMS_DIR, `${baseFilename}.txt`);
-        const appIdeasPath = path.join(APP_IDEAS_DIR, `${baseFilename}.txt`);
-        const blogPostPath = path.join(BLOG_POSTS_DIR, `${baseFilename}.txt`);
+        const promptsPath = path.join(PROMPTS_DIR, `${baseFilename}.txt`);
+        const draftsPath = path.join(DRAFTS_DIR, `${baseFilename}.md`);
         
         // Read all files if they exist
-        const [transcript, summary, todos, actionItems, appIdeas, blogPost] = await Promise.all([
+        const [transcript, summary, todos, prompts, drafts] = await Promise.all([
           readFileIfExists(transcriptPath),
           readFileIfExists(summaryPath),
           readFileIfExists(todosPath),
-          readFileIfExists(actionItemsPath),
-          readFileIfExists(appIdeasPath),
-          readFileIfExists(blogPostPath)
+          readFileIfExists(promptsPath),
+          readFileIfExists(draftsPath)
         ]);
 
         const stats = await fs.stat(path.join(VOICE_MEMOS_DIR, file));
@@ -53,9 +50,8 @@ export async function GET(): Promise<NextResponse> {
           transcript,
           summary,
           todos,
-          actionItems,
-          appIdeas,
-          blogPost,
+          prompts,
+          drafts,
           audioUrl: `/api/audio/${encodeURIComponent(file)}`,
           createdAt: stats.mtime
         });
