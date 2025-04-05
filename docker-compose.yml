@@ -1,0 +1,7 @@
+services:
+  voice-memos:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./VoiceMemos:/app/VoiceMemos
