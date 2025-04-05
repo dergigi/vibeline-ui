@@ -9,8 +9,7 @@ import { FilterButtons } from '@/components/FilterButtons';
 export const dynamic = 'force-dynamic';
 
 async function getData() {
-  const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.NEXT_PUBLIC_API_URL;
-  const response = await fetch(`${baseUrl}/api/memos`, { cache: 'no-store' });
+  const response = await fetch(new URL('/api/memos', typeof window !== 'undefined' ? window.location.protocol + '//' + window.location.host : 'http://localhost:3000'), { cache: 'no-store' });
   return response.json();
 }
 
@@ -45,4 +44,4 @@ export default async function Home() {
       </main>
     </SearchProvider>
   );
-} 
+}
