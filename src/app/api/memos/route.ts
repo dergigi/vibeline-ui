@@ -46,7 +46,7 @@ export async function GET(): Promise<NextResponse> {
         const baseFilename = path.basename(file, '.m4a');
         const transcriptPath = path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`);
         const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}.txt`);
-        const todosPath = path.join(TODOS_DIR, `${baseFilename}.txt`);
+        const todosPath = path.join(TODOS_DIR, `${baseFilename}.md`);
         const promptsPath = path.join(PROMPTS_DIR, `${baseFilename}.txt`);
         const draftsPath = path.join(DRAFTS_DIR, `${baseFilename}.md`);
         
