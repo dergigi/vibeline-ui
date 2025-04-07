@@ -2,9 +2,11 @@
 
 A modern web interface for [VibeLine](https://github.com/dergigi/vibeline), a powerful voice memo processing system that uses AI to extract meaningful content from your voice recordings.
 
+> "Call 555-vibe to vibe it into existence 🤙"
+
 ## Features
 
-- 🎙️ Beautiful and intuitive interface for your voice memos
+- 🎙️ Minimalistic interface for your voice memos
 - 🔍 Real-time search and filtering capabilities
 - 📊 Dashboard with activity statistics and insights
 - 📱 Responsive design that works on all devices
@@ -15,7 +17,7 @@ A modern web interface for [VibeLine](https://github.com/dergigi/vibeline), a po
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/vibeline-ui.git
+git clone https://github.com/dergigi/vibeline-ui.git
 cd vibeline-ui
 ```
 
@@ -29,7 +31,7 @@ npm install
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Open [http://localhost:555](http://localhost:555) in your browser.
 
 ## Development
 
@@ -46,7 +48,7 @@ If you make a contribution (always welcome!) please publicly tag @dergigi or one
 
 ## Contributors
 
-Contributors
+[![Contributors](https://contrib.rocks/image?repo=dergigi/vibeline-ui)](https://github.com/dergigi/vibeline-ui/graphs/contributors)
 
 ## License
 
