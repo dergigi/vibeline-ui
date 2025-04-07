@@ -44,7 +44,7 @@ This project is built with:
 
 ## Contributing
 
-If you make a contribution (always welcome!) please publicly tag @dergigi or one of the maintainers on nostr so that we know something happened here. (GitHub notifications are rekt.)
+If you make a contribution (always welcome!) please publicly tag [@dergigi](https://njump.me/dergigi.com) or one of the maintainers on nostr so that we know something happened here. (GitHub notifications are rekt.)
 
 ## Contributors
 
