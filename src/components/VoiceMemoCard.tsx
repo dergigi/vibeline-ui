@@ -4,7 +4,7 @@ import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
 import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon } from '@heroicons/react/24/solid';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
 
@@ -26,6 +26,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [showDraftEditor, setShowDraftEditor] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
+  // Add state to manage optimistic UI updates for todos
+  const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
@@ -180,7 +182,46 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const handleHashtagClick = (tag: string): void => {
     setSearchTerm(tag);
   };
-
+  
+  // Function to handle toggling a todo item
+  const handleTodoToggle = useCallback(async (lineNumber: number, currentChecked: boolean) => {
+    const markdownPath = memo.path; // Use memo.path instead of memo.filename
+    const newChecked = !currentChecked;
+  
+    // Optimistic UI update
+    const lines = (optimisticTodos ?? memo.todos ?? '').split('\n');
+    if (lineNumber >= 0 && lineNumber < lines.length) {
+      const line = lines[lineNumber];
+      const match = line.match(/^(\s*-\s*\[)[ x](\]\s*.*)/);
+      if (match) {
+        lines[lineNumber] = `${match[1]}${newChecked ? 'x' : ' '}${match[2]}`;
+        setOptimisticTodos(lines.join('\n'));
+      }
+    }
+  
+    try {
+      const response = await fetch('/api/todos/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ markdownPath, lineNumber, isChecked: newChecked }), // Send markdownPath
+      });
+  
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+      }
+      // Optionally: Refetch memos or confirm update based on API response
+      // For now, the optimistic update handles the UI change.
+      // If the API fails, revert the optimistic update:
+    } catch (error) {
+      console.error('Failed to toggle todo:', error);
+      // Revert optimistic update on failure
+      setOptimisticTodos(null);
+      // Optionally show an error message to the user
+      }
+      }, [memo.path, memo.todos, optimisticTodos]); // Update dependency array
+  
   const handleShare = async (): Promise<void> => {
     try {
       const response = await fetch('/api/open-in-finder', {
@@ -190,7 +231,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         },
         body: JSON.stringify({ filename: memo.filename }),
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to open file in Finder');
       }
@@ -342,11 +383,37 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   </div>
                 </div>
                 {isTodosExpanded && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
-                    {memo.todos.trim()}
-                  </p>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 pl-1"> {/* Added mt-2 and pl-1 for spacing */}
+                    {(optimisticTodos ?? memo.todos ?? '').trim().split('\n').map((line, index) => {
+                      // Match markdown checkbox format: "- [ ] text" or "- [x] text" (allowing for whitespace variations)
+                      const match = line.match(/^(\s*-\s*\[\s*)([ x])(\s*\]\s*)(.*)/);
+                      if (match) {
+                        const indent = match[1].match(/^\s*/)?.[0] || ''; // Capture leading whitespace for indentation
+                        const isChecked = match[2] === 'x';
+                        const text = match[4];
+                        return (
+                          <div key={index} className="flex items-center gap-2" style={{ paddingLeft: `${indent.length * 0.5}em` }}> {/* Basic indentation */}
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleTodoToggle(index, isChecked)}
+                              // Added Tailwind form plugin class and styling
+                              className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
+                            />
+                            <label className={`flex-1 ${isChecked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(index, isChecked)}>
+                              {text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>} {/* Handle empty todo text */}
+                            </label>
+                          </div>
+                        );
+                      }
+                      // Render non-checkbox lines as plain text, preserving indentation
+                      const indentMatch = line.match(/^\s*/);
+                      const indent = indentMatch ? indentMatch[0] : '';
+                      return <div key={index} style={{ paddingLeft: `${indent.length * 0.5}em` }}>{line.trim() || <br />}</div>; // Render empty lines as breaks
+                    })}
+                  </div>
                 )}
-              </div>
+                </div>
             )}
 
             {hasPrompts && (

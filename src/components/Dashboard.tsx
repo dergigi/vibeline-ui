@@ -3,7 +3,7 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { formatTimeAgo } from '@/utils/date';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 interface DashboardProps {
@@ -11,9 +11,12 @@ interface DashboardProps {
 }
 
 interface TodoItem {
-  text: string;
-  date: Date;
-  memoId: string;
+  text: string;         // The text content of the todo line (after checkbox)
+  date: Date;          // Date derived from the memo filename
+  memoId: string;      // Base filename of the memo
+  markdownPath: string; // Full path to the markdown file
+  lineNumber: number;  // Original line number in the markdown file
+  isChecked: boolean;  // Current state of the checkbox
 }
 
 interface Statistics {
@@ -35,7 +38,10 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EC4899'];
 export default function Dashboard({ memos }: DashboardProps) {
   const [isCompletedExpanded, setIsCompletedExpanded] = useState(false);
   const [isOpenExpanded, setIsOpenExpanded] = useState(false);
-
+  // State for optimistic UI updates
+  const [optimisticOpenTodos, setOptimisticOpenTodos] = useState<TodoItem[] | null>(null);
+  const [optimisticCompletedTodos, setOptimisticCompletedTodos] = useState<TodoItem[] | null>(null);
+  
   const getRecentTodos = (memos: VoiceMemo[], completed: boolean, expanded: boolean): TodoItem[] => {
     const allTodos: TodoItem[] = [];
     const now = new Date();
@@ -45,15 +51,23 @@ export default function Dashboard({ memos }: DashboardProps) {
     memos.forEach(memo => {
       if (!memo.todos) return;
       
-      const todos = memo.todos
-        .split('\n')
-        .filter(line => {
-          const trimmed = line.trim();
-          return completed ? trimmed.startsWith('- [x]') : trimmed.startsWith('- [ ]');
-        })
-        .map(line => line.trim());
+      // Process todos line by line to preserve original index and extract text
+      const todosData: { text: string; lineNumber: number; isChecked: boolean }[] = [];
+      memo.todos.split('\n').forEach((line, index) => {
+        const match = line.match(/^(\s*-\s*\[\s*)([ x])(\s*\]\s*)(.*)/);
+        if (match) {
+          const isChecked = match[2] === 'x';
+          if (isChecked === completed) { // Filter based on completed status
+            todosData.push({
+              text: match[4], // Extract text after checkbox
+              lineNumber: index,
+              isChecked: isChecked,
+            });
+          }
+        }
+      });
 
-      if (todos.length === 0) return;
+      if (todosData.length === 0) return;
 
       const date = new Date(memo.filename.slice(0, 4) + '-' + 
                           memo.filename.slice(4, 6) + '-' + 
@@ -64,11 +78,14 @@ export default function Dashboard({ memos }: DashboardProps) {
       
       // Only include TODOs from the last 21 days
       if (date >= twentyOneDaysAgo) {
-        todos.forEach(todo => {
+        todosData.forEach(todoInfo => {
           allTodos.push({
-            text: todo,
+            text: todoInfo.text,
             date,
-            memoId: memo.filename
+            memoId: memo.filename, // Keep original memoId if needed elsewhere
+            markdownPath: memo.path, // Use the correct markdown path
+            lineNumber: todoInfo.lineNumber,
+            isChecked: todoInfo.isChecked,
           });
         });
       }
@@ -173,6 +190,67 @@ export default function Dashboard({ memos }: DashboardProps) {
       .slice(-7); // Last 7 days
   };
 
+  // Function to handle toggling a todo item in the dashboard
+  const handleTodoToggle = useCallback(async (todoToToggle: TodoItem, listType: 'open' | 'completed') => {
+    const newCheckedState = !todoToToggle.isChecked;
+
+    // Determine source and target lists and state setters
+    const isOpenListSource = listType === 'open';
+    const sourceList = isOpenListSource
+      ? (optimisticOpenTodos ?? recentOpenTodos)
+      : (optimisticCompletedTodos ?? recentCompletedTodos);
+    const targetList = isOpenListSource
+      ? (optimisticCompletedTodos ?? recentCompletedTodos)
+      : (optimisticOpenTodos ?? recentOpenTodos);
+      
+    const setOptimisticSourceList = isOpenListSource
+      ? setOptimisticOpenTodos
+      : setOptimisticCompletedTodos;
+    const setOptimisticTargetList = isOpenListSource
+      ? setOptimisticCompletedTodos
+      : setOptimisticOpenTodos;
+
+    // --- Optimistic UI Update ---
+    // 1. Find the item to move
+    const itemToMove = { ...todoToToggle, isChecked: newCheckedState };
+
+    // 2. Update source list (remove the item)
+    const newSourceList = sourceList.filter(item =>
+      !(item.markdownPath === todoToToggle.markdownPath && item.lineNumber === todoToToggle.lineNumber)
+    );
+    setOptimisticSourceList(newSourceList);
+
+    // 3. Update target list (add the item and sort)
+    const newTargetList = [...targetList, itemToMove].sort((a, b) => b.date.getTime() - a.date.getTime());
+    setOptimisticTargetList(newTargetList);
+
+    // --- API Call ---
+    try {
+      const response = await fetch('/api/todos/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          markdownPath: todoToToggle.markdownPath,
+          lineNumber: todoToToggle.lineNumber,
+          isChecked: newCheckedState,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+      }
+      // Success: Optimistic update is now confirmed.
+    } catch (error) {
+      console.error('Failed to toggle todo:', error);
+      // --- Revert Optimistic Update on Failure ---
+      // Revert both optimistic states on failure
+      setOptimisticOpenTodos(null);
+      setOptimisticCompletedTodos(null);
+    }
+  }, [optimisticOpenTodos, optimisticCompletedTodos, setOptimisticOpenTodos, setOptimisticCompletedTodos]); // Use setters in deps
+
   const getContentDistribution = (stats: ReturnType<typeof getStatistics>) => {
     return [
       { name: 'TODOs', value: stats.todos.total },
@@ -207,13 +285,23 @@ export default function Dashboard({ memos }: DashboardProps) {
           </button>
         </div>
         {recentCompletedTodos.length > 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4">
-            <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
-              {recentCompletedTodos.map(todo => todo.text).join('\n')}
-            </pre>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Last completed {formatTimeAgo(recentCompletedTodos[0].date)}
-              {!isCompletedExpanded && recentCompletedTodos.length === 5 && (
+          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
+            {(optimisticCompletedTodos ?? recentCompletedTodos).map((todo, index) => (
+              <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={todo.isChecked}
+                  onChange={() => handleTodoToggle(todo, 'completed')}
+                  className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
+                />
+                <label className={`flex-1 text-sm ${todo.isChecked ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(todo, 'completed')}>
+                  {todo.text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
+                </label>
+              </div>
+            ))}
+            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+              {(optimisticCompletedTodos ?? recentCompletedTodos).length > 0 && `Last completed ${formatTimeAgo((optimisticCompletedTodos ?? recentCompletedTodos)[0].date)}`}
+              {!isCompletedExpanded && (optimisticCompletedTodos ?? recentCompletedTodos).length >= 5 && (
                 <span className="ml-2">• Click expand to see more</span>
               )}
             </p>
@@ -238,13 +326,23 @@ export default function Dashboard({ memos }: DashboardProps) {
           </button>
         </div>
         {recentOpenTodos.length > 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4">
-            <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono">
-              {recentOpenTodos.map(todo => todo.text).join('\n')}
-            </pre>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Last updated {formatTimeAgo(recentOpenTodos[0].date)}
-              {!isOpenExpanded && recentOpenTodos.length === 5 && (
+          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
+            {(optimisticOpenTodos ?? recentOpenTodos).map((todo, index) => (
+              <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={todo.isChecked}
+                  onChange={() => handleTodoToggle(todo, 'open')}
+                  className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
+                />
+                <label className={`flex-1 text-sm ${todo.isChecked ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(todo, 'open')}>
+                  {todo.text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
+                </label>
+              </div>
+            ))}
+            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+              {(optimisticOpenTodos ?? recentOpenTodos).length > 0 && `Last updated ${formatTimeAgo((optimisticOpenTodos ?? recentOpenTodos)[0].date)}`}
+              {!isOpenExpanded && (optimisticOpenTodos ?? recentOpenTodos).length >= 5 && (
                 <span className="ml-2">• Click expand to see more</span>
               )}
             </p>
@@ -406,4 +504,4 @@ export default function Dashboard({ memos }: DashboardProps) {
       </div>
     </div>
   );
-} 
+}

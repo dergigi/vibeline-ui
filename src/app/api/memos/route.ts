@@ -61,8 +61,8 @@ export async function GET(): Promise<NextResponse> {
         
         memos.push({
           id: baseFilename,
-          filename: file,
-          path: path.join(VOICE_MEMOS_DIR, file),
+          filename: file, // Keep the audio filename here
+          path: todosPath, // Assign the path to the TODOs markdown file
           transcript,
           summary,
           todos,
@@ -74,7 +74,12 @@ export async function GET(): Promise<NextResponse> {
       }
     }
 
-    const sortedMemos = memos.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const sortedMemos = memos.sort((a, b) => {
+      // Ensure both are Date objects before comparing
+      const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt;
+      const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt;
+      return dateB.getTime() - dateA.getTime();
+    });
     return NextResponse.json(sortedMemos);
   } catch (err) {
     console.error('Error reading voice memos:', err instanceof Error ? err.message : 'Unknown error');
