@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE ${PORT:-555}
 
 # Create a volume for the VoiceMemos directory
 VOLUME [ "/app/VoiceMemos" ]

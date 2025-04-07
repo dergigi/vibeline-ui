@@ -9,7 +9,8 @@ import { FilterButtons } from '@/components/FilterButtons';
 export const dynamic = 'force-dynamic';
 
 async function getData() {
-  const response = await fetch(new URL('/api/memos', typeof window !== 'undefined' ? window.location.protocol + '//' + window.location.host : 'http://localhost:3000'), { cache: 'no-store' });
+  const port = process.env.PORT || '555';
+  const response = await fetch(new URL('/api/memos', typeof window !== 'undefined' ? window.location.protocol + '//' + window.location.host : `http://localhost:${port}`), { cache: 'no-store' });
   return response.json();
 }
 

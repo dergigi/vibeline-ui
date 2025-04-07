@@ -2,6 +2,6 @@ services:
   voice-memos:
     build: .
     ports:
-      - "3000:3000"
+      - "${PORT:-555}:${PORT:-555}"
     volumes:
       - ./VoiceMemos:/app/VoiceMemos
