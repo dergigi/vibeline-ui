@@ -1,22 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vibeline UI
+
+A modern web interface for [VibeLine](https://github.com/dergigi/vibeline), a powerful voice memo processing system that uses AI to extract meaningful content from your voice recordings.
+
+## Features
+
+- 🎙️ Beautiful and intuitive interface for your voice memos
+- 🔍 Real-time search and filtering capabilities
+- 📊 Dashboard with activity statistics and insights
+- 📱 Responsive design that works on all devices
+- 🌓 Dark mode support
+- 🔄 Real-time updates as new memos are processed
 
 ## Getting Started
 
-First, run the development server:
-
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/vibeline-ui.git
+cd vibeline-ui
 ```
 
-Open [http://localhost:${PORT:-555}](http://localhost:${PORT:-555}) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Start the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Development
+
+This project is built with:
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Recharts
+
+## Contributing
+
+If you make a contribution (always welcome!) please publicly tag @dergigi or one of the maintainers on nostr so that we know something happened here. (GitHub notifications are rekt.)
+
+## Contributors
+
+Contributors
+
+## License
+
+MIT License - see the [LICENSE](LICENSE) file for details.
 
