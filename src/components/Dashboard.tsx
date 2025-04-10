@@ -46,11 +46,16 @@ interface TodoSectionProps {
 }
 
 function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, optimisticTodos, showLastUpdated = false }: TodoSectionProps) {
-  if (todos.length === 0) {
+  const totalCount = (optimisticTodos ?? todos).length;
+
+  if (totalCount === 0) {
     return (
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h4>
+            <span className="text-xs text-gray-400 dark:text-gray-500">(0)</span>
+          </div>
           <button 
             onClick={onToggleExpand}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -70,7 +75,12 @@ function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, o
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h4>
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h4>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            ({totalCount})
+          </span>
+        </div>
         <button 
           onClick={onToggleExpand}
           className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -83,7 +93,7 @@ function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, o
         </button>
       </div>
       <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
-        {(optimisticTodos ?? todos).map((todo) => (
+        {(optimisticTodos ?? todos).slice(0, isExpanded ? undefined : 5).map((todo) => (
           <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -96,7 +106,7 @@ function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, o
             </label>
           </div>
         ))}
-        {showLastUpdated && todos.length > 0 && (
+        {showLastUpdated && totalCount > 0 && (
           <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
             Last updated {formatTimeAgo(todos[0].date)}
           </p>
@@ -204,8 +214,8 @@ export default function Dashboard({ memos }: DashboardProps) {
       });
     });
     
-    const sortedTodos = allTodos.sort((a, b) => b.date.getTime() - a.date.getTime());
-    return expanded ? sortedTodos : sortedTodos.slice(0, 5);
+    // Always return all todos sorted by date, don't slice here
+    return allTodos.sort((a, b) => b.date.getTime() - a.date.getTime());
   };
 
   const getStatistics = (memos: VoiceMemo[]): { 
