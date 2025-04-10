@@ -271,47 +271,6 @@ export default function Dashboard({ memos }: DashboardProps) {
       <div className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Recently DONE
-          </h3>
-          <button 
-            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            {isCompletedExpanded ? (
-              <ChevronUpIcon className="h-5 w-5" />
-            ) : (
-              <ChevronDownIcon className="h-5 w-5" />
-            )}
-          </button>
-        </div>
-        {recentCompletedTodos.length > 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
-            {(optimisticCompletedTodos ?? recentCompletedTodos).map((todo, index) => (
-              <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={todo.isChecked}
-                  onChange={() => handleTodoToggle(todo, 'completed')}
-                  className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
-                />
-                <label className={`flex-1 text-sm ${todo.isChecked ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(todo, 'completed')}>
-                  {todo.text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
-                </label>
-              </div>
-            ))}
-            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
-              {(optimisticCompletedTodos ?? recentCompletedTodos).length > 0 && `Last completed ${formatTimeAgo((optimisticCompletedTodos ?? recentCompletedTodos)[0].date)}`}
-              {!isCompletedExpanded && (optimisticCompletedTodos ?? recentCompletedTodos).length >= 5 && (
-                <span className="ml-2">• Click expand to see more</span>
-              )}
-            </p>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 dark:text-gray-400">No completed TODOs found</p>
-        )}
-
-        <div className="flex items-center justify-between mb-3 mt-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
             Open TODOs
           </h3>
           <button 
@@ -349,6 +308,47 @@ export default function Dashboard({ memos }: DashboardProps) {
           </div>
         ) : (
           <p className="text-sm text-gray-500 dark:text-gray-400">No open TODOs found</p>
+        )}
+
+        <div className="flex items-center justify-between mb-3 mt-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            Recently DONE
+          </h3>
+          <button 
+            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            {isCompletedExpanded ? (
+              <ChevronUpIcon className="h-5 w-5" />
+            ) : (
+              <ChevronDownIcon className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+        {recentCompletedTodos.length > 0 ? (
+          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
+            {(optimisticCompletedTodos ?? recentCompletedTodos).map((todo, index) => (
+              <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={todo.isChecked}
+                  onChange={() => handleTodoToggle(todo, 'completed')}
+                  className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
+                />
+                <label className={`flex-1 text-sm ${todo.isChecked ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(todo, 'completed')}>
+                  {todo.text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
+                </label>
+              </div>
+            ))}
+            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+              {(optimisticCompletedTodos ?? recentCompletedTodos).length > 0 && `Last completed ${formatTimeAgo((optimisticCompletedTodos ?? recentCompletedTodos)[0].date)}`}
+              {!isCompletedExpanded && (optimisticCompletedTodos ?? recentCompletedTodos).length >= 5 && (
+                <span className="ml-2">• Click expand to see more</span>
+              )}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No completed TODOs found</p>
         )}
       </div>
 
