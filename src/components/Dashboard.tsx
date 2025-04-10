@@ -42,9 +42,10 @@ interface TodoSectionProps {
   onToggleExpand: () => void;
   onToggleTodo: (todo: TodoItem, listType: 'open' | 'completed') => void;
   optimisticTodos: TodoItem[] | null;
+  showLastUpdated?: boolean;
 }
 
-function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, optimisticTodos }: TodoSectionProps) {
+function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, optimisticTodos, showLastUpdated = false }: TodoSectionProps) {
   if (todos.length === 0) {
     return (
       <div className="mb-6">
@@ -95,12 +96,11 @@ function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, o
             </label>
           </div>
         ))}
-        <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
-          {todos.length > 0 && `Last updated ${formatTimeAgo(todos[0].date)}`}
-          {!isExpanded && todos.length >= 5 && (
-            <span className="ml-2">• Click expand to see more</span>
-          )}
-        </p>
+        {showLastUpdated && todos.length > 0 && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+            Last updated {formatTimeAgo(todos[0].date)}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -444,6 +444,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           onToggleExpand={() => setIsOlderExpanded(!isOlderExpanded)}
           onToggleTodo={handleTodoToggle}
           optimisticTodos={optimisticOlderTodos}
+          showLastUpdated={true}
         />
 
         <div className="flex items-center justify-between mb-3 mt-6">
@@ -476,12 +477,11 @@ export default function Dashboard({ memos }: DashboardProps) {
                 </label>
               </div>
             ))}
-            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
-              {(optimisticCompletedTodos ?? recentCompletedTodos).length > 0 && `Last completed ${formatTimeAgo((optimisticCompletedTodos ?? recentCompletedTodos)[0].date)}`}
-              {!isCompletedExpanded && (optimisticCompletedTodos ?? recentCompletedTodos).length >= 5 && (
-                <span className="ml-2">• Click expand to see more</span>
-              )}
-            </p>
+            {(optimisticCompletedTodos ?? recentCompletedTodos).length > 0 && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+                Last completed {formatTimeAgo((optimisticCompletedTodos ?? recentCompletedTodos)[0].date)}
+              </p>
+            )}
           </div>
         ) : (
           <p className="text-sm text-gray-500 dark:text-gray-400">No completed TODOs found</p>
