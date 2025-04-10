@@ -3,7 +3,7 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { formatTimeAgo } from '@/utils/date';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 interface DashboardProps {
@@ -140,7 +140,9 @@ export default function Dashboard({ memos }: DashboardProps) {
   const [isYesterdayExpanded, setIsYesterdayExpanded] = useState(false);
   const [isOlderExpanded, setIsOlderExpanded] = useState(false);
   // State for optimistic UI updates
-  const [optimisticOpenTodos, setOptimisticOpenTodos] = useState<TodoItem[] | null>(null);
+  const [optimisticTodayTodos, setOptimisticTodayTodos] = useState<TodoItem[] | null>(null);
+  const [optimisticYesterdayTodos, setOptimisticYesterdayTodos] = useState<TodoItem[] | null>(null);
+  const [optimisticOlderTodos, setOptimisticOlderTodos] = useState<TodoItem[] | null>(null);
   const [optimisticCompletedTodos, setOptimisticCompletedTodos] = useState<TodoItem[] | null>(null);
   
   // Date variables for filtering
@@ -306,70 +308,94 @@ export default function Dashboard({ memos }: DashboardProps) {
   const recentOpenTodosOlder = getRecentTodos(memos, false, isOlderExpanded, 'older');
   const recentCompletedTodos = getRecentTodos(memos, true, isCompletedExpanded);
 
-  // Function to handle toggling a todo item in the dashboard
-  const handleTodoToggle = useCallback(async (todoToToggle: TodoItem, listType: 'open' | 'completed') => {
-    const newCheckedState = !todoToToggle.isChecked;
-
-    // Determine source and target lists and state setters
-    const isOpenListSource = listType === 'open';
-    const sourceList = isOpenListSource
-      ? (optimisticOpenTodos ?? (todoToToggle.date >= startOfToday ? recentOpenTodosToday : 
-         todoToToggle.date >= startOfYesterday ? recentOpenTodosYesterday : 
-         recentOpenTodosOlder))
-      : (optimisticCompletedTodos ?? recentCompletedTodos);
-    const targetList = isOpenListSource
-      ? (optimisticCompletedTodos ?? recentCompletedTodos)
-      : (optimisticOpenTodos ?? (todoToToggle.date >= startOfToday ? recentOpenTodosToday : 
-         todoToToggle.date >= startOfYesterday ? recentOpenTodosYesterday : 
-         recentOpenTodosOlder));
-      
-    const setOptimisticSourceList = isOpenListSource
-      ? setOptimisticOpenTodos
-      : setOptimisticCompletedTodos;
-    const setOptimisticTargetList = isOpenListSource
-      ? setOptimisticCompletedTodos
-      : setOptimisticOpenTodos;
-
-    // --- Optimistic UI Update ---
-    // 1. Find the item to move
-    const itemToMove = { ...todoToToggle, isChecked: newCheckedState };
-
-    // 2. Update source list (remove the item)
-    const newSourceList = sourceList.filter(item =>
-      !(item.markdownPath === todoToToggle.markdownPath && item.lineNumber === todoToToggle.lineNumber)
-    );
-    setOptimisticSourceList(newSourceList);
-
-    // 3. Update target list (add the item and sort)
-    const newTargetList = [...targetList, itemToMove].sort((a, b) => b.date.getTime() - a.date.getTime());
-    setOptimisticTargetList(newTargetList);
-
-    // --- API Call ---
+  const handleTodoToggle = async (todo: TodoItem, listType: 'open' | 'completed') => {
     try {
+      // Optimistically update the UI
+      if (listType === 'open') {
+        // Determine which section the todo belongs to
+        const todoDate = todo.date;
+        if (todoDate >= startOfToday) {
+          // Remove from today's todos
+          setOptimisticTodayTodos(prev => 
+            (prev ?? recentOpenTodosToday).filter(t => 
+              !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+            )
+          );
+        } else if (todoDate >= startOfYesterday && todoDate <= endOfYesterday) {
+          // Remove from yesterday's todos
+          setOptimisticYesterdayTodos(prev => 
+            (prev ?? recentOpenTodosYesterday).filter(t => 
+              !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+            )
+          );
+        } else {
+          // Remove from older todos
+          setOptimisticOlderTodos(prev => 
+            (prev ?? recentOpenTodosOlder).filter(t => 
+              !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+            )
+          );
+        }
+        
+        // Add to completed todos
+        const newCompletedTodo = { ...todo, isChecked: true };
+        setOptimisticCompletedTodos(prev => 
+          [newCompletedTodo, ...(prev ?? recentCompletedTodos)].slice(0, 5)
+        );
+      } else {
+        // Remove from completed todos
+        const updatedCompletedTodos = (optimisticCompletedTodos ?? recentCompletedTodos).filter(
+          t => !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+        );
+        setOptimisticCompletedTodos(updatedCompletedTodos);
+        
+        // Add back to appropriate section based on date
+        const newOpenTodo = { ...todo, isChecked: false };
+        const todoDate = todo.date;
+        
+        if (todoDate >= startOfToday) {
+          setOptimisticTodayTodos(prev => {
+            const currentList = prev ?? recentOpenTodosToday;
+            return [newOpenTodo, ...currentList].slice(0, 5);
+          });
+        } else if (todoDate >= startOfYesterday && todoDate <= endOfYesterday) {
+          setOptimisticYesterdayTodos(prev => {
+            const currentList = prev ?? recentOpenTodosYesterday;
+            return [newOpenTodo, ...currentList].slice(0, 5);
+          });
+        } else {
+          setOptimisticOlderTodos(prev => {
+            const currentList = prev ?? recentOpenTodosOlder;
+            return [newOpenTodo, ...currentList].slice(0, 5);
+          });
+        }
+      }
+
+      // Make the API call
       const response = await fetch('/api/todos/toggle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          markdownPath: todoToToggle.markdownPath,
-          lineNumber: todoToToggle.lineNumber,
-          isChecked: newCheckedState,
+          markdownPath: todo.markdownPath,
+          lineNumber: todo.lineNumber,
+          isChecked: !todo.isChecked
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        throw new Error('Failed to toggle todo');
       }
-      // Success: Optimistic update is now confirmed.
     } catch (error) {
-      console.error('Failed to toggle todo:', error);
-      // --- Revert Optimistic Update on Failure ---
-      // Revert both optimistic states on failure
-      setOptimisticOpenTodos(null);
+      console.error('Error toggling todo:', error);
+      // Revert optimistic updates on error
+      setOptimisticTodayTodos(null);
+      setOptimisticYesterdayTodos(null);
+      setOptimisticOlderTodos(null);
       setOptimisticCompletedTodos(null);
     }
-  }, [optimisticOpenTodos, optimisticCompletedTodos, setOptimisticOpenTodos, setOptimisticCompletedTodos, recentOpenTodosToday, recentOpenTodosYesterday, recentOpenTodosOlder, recentCompletedTodos]); // Use setters in deps
+  };
 
   const getContentDistribution = (stats: ReturnType<typeof getStatistics>) => {
     return [
@@ -399,7 +425,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           isExpanded={isTodayExpanded}
           onToggleExpand={() => setIsTodayExpanded(!isTodayExpanded)}
           onToggleTodo={handleTodoToggle}
-          optimisticTodos={optimisticOpenTodos}
+          optimisticTodos={optimisticTodayTodos}
         />
 
         <TodoSection 
@@ -408,7 +434,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           isExpanded={isYesterdayExpanded}
           onToggleExpand={() => setIsYesterdayExpanded(!isYesterdayExpanded)}
           onToggleTodo={handleTodoToggle}
-          optimisticTodos={optimisticOpenTodos}
+          optimisticTodos={optimisticYesterdayTodos}
         />
 
         <TodoSection 
@@ -417,7 +443,7 @@ export default function Dashboard({ memos }: DashboardProps) {
           isExpanded={isOlderExpanded}
           onToggleExpand={() => setIsOlderExpanded(!isOlderExpanded)}
           onToggleTodo={handleTodoToggle}
-          optimisticTodos={optimisticOpenTodos}
+          optimisticTodos={optimisticOlderTodos}
         />
 
         <div className="flex items-center justify-between mb-3 mt-6">
