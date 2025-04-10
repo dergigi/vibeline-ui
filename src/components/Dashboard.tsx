@@ -429,52 +429,67 @@ export default function Dashboard({ memos }: DashboardProps) {
           </h3>
         </div>
 
-        <TodoSection 
-          title="Today"
-          todos={recentOpenTodosToday}
-          isExpanded={isTodayExpanded}
-          onToggleExpand={() => setIsTodayExpanded(!isTodayExpanded)}
-          onToggleTodo={handleTodoToggle}
-          optimisticTodos={optimisticTodayTodos}
-        />
+        {recentOpenTodosToday.length > 0 && (
+          <TodoSection 
+            title="Today"
+            todos={recentOpenTodosToday}
+            isExpanded={isTodayExpanded}
+            onToggleExpand={() => setIsTodayExpanded(!isTodayExpanded)}
+            onToggleTodo={handleTodoToggle}
+            optimisticTodos={optimisticTodayTodos}
+          />
+        )}
 
-        <TodoSection 
-          title="Yesterday"
-          todos={recentOpenTodosYesterday}
-          isExpanded={isYesterdayExpanded}
-          onToggleExpand={() => setIsYesterdayExpanded(!isYesterdayExpanded)}
-          onToggleTodo={handleTodoToggle}
-          optimisticTodos={optimisticYesterdayTodos}
-        />
+        {recentOpenTodosYesterday.length > 0 && (
+          <TodoSection 
+            title="Yesterday"
+            todos={recentOpenTodosYesterday}
+            isExpanded={isYesterdayExpanded}
+            onToggleExpand={() => setIsYesterdayExpanded(!isYesterdayExpanded)}
+            onToggleTodo={handleTodoToggle}
+            optimisticTodos={optimisticYesterdayTodos}
+          />
+        )}
 
-        <TodoSection 
-          title="Older TODOs"
-          todos={recentOpenTodosOlder}
-          isExpanded={isOlderExpanded}
-          onToggleExpand={() => setIsOlderExpanded(!isOlderExpanded)}
-          onToggleTodo={handleTodoToggle}
-          optimisticTodos={optimisticOlderTodos}
-          showLastUpdated={true}
-        />
+        {recentOpenTodosOlder.length > 0 && (
+          <TodoSection 
+            title="Older TODOs"
+            todos={recentOpenTodosOlder}
+            isExpanded={isOlderExpanded}
+            onToggleExpand={() => setIsOlderExpanded(!isOlderExpanded)}
+            onToggleTodo={handleTodoToggle}
+            optimisticTodos={optimisticOlderTodos}
+            showLastUpdated={true}
+          />
+        )}
+
+        {recentOpenTodosToday.length === 0 && 
+         recentOpenTodosYesterday.length === 0 && 
+         recentOpenTodosOlder.length === 0 && (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No open TODOs found</p>
+        )}
 
         <div className="flex items-center justify-between mb-3 mt-6">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
             Recently DONE
           </h3>
-          <button 
-            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            {isCompletedExpanded ? (
-              <ChevronUpIcon className="h-5 w-5" />
-            ) : (
-              <ChevronDownIcon className="h-5 w-5" />
-            )}
-          </button>
+          {recentCompletedTodos.length > 0 && (
+            <button 
+              onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {isCompletedExpanded ? (
+                <ChevronUpIcon className="h-5 w-5" />
+              ) : (
+                <ChevronDownIcon className="h-5 w-5" />
+              )}
+            </button>
+          )}
         </div>
+
         {recentCompletedTodos.length > 0 ? (
           <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
-            {(optimisticCompletedTodos ?? recentCompletedTodos).map((todo) => (
+            {(optimisticCompletedTodos ?? recentCompletedTodos).slice(0, isCompletedExpanded ? undefined : 5).map((todo) => (
               <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
                 <input
                   type="checkbox"
