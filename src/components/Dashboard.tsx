@@ -3,7 +3,7 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { formatTimeAgo } from '@/utils/date';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 interface DashboardProps {
@@ -35,32 +35,151 @@ interface DailyActivity {
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EC4899'];
 
+interface TodoSectionProps {
+  title: string;
+  todos: TodoItem[];
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onToggleTodo: (todo: TodoItem, listType: 'open' | 'completed') => void;
+  optimisticTodos: TodoItem[] | null;
+  showLastUpdated?: boolean;
+}
+
+function TodoSection({ title, todos, isExpanded, onToggleExpand, onToggleTodo, optimisticTodos, showLastUpdated = false }: TodoSectionProps) {
+  const totalCount = (optimisticTodos ?? todos).length;
+
+  if (totalCount === 0) {
+    return (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h4>
+            <span className="text-xs text-gray-400 dark:text-gray-500">(0)</span>
+          </div>
+          <button 
+            onClick={onToggleExpand}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            {isExpanded ? (
+              <ChevronUpIcon className="h-5 w-5" />
+            ) : (
+              <ChevronDownIcon className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">No TODOs {title.toLowerCase()}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h4>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            ({totalCount})
+          </span>
+        </div>
+        <button 
+          onClick={onToggleExpand}
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          {isExpanded ? (
+            <ChevronUpIcon className="h-5 w-5" />
+          ) : (
+            <ChevronDownIcon className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+      <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
+        {(optimisticTodos ?? todos).slice(0, isExpanded ? undefined : 5).map((todo) => (
+          <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={todo.isChecked}
+              onChange={() => onToggleTodo(todo, 'open')}
+              className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
+            />
+            <label className={`flex-1 text-sm ${todo.isChecked ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => onToggleTodo(todo, 'open')}>
+              {todo.text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
+            </label>
+          </div>
+        ))}
+        {showLastUpdated && totalCount > 0 && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+            Last updated {formatTimeAgo(todos[0].date)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface StatsCardProps {
+  title: string;
+  stats: Statistics;
+  color: string;
+}
+
+function StatsCard({ title, stats, color }: StatsCardProps) {
+  return (
+    <div>
+      <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{title}</h4>
+      <div className="grid grid-cols-3 gap-2">
+        <div className={`bg-${color}-50 dark:bg-${color}-900/20 rounded-lg p-2`}>
+          <p className={`text-xs font-medium text-${color}-600 dark:text-${color}-400`}>This Week</p>
+          <p className={`text-2xl font-bold text-${color}-700 dark:text-${color}-300`}>{stats.thisWeek}</p>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
+          <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.thisMonth}</p>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
+          <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.total}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard({ memos }: DashboardProps) {
   const [isCompletedExpanded, setIsCompletedExpanded] = useState(false);
-  const [isOpenExpanded, setIsOpenExpanded] = useState(false);
+  const [isTodayExpanded, setIsTodayExpanded] = useState(false);
+  const [isYesterdayExpanded, setIsYesterdayExpanded] = useState(false);
+  const [isOlderExpanded, setIsOlderExpanded] = useState(false);
   // State for optimistic UI updates
-  const [optimisticOpenTodos, setOptimisticOpenTodos] = useState<TodoItem[] | null>(null);
+  const [optimisticTodayTodos, setOptimisticTodayTodos] = useState<TodoItem[] | null>(null);
+  const [optimisticYesterdayTodos, setOptimisticYesterdayTodos] = useState<TodoItem[] | null>(null);
+  const [optimisticOlderTodos, setOptimisticOlderTodos] = useState<TodoItem[] | null>(null);
   const [optimisticCompletedTodos, setOptimisticCompletedTodos] = useState<TodoItem[] | null>(null);
   
-  const getRecentTodos = (memos: VoiceMemo[], completed: boolean, expanded: boolean): TodoItem[] => {
+  // Date variables for filtering
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+  const endOfYesterday = new Date(startOfToday);
+  endOfYesterday.setMilliseconds(-1);
+  
+  const getRecentTodos = (memos: VoiceMemo[], completed: boolean, expanded: boolean, dateFilter?: 'today' | 'yesterday' | 'older'): TodoItem[] => {
     const allTodos: TodoItem[] = [];
-    const now = new Date();
-    const twentyOneDaysAgo = new Date(now);
-    twentyOneDaysAgo.setDate(now.getDate() - 21);
     
     memos.forEach(memo => {
       if (!memo.todos) return;
       
       // Process todos line by line to preserve original index and extract text
       const todosData: { text: string; lineNumber: number; isChecked: boolean }[] = [];
-      memo.todos.split('\n').forEach((line, index) => {
+      memo.todos.split('\n').forEach((line, lineNumber) => {
         const match = line.match(/^(\s*-\s*\[\s*)([ x])(\s*\]\s*)(.*)/);
         if (match) {
           const isChecked = match[2] === 'x';
           if (isChecked === completed) { // Filter based on completed status
             todosData.push({
               text: match[4], // Extract text after checkbox
-              lineNumber: index,
+              lineNumber,
               isChecked: isChecked,
             });
           }
@@ -76,23 +195,27 @@ export default function Dashboard({ memos }: DashboardProps) {
                           memo.filename.slice(11, 13) + ':' + 
                           memo.filename.slice(13, 15));
       
-      // Only include TODOs from the last 21 days
-      if (date >= twentyOneDaysAgo) {
-        todosData.forEach(todoInfo => {
-          allTodos.push({
-            text: todoInfo.text,
-            date,
-            memoId: memo.filename, // Keep original memoId if needed elsewhere
-            markdownPath: memo.path, // Use the correct markdown path
-            lineNumber: todoInfo.lineNumber,
-            isChecked: todoInfo.isChecked,
-          });
-        });
+      // Apply date filtering if specified
+      if (dateFilter) {
+        if (dateFilter === 'today' && date < startOfToday) return;
+        if (dateFilter === 'yesterday' && (date < startOfYesterday || date > endOfYesterday)) return;
+        if (dateFilter === 'older' && date >= startOfYesterday) return;
       }
+      
+      todosData.forEach(todoInfo => {
+        allTodos.push({
+          text: todoInfo.text,
+          date,
+          memoId: memo.filename,
+          markdownPath: memo.path,
+          lineNumber: todoInfo.lineNumber,
+          isChecked: todoInfo.isChecked,
+        });
+      });
     });
     
-    const sortedTodos = allTodos.sort((a, b) => b.date.getTime() - a.date.getTime());
-    return expanded ? sortedTodos : sortedTodos.slice(0, 5);
+    // Always return all todos sorted by date, don't slice here
+    return allTodos.sort((a, b) => b.date.getTime() - a.date.getTime());
   };
 
   const getStatistics = (memos: VoiceMemo[]): { 
@@ -190,66 +313,99 @@ export default function Dashboard({ memos }: DashboardProps) {
       .slice(-7); // Last 7 days
   };
 
-  // Function to handle toggling a todo item in the dashboard
-  const handleTodoToggle = useCallback(async (todoToToggle: TodoItem, listType: 'open' | 'completed') => {
-    const newCheckedState = !todoToToggle.isChecked;
+  const recentOpenTodosToday = getRecentTodos(memos, false, isTodayExpanded, 'today');
+  const recentOpenTodosYesterday = getRecentTodos(memos, false, isYesterdayExpanded, 'yesterday');
+  const recentOpenTodosOlder = getRecentTodos(memos, false, isOlderExpanded, 'older');
+  const recentCompletedTodos = getRecentTodos(memos, true, isCompletedExpanded);
 
-    // Determine source and target lists and state setters
-    const isOpenListSource = listType === 'open';
-    const sourceList = isOpenListSource
-      ? (optimisticOpenTodos ?? recentOpenTodos)
-      : (optimisticCompletedTodos ?? recentCompletedTodos);
-    const targetList = isOpenListSource
-      ? (optimisticCompletedTodos ?? recentCompletedTodos)
-      : (optimisticOpenTodos ?? recentOpenTodos);
-      
-    const setOptimisticSourceList = isOpenListSource
-      ? setOptimisticOpenTodos
-      : setOptimisticCompletedTodos;
-    const setOptimisticTargetList = isOpenListSource
-      ? setOptimisticCompletedTodos
-      : setOptimisticOpenTodos;
-
-    // --- Optimistic UI Update ---
-    // 1. Find the item to move
-    const itemToMove = { ...todoToToggle, isChecked: newCheckedState };
-
-    // 2. Update source list (remove the item)
-    const newSourceList = sourceList.filter(item =>
-      !(item.markdownPath === todoToToggle.markdownPath && item.lineNumber === todoToToggle.lineNumber)
-    );
-    setOptimisticSourceList(newSourceList);
-
-    // 3. Update target list (add the item and sort)
-    const newTargetList = [...targetList, itemToMove].sort((a, b) => b.date.getTime() - a.date.getTime());
-    setOptimisticTargetList(newTargetList);
-
-    // --- API Call ---
+  const handleTodoToggle = async (todo: TodoItem, listType: 'open' | 'completed') => {
     try {
+      // Optimistically update the UI
+      if (listType === 'open') {
+        // Determine which section the todo belongs to
+        const todoDate = todo.date;
+        if (todoDate >= startOfToday) {
+          // Remove from today's todos
+          setOptimisticTodayTodos(prev => 
+            (prev ?? recentOpenTodosToday).filter(t => 
+              !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+            )
+          );
+        } else if (todoDate >= startOfYesterday && todoDate <= endOfYesterday) {
+          // Remove from yesterday's todos
+          setOptimisticYesterdayTodos(prev => 
+            (prev ?? recentOpenTodosYesterday).filter(t => 
+              !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+            )
+          );
+        } else {
+          // Remove from older todos
+          setOptimisticOlderTodos(prev => 
+            (prev ?? recentOpenTodosOlder).filter(t => 
+              !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+            )
+          );
+        }
+        
+        // Add to completed todos
+        const newCompletedTodo = { ...todo, isChecked: true };
+        setOptimisticCompletedTodos(prev => 
+          [newCompletedTodo, ...(prev ?? recentCompletedTodos)].slice(0, 5)
+        );
+      } else {
+        // Remove from completed todos
+        const updatedCompletedTodos = (optimisticCompletedTodos ?? recentCompletedTodos).filter(
+          t => !(t.markdownPath === todo.markdownPath && t.lineNumber === todo.lineNumber)
+        );
+        setOptimisticCompletedTodos(updatedCompletedTodos);
+        
+        // Add back to appropriate section based on date
+        const newOpenTodo = { ...todo, isChecked: false };
+        const todoDate = todo.date;
+        
+        if (todoDate >= startOfToday) {
+          setOptimisticTodayTodos(prev => {
+            const currentList = prev ?? recentOpenTodosToday;
+            return [newOpenTodo, ...currentList].slice(0, 5);
+          });
+        } else if (todoDate >= startOfYesterday && todoDate <= endOfYesterday) {
+          setOptimisticYesterdayTodos(prev => {
+            const currentList = prev ?? recentOpenTodosYesterday;
+            return [newOpenTodo, ...currentList].slice(0, 5);
+          });
+        } else {
+          setOptimisticOlderTodos(prev => {
+            const currentList = prev ?? recentOpenTodosOlder;
+            return [newOpenTodo, ...currentList].slice(0, 5);
+          });
+        }
+      }
+
+      // Make the API call
       const response = await fetch('/api/todos/toggle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          markdownPath: todoToToggle.markdownPath,
-          lineNumber: todoToToggle.lineNumber,
-          isChecked: newCheckedState,
+          markdownPath: todo.markdownPath,
+          lineNumber: todo.lineNumber,
+          isChecked: !todo.isChecked
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        throw new Error('Failed to toggle todo');
       }
-      // Success: Optimistic update is now confirmed.
     } catch (error) {
-      console.error('Failed to toggle todo:', error);
-      // --- Revert Optimistic Update on Failure ---
-      // Revert both optimistic states on failure
-      setOptimisticOpenTodos(null);
+      console.error('Error toggling todo:', error);
+      // Revert optimistic updates on error
+      setOptimisticTodayTodos(null);
+      setOptimisticYesterdayTodos(null);
+      setOptimisticOlderTodos(null);
       setOptimisticCompletedTodos(null);
     }
-  }, [optimisticOpenTodos, optimisticCompletedTodos, setOptimisticOpenTodos, setOptimisticCompletedTodos]); // Use setters in deps
+  };
 
   const getContentDistribution = (stats: ReturnType<typeof getStatistics>) => {
     return [
@@ -259,8 +415,6 @@ export default function Dashboard({ memos }: DashboardProps) {
     ];
   };
 
-  const recentOpenTodos = getRecentTodos(memos, false, isOpenExpanded);
-  const recentCompletedTodos = getRecentTodos(memos, true, isCompletedExpanded);
   const stats = getStatistics(memos);
   const dailyActivity = getDailyActivity(memos);
   const contentDistribution = getContentDistribution(stats);
@@ -271,22 +425,71 @@ export default function Dashboard({ memos }: DashboardProps) {
       <div className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            Open TODOs
+          </h3>
+        </div>
+
+        {recentOpenTodosToday.length > 0 && (
+          <TodoSection 
+            title="Today"
+            todos={recentOpenTodosToday}
+            isExpanded={isTodayExpanded}
+            onToggleExpand={() => setIsTodayExpanded(!isTodayExpanded)}
+            onToggleTodo={handleTodoToggle}
+            optimisticTodos={optimisticTodayTodos}
+          />
+        )}
+
+        {recentOpenTodosYesterday.length > 0 && (
+          <TodoSection 
+            title="Yesterday"
+            todos={recentOpenTodosYesterday}
+            isExpanded={isYesterdayExpanded}
+            onToggleExpand={() => setIsYesterdayExpanded(!isYesterdayExpanded)}
+            onToggleTodo={handleTodoToggle}
+            optimisticTodos={optimisticYesterdayTodos}
+          />
+        )}
+
+        {recentOpenTodosOlder.length > 0 && (
+          <TodoSection 
+            title="Older TODOs"
+            todos={recentOpenTodosOlder}
+            isExpanded={isOlderExpanded}
+            onToggleExpand={() => setIsOlderExpanded(!isOlderExpanded)}
+            onToggleTodo={handleTodoToggle}
+            optimisticTodos={optimisticOlderTodos}
+            showLastUpdated={true}
+          />
+        )}
+
+        {recentOpenTodosToday.length === 0 && 
+         recentOpenTodosYesterday.length === 0 && 
+         recentOpenTodosOlder.length === 0 && (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No open TODOs found</p>
+        )}
+
+        <div className="flex items-center justify-between mb-3 mt-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
             Recently DONE
           </h3>
-          <button 
-            onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            {isCompletedExpanded ? (
-              <ChevronUpIcon className="h-5 w-5" />
-            ) : (
-              <ChevronDownIcon className="h-5 w-5" />
-            )}
-          </button>
+          {recentCompletedTodos.length > 0 && (
+            <button 
+              onClick={() => setIsCompletedExpanded(!isCompletedExpanded)}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {isCompletedExpanded ? (
+                <ChevronUpIcon className="h-5 w-5" />
+              ) : (
+                <ChevronDownIcon className="h-5 w-5" />
+              )}
+            </button>
+          )}
         </div>
+
         {recentCompletedTodos.length > 0 ? (
           <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
-            {(optimisticCompletedTodos ?? recentCompletedTodos).map((todo, index) => (
+            {(optimisticCompletedTodos ?? recentCompletedTodos).slice(0, isCompletedExpanded ? undefined : 5).map((todo) => (
               <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -299,56 +502,14 @@ export default function Dashboard({ memos }: DashboardProps) {
                 </label>
               </div>
             ))}
-            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
-              {(optimisticCompletedTodos ?? recentCompletedTodos).length > 0 && `Last completed ${formatTimeAgo((optimisticCompletedTodos ?? recentCompletedTodos)[0].date)}`}
-              {!isCompletedExpanded && (optimisticCompletedTodos ?? recentCompletedTodos).length >= 5 && (
-                <span className="ml-2">• Click expand to see more</span>
-              )}
-            </p>
+            {(optimisticCompletedTodos ?? recentCompletedTodos).length > 0 && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+                Last completed {formatTimeAgo((optimisticCompletedTodos ?? recentCompletedTodos)[0].date)}
+              </p>
+            )}
           </div>
         ) : (
           <p className="text-sm text-gray-500 dark:text-gray-400">No completed TODOs found</p>
-        )}
-
-        <div className="flex items-center justify-between mb-3 mt-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Open TODOs
-          </h3>
-          <button 
-            onClick={() => setIsOpenExpanded(!isOpenExpanded)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            {isOpenExpanded ? (
-              <ChevronUpIcon className="h-5 w-5" />
-            ) : (
-              <ChevronDownIcon className="h-5 w-5" />
-            )}
-          </button>
-        </div>
-        {recentOpenTodos.length > 0 ? (
-          <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 space-y-2">
-            {(optimisticOpenTodos ?? recentOpenTodos).map((todo, index) => (
-              <div key={`${todo.markdownPath}-${todo.lineNumber}`} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={todo.isChecked}
-                  onChange={() => handleTodoToggle(todo, 'open')}
-                  className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
-                />
-                <label className={`flex-1 text-sm ${todo.isChecked ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(todo, 'open')}>
-                  {todo.text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
-                </label>
-              </div>
-            ))}
-            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
-              {(optimisticOpenTodos ?? recentOpenTodos).length > 0 && `Last updated ${formatTimeAgo((optimisticOpenTodos ?? recentOpenTodos)[0].date)}`}
-              {!isOpenExpanded && (optimisticOpenTodos ?? recentOpenTodos).length >= 5 && (
-                <span className="ml-2">• Click expand to see more</span>
-              )}
-            </p>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 dark:text-gray-400">No open TODOs found</p>
         )}
       </div>
 
@@ -396,24 +557,8 @@ export default function Dashboard({ memos }: DashboardProps) {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Voice Memos</h4>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">This Week</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.memos.thisWeek}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.memos.thisMonth}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.memos.total}</p>
-              </div>
-            </div>
-          </div>
-
+          <StatsCard title="Voice Memos" stats={stats.memos} color="blue" />
+          
           {/* Content Distribution Chart */}
           <div>
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Content Distribution</h4>
@@ -447,59 +592,9 @@ export default function Dashboard({ memos }: DashboardProps) {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TODOs</h4>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">This Week</p>
-                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.todos.thisWeek}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.todos.thisMonth}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.todos.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Blog Drafts</h4>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">This Week</p>
-                <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.drafts.thisWeek}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.drafts.thisMonth}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.drafts.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">App Ideas</h4>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-pink-600 dark:text-pink-400">This Week</p>
-                <p className="text-2xl font-bold text-pink-700 dark:text-pink-300">{stats.prompts.thisWeek}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
-                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.prompts.thisMonth}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
-                <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.prompts.total}</p>
-              </div>
-            </div>
-          </div>
+          <StatsCard title="TODOs" stats={stats.todos} color="emerald" />
+          <StatsCard title="Blog Drafts" stats={stats.drafts} color="amber" />
+          <StatsCard title="App Ideas" stats={stats.prompts} color="pink" />
         </div>
       </div>
     </div>
