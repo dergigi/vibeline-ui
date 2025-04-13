@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle, Circle, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Todo {
   id: string;
@@ -119,21 +119,12 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
     }
   };
 
-  const deleteTodo = (todoId: string) => {
-    setSections(prevSections => 
-      prevSections.map(section => ({
-        ...section,
-        todos: section.todos.filter(todo => todo.id !== todoId)
-      }))
-    );
-  };
-
   const renderTodoItem = (todo: Todo) => (
     <div
       key={todo.id}
-      className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
+      className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
     >
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-3 flex-1">
         <button
           onClick={() => toggleTodo(todo.id, todo.completed)}
           className="text-blue-500 hover:text-blue-600"
@@ -150,12 +141,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
           {todo.text}
         </span>
       </div>
-      <button
-        onClick={() => deleteTodo(todo.id)}
-        className="text-red-500 hover:text-red-600"
-      >
-        <Trash2 size={20} />
-      </button>
     </div>
   );
 
