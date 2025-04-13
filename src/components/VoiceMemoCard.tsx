@@ -185,8 +185,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   
   // Function to handle toggling a todo item
   const handleTodoToggle = useCallback(async (lineNumber: number, currentChecked: boolean) => {
-    // Get the relative path by taking just the filename part
-    const filePath = memo.path.split('/').pop() || '';
+    // Get the relative path by taking the last two parts (TODOs/filename.md)
+    const pathParts = memo.path.split('/');
+    const filePath = pathParts.slice(-2).join('/');
     const newChecked = !currentChecked;
   
     // Optimistic UI update
