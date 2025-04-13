@@ -293,14 +293,65 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
   const [filter, setFilter] = useState<'red' | 'yellow' | 'blue' | 'green' | 'all'>('all');
-  const [timelineData, setTimelineData] = useState<any[]>([]);
-  const [radarData, setRadarData] = useState<any[]>([]);
   const [timeRange, setTimeRange] = useState<{ start: Date; end: Date }>(() => {
     const now = new Date();
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     return { start: sevenDaysAgo, end: now };
   });
+
+  // Process data for timeline
+  const timelineData = useMemo(() => {
+    const groupedByDate = groupBy(moodEntries, entry => 
+      new Date(entry.date).toISOString().split('T')[0]
+    );
+
+    return Object.entries(groupedByDate).map(([date, entries]) => {
+      const colorCounts = countBy(entries, 'color');
+      const avgIntensity = mean(entries.map(e => e.intensity || 0));
+      
+      return {
+        date,
+        entries,
+        intensity: avgIntensity || 0,
+        red: colorCounts.red || 0,
+        yellow: colorCounts.yellow || 0,
+        green: colorCounts.green || 0,
+        blue: colorCounts.blue || 0
+      };
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [moodEntries]);
+
+  // Process radar data
+  const radarData = useMemo(() => {
+    const emotionTotals: Record<string, number> = {};
+    moodEntries
+      .filter(entry => new Date(entry.date) >= timeRange.start)
+      .forEach(entry => {
+        const lowerContent = entry.content.toLowerCase();
+        Object.entries(EMOTIONS).forEach(([color, category]) => {
+          Object.entries(category.emotions).forEach(([emotion, description]) => {
+            const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
+            const matches = (lowerContent.match(regex) || []).length;
+            if (matches > 0) {
+              emotionTotals[emotion] = (emotionTotals[emotion] || 0) + matches;
+            }
+          });
+        });
+      });
+
+    // Convert to radar format and get top emotions
+    return Object.entries(emotionTotals)
+      .map(([emotion, count]) => ({
+        emotion,
+        count,
+        category: Object.entries(EMOTIONS).find(([_, category]) => 
+          Object.keys(category.emotions).includes(emotion)
+        )?.[0] || ''
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8); // Show top 8 emotions
+  }, [moodEntries, timeRange]);
 
   useEffect(() => {
     // Process mood files
@@ -388,100 +439,8 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     // Sort by date (newest first)
     entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
-    // Group entries by exact timestamp
-    const timelineEntries = entries
-      .filter(entry => new Date(entry.date) >= timeRange.start)
-      .reduce((acc, entry) => {
-        const timestamp = new Date(entry.date).getTime();
-        
-        // Calculate mood intensity (higher = more negative)
-        // Red emotions (high energy unpleasant) = highest intensity
-        // Blue emotions (low energy unpleasant) = high intensity
-        // Yellow/Green emotions (pleasant) = lower intensity
-        const emotionMatches = {
-          red: 0,
-          blue: 0,
-          yellow: 0,
-          green: 0
-        };
-
-        const lowerContent = entry.content.toLowerCase();
-        Object.entries(EMOTIONS).forEach(([color, category]) => {
-          Object.keys(category.emotions).forEach(emotion => {
-            const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
-            const matches = (lowerContent.match(regex) || []).length;
-            emotionMatches[color as MoodColor] += matches;
-          });
-        });
-
-        // Calculate intensity score (0-100)
-        // Red emotions count most towards negativity (weight: 1.0)
-        // Blue emotions count significantly (weight: 0.7)
-        // Pleasant emotions reduce the score
-        const intensityScore = Math.min(100, Math.max(0,
-          (emotionMatches.red * 100) +
-          (emotionMatches.blue * 70) -
-          (emotionMatches.yellow * 50) -
-          (emotionMatches.green * 50)
-        )) / 100;
-
-        if (!acc[timestamp]) {
-          acc[timestamp] = {
-            timestamp,
-            date: entry.date,
-            intensity: intensityScore,
-            red: 0,
-            yellow: 0,
-            green: 0,
-            blue: 0,
-            entries: []
-          };
-        }
-        acc[timestamp][entry.color]++;
-        acc[timestamp].entries.push({
-          ...entry,
-          intensity: intensityScore
-        });
-        return acc;
-      }, {} as Record<string, any>);
-
-    // Convert to array and sort by timestamp
-    const timelineArray = Object.values(timelineEntries)
-      .sort((a, b) => a.timestamp - b.timestamp);
-
-    // Process radar data
-    const emotionTotals: Record<string, number> = {};
-    entries
-      .filter(entry => new Date(entry.date) >= timeRange.start)
-      .forEach(entry => {
-        const lowerContent = entry.content.toLowerCase();
-        Object.entries(EMOTIONS).forEach(([color, category]) => {
-          Object.entries(category.emotions).forEach(([emotion, description]) => {
-            const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
-            const matches = (lowerContent.match(regex) || []).length;
-            if (matches > 0) {
-              emotionTotals[emotion] = (emotionTotals[emotion] || 0) + matches;
-            }
-          });
-        });
-      });
-
-    // Convert to radar format and get top emotions
-    const radarArray = Object.entries(emotionTotals)
-      .map(([emotion, count]) => ({
-        emotion,
-        count,
-        category: Object.entries(EMOTIONS).find(([_, category]) => 
-          Object.keys(category.emotions).includes(emotion)
-        )?.[0] || ''
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8); // Show top 8 emotions
-
-    setRadarData(radarArray);
-    setTimelineData(timelineArray);
     setMoodEntries(entries);
-  }, [files, timeRange]);
+  }, [files]);
 
   useEffect(() => {
     if (selectedEntry) {
@@ -587,28 +546,6 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       </div>
     );
   };
-
-  // Process data for timeline
-  const timelineData = useMemo(() => {
-    const groupedByDate = groupBy(moodEntries, entry => 
-      new Date(entry.timestamp).toISOString().split('T')[0]
-    );
-
-    return Object.entries(groupedByDate).map(([date, entries]) => {
-      const colorCounts = countBy(entries, 'color');
-      const avgIntensity = mean(entries.map(e => e.intensity));
-      
-      return {
-        date,
-        entries,
-        intensity: avgIntensity || 0,
-        red: colorCounts.red || 0,
-        yellow: colorCounts.yellow || 0,
-        green: colorCounts.green || 0,
-        blue: colorCounts.blue || 0
-      };
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [moodEntries]);
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
