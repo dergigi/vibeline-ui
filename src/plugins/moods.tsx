@@ -500,12 +500,28 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      weekday: 'short',
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const isToday = date.toDateString() === now.toDateString();
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+    
+    const timeFormat = { hour: 'numeric', minute: 'numeric' } as const;
+    
+    if (isToday) {
+      return date.toLocaleTimeString('en-US', timeFormat);
+    }
+    
+    if (isYesterday) {
+      return `Yesterday ${date.toLocaleTimeString('en-US', timeFormat)}`;
+    }
+    
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      hour: 'numeric',
+      minute: 'numeric'
     });
   };
 
