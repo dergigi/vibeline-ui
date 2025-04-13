@@ -171,16 +171,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       <div className="flex items-center px-4">
         <div className="flex gap-2">
           <button
-            onClick={() => setFilter('all')}
-            className={`text-sm px-3 py-1 rounded-full ${
-              filter === 'all'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          <button
             onClick={() => setFilter('open-first')}
             className={`text-sm px-3 py-1 rounded-full ${
               filter === 'open-first'
@@ -209,6 +199,16 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             }`}
           >
             Done
+          </button>
+          <button
+            onClick={() => setFilter('all')}
+            className={`text-sm px-3 py-1 rounded-full ${
+              filter === 'all'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Unfiltered
           </button>
         </div>
       </div>
