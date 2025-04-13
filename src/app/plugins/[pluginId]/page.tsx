@@ -3,9 +3,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { notFound } from 'next/navigation';
 import { existsSync } from 'fs';
-import PluginUIWrapper from '@/components/PluginUIWrapper';
+import dynamic from 'next/dynamic';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
+const PLUGINS_DIR = path.join(process.cwd(), 'src', 'plugins');
 
 interface PluginFile {
   name: string;
@@ -15,12 +16,20 @@ interface PluginFile {
 
 async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]; hasCustomUI: boolean }> {
   const pluginDir = path.join(VOICE_MEMOS_DIR, pluginId);
-  const customUIPath = path.join(pluginDir, 'page.tsx');
+  const customUIPath = path.join(PLUGINS_DIR, `${pluginId}.tsx`);
   
+  // Create the plugin directory if it doesn't exist
+  if (!existsSync(pluginDir)) {
+    await fs.mkdir(pluginDir, { recursive: true });
+  }
+
+  // Check if the custom UI exists
+  const hasCustomUI = existsSync(customUIPath);
+
   try {
     const entries = await fs.readdir(pluginDir, { withFileTypes: true });
     const filePromises = entries
-      .filter(entry => entry.isFile() && entry.name !== 'page.tsx') // Exclude the UI file from the list
+      .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
       .map(async entry => {
         const filePath = path.join(pluginDir, entry.name);
         let content: string | undefined;
@@ -37,12 +46,10 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
       });
 
     const files = await Promise.all(filePromises);
-    const hasCustomUI = existsSync(customUIPath);
-    
     return { files, hasCustomUI };
   } catch (error) {
     console.error(`Error reading plugin ${pluginId}:`, error);
-    return { files: [], hasCustomUI: false };
+    return { files: [], hasCustomUI };
   }
 }
 
@@ -84,15 +91,27 @@ export default async function PluginPage({ params }: { params: Promise<{ pluginI
     notFound();
   }
 
+  if (hasCustomUI) {
+    const CustomUI = dynamic<{ files: PluginFile[] }>(() => import(`@/plugins/${pluginId}`), {
+      loading: () => <div>Loading custom plugin UI...</div>
+    });
+
+    return (
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <Suspense fallback={<div>Loading...</div>}>
+            <CustomUI files={files} />
+          </Suspense>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Suspense fallback={<div>Loading...</div>}>
-          {hasCustomUI ? (
-            <PluginUIWrapper pluginId={pluginId} files={files} />
-          ) : (
-            <DefaultPluginUI files={files} pluginId={pluginId} />
-          )}
+          <DefaultPluginUI files={files} pluginId={pluginId} />
         </Suspense>
       </div>
     </main>
