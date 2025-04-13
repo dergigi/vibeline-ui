@@ -4,8 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { 
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
-  AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  RadarProps
+  AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { groupBy, countBy, mean } from 'lodash';
 
@@ -658,47 +657,13 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Emotion Distribution</h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%">
-                  <PolarGrid 
-                    stroke="#374151" 
-                    strokeOpacity={0.15}
-                    strokeDasharray="3 3"
-                  />
-                  <PolarAngleAxis
-                    dataKey="emotion"
-                    tick={(props) => {
-                      const { x, y, payload, cx = 0 } = props;
-                      const matchingEmotion = radarData.find(d => d.emotion === payload.value);
-                      const color = matchingEmotion?.category ? getMoodColor(matchingEmotion.category).hex.text : '#6B7280';
-                      return (
-                        <text
-                          x={x}
-                          y={y}
-                          textAnchor={x > cx ? 'start' : 'end'}
-                          fill={color}
-                          fontSize={10}
-                          fillOpacity={0.85}
-                        >
-                          {payload.value}
-                        </text>
-                      );
-                    }}
-                  />
-                  <PolarRadiusAxis
-                    angle={30}
-                    domain={[0, 'auto']}
-                    tick={{ 
-                      fill: '#6B7280',
-                      fontSize: 10,
-                      fillOpacity: 0.7
-                    }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="emotion" />
+                  <PolarRadiusAxis />
                   <Radar
                     name="Emotions"
                     dataKey="count"
-                    data={radarData}
                     stroke={getMoodColor(radarData[0]?.category || 'blue').hex.stroke}
                     fill={getMoodColor(radarData[0]?.category || 'blue').hex.fill}
                     fillOpacity={0.3}
