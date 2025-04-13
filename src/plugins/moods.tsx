@@ -339,7 +339,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     </div>
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-1">
-                    {entry.mood}: {entry.description}
+                    {entry.description.replace(/^(Blue|Red|Yellow|Green): /, '')}
                   </p>
                 </div>
               );
