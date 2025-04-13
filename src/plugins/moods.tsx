@@ -694,32 +694,55 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex space-x-1.5 mb-3">
+        <div className="grid grid-cols-5 gap-2 mb-4">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors
               ${filter === 'all' 
                 ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' 
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
           >
-            All
+            All Moods
           </button>
-          {Object.entries(EMOTIONS).map(([color, { label }]) => {
-            const colorClasses = getMoodColor(color);
-            const [energy, ...rest] = label.split(' ');
-            return (
-              <button
-                key={color}
-                onClick={() => setFilter(color as MoodColor)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors
-                  ${filter === color ? colorClasses.button : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-              >
-                <span className="opacity-75">{energy}</span>
-                <br />
-                {rest.join(' ')}
-              </button>
-            );
-          })}
+          {Object.keys(MOOD_COLORS).map((color) => (
+            <button
+              key={color}
+              onClick={() => setFilter(color as any)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                ${filter === color 
+                  ? getMoodColor(color).button
+                  : `${getMoodColor(color).bg} ${getMoodColor(color).text}`
+                }`}
+            >
+              <span className="block leading-tight">
+                {color === 'yellow' && (
+                  <>
+                    <span className="block">High Energy</span>
+                    <span className="block">Pleasant</span>
+                  </>
+                )}
+                {color === 'green' && (
+                  <>
+                    <span className="block">Low Energy</span>
+                    <span className="block">Pleasant</span>
+                  </>
+                )}
+                {color === 'blue' && (
+                  <>
+                    <span className="block">Low Energy</span>
+                    <span className="block">Unpleasant</span>
+                  </>
+                )}
+                {color === 'red' && (
+                  <>
+                    <span className="block">High Energy</span>
+                    <span className="block">Unpleasant</span>
+                  </>
+                )}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
       
