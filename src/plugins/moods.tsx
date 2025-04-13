@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock } from 'lucide-react';
 
 interface MoodEntry {
   id: string;
@@ -10,9 +9,18 @@ interface MoodEntry {
   description: string;
   energy: 'high' | 'low';
   pleasant: boolean;
-  color: 'red' | 'yellow' | 'blue' | 'green';
+  color: MoodColor;
   content: string;
 }
+
+type MoodColor = 'red' | 'yellow' | 'blue' | 'green';
+
+type EmotionCategory = {
+  label: string;
+  emotions: Record<string, string>;
+}
+
+type EmotionsType = Record<MoodColor, EmotionCategory>;
 
 interface MoodsPluginProps {
   files: {
@@ -22,7 +30,7 @@ interface MoodsPluginProps {
   }[];
 }
 
-const EMOTIONS = {
+const EMOTIONS: EmotionsType = {
   yellow: {
     label: "High Energy Pleasant",
     emotions: {
@@ -215,30 +223,30 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
 
       // Analyze content to determine mood category
       const lowerContent = content.toLowerCase();
-      let color: 'red' | 'yellow' | 'blue' | 'green' = 'blue'; // default
+      let color: MoodColor = 'blue'; // default
       let mood = 'Unknown';
       
       // Try to match known moods
       Object.entries(EMOTIONS).forEach(([categoryColor, category]) => {
         Object.keys(category.emotions).forEach(emotion => {
           if (lowerContent.includes(emotion.toLowerCase())) {
-            color = categoryColor as 'red' | 'yellow' | 'blue' | 'green';
+            color = categoryColor as MoodColor;
             mood = emotion;
           }
         });
       });
 
       // Determine energy and pleasantness based on color
-      const energy = (color === 'red' || color === 'yellow') ? 'high' : 'low';
-      const pleasant = (color === 'yellow' || color === 'green');
+      const moodEnergy = ['red', 'yellow'].includes(color) ? 'high' : 'low' as const;
+      const isPleasant = ['yellow', 'green'].includes(color);
       
       entries.push({
         id: fileName,
         date: date.toISOString(),
         mood,
         description: content.split('\n')[0]?.trim() || 'No description',
-        energy,
-        pleasant,
+        energy: moodEnergy,
+        pleasant: isPleasant,
         color,
         content
       });
@@ -274,13 +282,13 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Mood Timeline</h2>
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold mb-3">Mood Timeline</h2>
         
-        <div className="flex space-x-2 mb-4">
+        <div className="flex space-x-1.5 mb-3">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors
               ${filter === 'all' 
                 ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' 
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
@@ -289,46 +297,50 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
           </button>
           {Object.entries(EMOTIONS).map(([color, { label }]) => {
             const colorClasses = getMoodColor(color);
+            const [energy, ...rest] = label.split(' ');
             return (
               <button
                 key={color}
-                onClick={() => setFilter(color as any)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                onClick={() => setFilter(color as MoodColor)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors
                   ${filter === color ? colorClasses.button : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
               >
-                {label}
+                <span className="opacity-75">{energy}</span>
+                <br />
+                {rest.join(' ')}
               </button>
             );
           })}
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Timeline */}
-        <div className="md:col-span-1 bg-white rounded-lg shadow p-4 overflow-y-auto max-h-[80vh]">
-          <div className="space-y-4">
+        <div className="md:col-span-1 bg-white rounded-lg shadow overflow-y-auto max-h-[70vh]">
+          <div className="divide-y">
             {filteredEntries.map(entry => {
               const colorClasses = getMoodColor(entry.color);
               return (
                 <div
                   key={entry.id}
                   onClick={() => setSelectedEntry(entry)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-colors
-                    ${colorClasses.bg} ${colorClasses.border} ${colorClasses.hover}`}
+                  className={`p-3 cursor-pointer transition-colors
+                    ${colorClasses.hover} ${selectedEntry?.id === entry.id ? colorClasses.bg : ''}`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${colorClasses.dot}`} />
-                      <span className={`font-medium ${colorClasses.text}`}>{entry.mood}</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <div className={`w-2 h-2 rounded-full ${colorClasses.dot}`} />
+                      <span className={`text-sm font-medium ${colorClasses.text}`}>
+                        {entry.pleasant ? 'Pleasant' : 'Unpleasant'}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDate(entry.date)}</span>
-                      <Clock className="w-4 h-4 ml-2" />
+                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                       <span>{formatTime(entry.date)}</span>
                     </div>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 line-clamp-2">{entry.description}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-1">
+                    {entry.mood}: {entry.description}
+                  </p>
                 </div>
               );
             })}
@@ -336,44 +348,29 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
         </div>
         
         {/* Detail view */}
-        <div className="md:col-span-2 bg-white rounded-lg shadow p-4">
+        <div className="md:col-span-2 bg-white rounded-lg shadow">
           {selectedEntry ? (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={`w-4 h-4 rounded-full ${getMoodColor(selectedEntry.color).dot}`} />
-                      <span className={`font-medium ${getMoodColor(selectedEntry.color).text}`}>
-                        {EMOTIONS[selectedEntry.color].label}
-                      </span>
-                    </div>
-                    <div className="mb-6">
-                      <h4 className="text-lg font-medium mb-2">Mood</h4>
-                      <div className="flex flex-col gap-2">
-                        <span className={`text-xl ${getMoodColor(selectedEntry.color).text}`}>
-                          {selectedEntry.mood}
-                        </span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {EMOTIONS[selectedEntry.color].emotions[selectedEntry.mood]}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedEntry(null)}
-                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    Close
-                  </button>
+            <div className="p-4 h-full overflow-y-auto">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${getMoodColor(selectedEntry.color).dot}`} />
+                  <span className={`text-sm font-medium ${getMoodColor(selectedEntry.color).text}`}>
+                    {selectedEntry.mood}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {EMOTIONS[selectedEntry.color].emotions[selectedEntry.mood]}
+                  </span>
                 </div>
-                <div className="prose dark:prose-invert max-w-none">
-                  {selectedEntry.content}
+                <div className="text-xs text-gray-500">
+                  {formatDate(selectedEntry.date)} {formatTime(selectedEntry.date)}
                 </div>
+              </div>
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {selectedEntry.content}
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="flex items-center justify-center h-full text-sm text-gray-500 p-4">
               <p>Select a mood entry to view details</p>
             </div>
           )}
