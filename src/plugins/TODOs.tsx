@@ -103,10 +103,10 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       });
 
     setSections([
-      { title: 'Today', todos: todayTodos, isExpanded: true },
-      { title: 'Yesterday', todos: yesterdayTodos, isExpanded: true },
-      { title: 'This Week', todos: weekTodos, isExpanded: true },
-      { title: 'Older', todos: olderTodos, isExpanded: true }
+      { title: 'Today', todos: todayTodos, isExpanded: false },
+      { title: 'Yesterday', todos: yesterdayTodos, isExpanded: false },
+      { title: 'This Week', todos: weekTodos, isExpanded: false },
+      { title: 'Older', todos: olderTodos, isExpanded: false }
     ]);
   }, [files]);
 
@@ -206,6 +206,14 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
                 </span>
               </div>
             ))}
+            {!section.isExpanded && section.todos.length > 5 && (
+              <button
+                onClick={() => toggleSection(index)}
+                className="mt-2 text-sm text-blue-500 hover:text-blue-600"
+              >
+                Show {section.todos.length - 5} more...
+              </button>
+            )}
           </div>
         </div>
       ))}
