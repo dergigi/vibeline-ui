@@ -552,12 +552,12 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       <div className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Timeline Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={timelineData}
-                  margin={{ top: 10, right: 10, left: -10, bottom: -10 }}
+                  margin={{ top: 5, right: 0, left: -20, bottom: -10 }}
                 >
                   <defs>
                     {Object.keys(MOOD_COLORS).map((color) => (
@@ -573,7 +573,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(date) => new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    tickMargin={5}
+                    tickMargin={2}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -581,7 +581,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(value) => Math.round(value)}
-                    tickMargin={5}
+                    tickMargin={2}
                     axisLine={false}
                     tickLine={false}
                   />
