@@ -87,7 +87,9 @@ export default async function PluginPage({ params }: { params: Promise<{ pluginI
   const { pluginId } = await params;
   const { files, hasCustomUI } = await getPluginContent(pluginId);
   
-  if (!files.length && !hasCustomUI) {
+  // Only show 404 if the plugin directory doesn't exist at all
+  const pluginDir = path.join(VOICE_MEMOS_DIR, pluginId);
+  if (!existsSync(pluginDir)) {
     notFound();
   }
 
