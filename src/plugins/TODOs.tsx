@@ -249,14 +249,14 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
           <div key={section.title} className="rounded-lg bg-gray-50">
             <button
               onClick={() => toggleSection(index)}
-              className="flex w-full items-center px-4 py-3"
+              className="flex w-full items-center px-4 py-3 hover:bg-gray-100 transition-colors duration-200 rounded-t-lg bg-gray-100/50"
             >
               {section.isExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500" />
+                <ChevronDown className="h-4 w-4 text-blue-500" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500" />
+                <ChevronRight className="h-4 w-4 text-blue-500" />
               )}
-              <span className="ml-2 text-sm font-medium text-gray-900">
+              <span className="ml-2 text-sm font-semibold text-gray-900">
                 {section.title}
               </span>
               <span className="ml-2 text-sm text-gray-500">
