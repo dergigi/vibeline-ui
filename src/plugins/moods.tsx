@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, 
+         RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 interface MoodEntry {
   id: string;
@@ -271,6 +272,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
   const [filter, setFilter] = useState<'red' | 'yellow' | 'blue' | 'green' | 'all'>('all');
   const [timelineData, setTimelineData] = useState<any[]>([]);
+  const [radarData, setRadarData] = useState<any[]>([]);
   const [timeRange, setTimeRange] = useState<{ start: Date; end: Date }>(() => {
     const now = new Date();
     const sevenDaysAgo = new Date(now);
@@ -425,6 +427,36 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     const timelineArray = Object.values(timelineEntries)
       .sort((a, b) => a.timestamp - b.timestamp);
 
+    // Process radar data
+    const emotionTotals: Record<string, number> = {};
+    entries
+      .filter(entry => new Date(entry.date) >= timeRange.start)
+      .forEach(entry => {
+        const lowerContent = entry.content.toLowerCase();
+        Object.entries(EMOTIONS).forEach(([color, category]) => {
+          Object.entries(category.emotions).forEach(([emotion, description]) => {
+            const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
+            const matches = (lowerContent.match(regex) || []).length;
+            if (matches > 0) {
+              emotionTotals[emotion] = (emotionTotals[emotion] || 0) + matches;
+            }
+          });
+        });
+      });
+
+    // Convert to radar format and get top emotions
+    const radarArray = Object.entries(emotionTotals)
+      .map(([emotion, count]) => ({
+        emotion,
+        count,
+        category: Object.entries(EMOTIONS).find(([_, category]) => 
+          Object.keys(category.emotions).includes(emotion)
+        )?.[0] || ''
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8); // Show top 8 emotions
+
+    setRadarData(radarArray);
     setTimelineData(timelineArray);
     setMoodEntries(entries);
   }, [files, timeRange]);
@@ -537,104 +569,154 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-3">Mood Timeline</h2>
+        <h2 className="text-xl font-semibold mb-3">Mood Analysis</h2>
         
-        {/* Timeline Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart
-                margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-                onClick={(data) => {
-                  if (data && data.activePayload && data.activePayload[0]) {
-                    const entry = data.activePayload[0].payload.entries[0];
-                    setSelectedEntry(entry);
-                  }
-                }}
-              >
-                <XAxis 
-                  dataKey="timestamp"
-                  type="number"
-                  domain={[timeRange.start.getTime(), timeRange.end.getTime()]}
-                  tickFormatter={(timestamp) => formatDate(new Date(timestamp).toISOString())}
-                  stroke="#6B7280"
-                  fontSize={12}
-                />
-                <YAxis 
-                  type="number"
-                  dataKey="intensity"
-                  domain={[0, 1]}
-                  tickFormatter={(value) => {
-                    if (value === 0) return "Pleasant";
-                    if (value === 0.5) return "Neutral";
-                    if (value === 1) return "Unpleasant";
-                    return "";
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Timeline Chart */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timeline</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart
+                  margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                  onClick={(data) => {
+                    if (data && data.activePayload && data.activePayload[0]) {
+                      const entry = data.activePayload[0].payload.entries[0];
+                      setSelectedEntry(entry);
+                    }
                   }}
-                  stroke="#6B7280"
-                  fontSize={12}
-                />
-                <ZAxis 
-                  type="number"
-                  range={[50, 400]}
-                  dataKey="size"
-                />
-                <Tooltip
-                  cursor={{ strokeDasharray: '3 3' }}
-                  contentStyle={{
-                    backgroundColor: '#1F2937',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    fontSize: '12px'
-                  }}
-                  content={({ active, payload }) => {
-                    if (!active || !payload || !payload.length) return null;
-                    const data = payload[0].payload;
-                    return (
-                      <div className="bg-gray-800 dark:bg-gray-700 p-2 rounded shadow text-white">
-                        <p className="font-medium">{formatDateTime(data.date)}</p>
-                        {data.entries.map((entry: MoodEntry & { intensity: number }, i: number) => (
-                          <div key={i} className="text-sm mt-1 cursor-pointer hover:opacity-80">
-                            <span className={getMoodColor(entry.color).text}>
-                              {entry.mood}
-                            </span>
-                            <span className="text-xs ml-2 text-gray-400">
-                              {entry.intensity >= 0.7 ? "Very Unpleasant" :
-                               entry.intensity >= 0.4 ? "Unpleasant" :
-                               entry.intensity >= 0.2 ? "Slightly Unpleasant" :
-                               "Pleasant"}
-                            </span>
-                          </div>
-                        ))}
-                        <div className="text-xs text-gray-400 mt-2 italic">
-                          Click to view details
-                        </div>
-                      </div>
-                    );
-                  }}
-                />
-                {['red', 'yellow', 'green', 'blue'].map((color) => (
-                  <Scatter
-                    key={color}
-                    name={color}
-                    className="cursor-pointer"
-                    data={timelineData.flatMap(day => 
-                      day[color] > 0 ? [{
-                        timestamp: new Date(day.date).getTime(),
-                        intensity: day.intensity,
-                        color,
-                        size: day[color] * 100,
-                        entries: day.entries.filter((e: MoodEntry) => e.color === color),
-                        date: day.date
-                      }] : []
-                    )}
-                    fill={color === 'red' ? '#EF4444' : 
-                          color === 'yellow' ? '#F59E0B' : 
-                          color === 'green' ? '#10B981' : 
-                          '#3B82F6'}
+                >
+                  <XAxis 
+                    dataKey="timestamp"
+                    type="number"
+                    domain={[timeRange.start.getTime(), timeRange.end.getTime()]}
+                    tickFormatter={(timestamp) => formatDate(new Date(timestamp).toISOString())}
+                    stroke="#6B7280"
+                    fontSize={12}
                   />
-                ))}
-              </ScatterChart>
-            </ResponsiveContainer>
+                  <YAxis 
+                    type="number"
+                    dataKey="intensity"
+                    domain={[0, 1]}
+                    tickFormatter={(value) => {
+                      if (value === 0) return "Pleasant";
+                      if (value === 0.5) return "Neutral";
+                      if (value === 1) return "Unpleasant";
+                      return "";
+                    }}
+                    stroke="#6B7280"
+                    fontSize={12}
+                  />
+                  <ZAxis 
+                    type="number"
+                    range={[50, 400]}
+                    dataKey="size"
+                  />
+                  <Tooltip
+                    cursor={{ strokeDasharray: '3 3' }}
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      fontSize: '12px'
+                    }}
+                    content={({ active, payload }) => {
+                      if (!active || !payload || !payload.length) return null;
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-gray-800 dark:bg-gray-700 p-2 rounded shadow text-white">
+                          <p className="font-medium">{formatDateTime(data.date)}</p>
+                          {data.entries.map((entry: MoodEntry & { intensity: number }, i: number) => (
+                            <div key={i} className="text-sm mt-1 cursor-pointer hover:opacity-80">
+                              <span className={getMoodColor(entry.color).text}>
+                                {entry.mood}
+                              </span>
+                              <span className="text-xs ml-2 text-gray-400">
+                                {entry.intensity >= 0.7 ? "Very Unpleasant" :
+                                 entry.intensity >= 0.4 ? "Unpleasant" :
+                                 entry.intensity >= 0.2 ? "Slightly Unpleasant" :
+                                 "Pleasant"}
+                              </span>
+                            </div>
+                          ))}
+                          <div className="text-xs text-gray-400 mt-2 italic">
+                            Click to view details
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  {['red', 'yellow', 'green', 'blue'].map((color) => (
+                    <Scatter
+                      key={color}
+                      name={color}
+                      className="cursor-pointer"
+                      data={timelineData.flatMap(day => 
+                        day[color] > 0 ? [{
+                          timestamp: new Date(day.date).getTime(),
+                          intensity: day.intensity,
+                          color,
+                          size: day[color] * 100,
+                          entries: day.entries.filter((e: MoodEntry) => e.color === color),
+                          date: day.date
+                        }] : []
+                      )}
+                      fill={color === 'red' ? '#EF4444' : 
+                            color === 'yellow' ? '#F59E0B' : 
+                            color === 'green' ? '#10B981' : 
+                            '#3B82F6'}
+                    />
+                  ))}
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Radar Chart */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Emotion Distribution</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%">
+                  <PolarGrid stroke="#374151" />
+                  <PolarAngleAxis
+                    dataKey="emotion"
+                    tick={{ fill: '#6B7280', fontSize: 10 }}
+                  />
+                  <PolarRadiusAxis
+                    angle={30}
+                    domain={[0, 'auto']}
+                    tick={{ fill: '#6B7280', fontSize: 10 }}
+                  />
+                  <Radar
+                    name="Emotions"
+                    dataKey="count"
+                    data={radarData}
+                    fill={(entry) => {
+                      const color = entry.category;
+                      return color === 'red' ? '#EF4444' : 
+                             color === 'yellow' ? '#F59E0B' : 
+                             color === 'green' ? '#10B981' : 
+                             '#3B82F6';
+                    }}
+                    fillOpacity={0.6}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      fontSize: '12px',
+                      color: '#F3F4F6'
+                    }}
+                    formatter={(value: number, name: string, props: any) => [
+                      `Count: ${value}`,
+                      props.payload.emotion
+                    ]}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
