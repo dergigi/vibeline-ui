@@ -1,0 +1,354 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock } from 'lucide-react';
+
+interface MoodEntry {
+  id: string;
+  date: string;
+  mood: string;
+  description: string;
+  energy: 'high' | 'low';
+  pleasant: boolean;
+  color: 'red' | 'yellow' | 'blue' | 'green';
+  content: string;
+}
+
+interface MoodsPluginProps {
+  files: {
+    name: string;
+    path: string;
+    content?: string;
+  }[];
+}
+
+const EMOTIONS = {
+  yellow: {
+    label: "High Energy Pleasant",
+    emotions: {
+      "Alert": "feeling awake and focused",
+      "Alive": "filled with energy and vitality",
+      "Absorbed": "fully focused and interested",
+      "Accomplished": "feeling effective and successful",
+      "Adoring": "feeling a deep love or respect for something or someone",
+      "Attentive": "focused on what you're doing",
+      "Buoyant": "feeling cheerful and lively",
+      "Challenged": "feeling pushed to reach a higher goal",
+      "Chatty": "feeling like talking in a friendly, informal way",
+      "Cheerful": "full of happy feelings",
+      "Competent": "feeling capable of doing something successfully",
+      "Confident": "feeling sure of yourself",
+      "Curious": "interested in learning something",
+      "Determined": "knowing what you want and not letting anything stand in the way",
+      "Delighted": "feeling lifted by joy",
+      "Desire": "wishing or longing for something or someone",
+      "Eager": "impatiently wanting to do or get something",
+      "Ecstatic": "feeling the greatest amount of joy or happiness",
+      "Elated": "very joyful, proud, or enthusiastic",
+      "Empowered": "feeling stronger or more confident due to someone or something that happened",
+      "Enchanted": "filled with delight",
+      "Encouraged": "feeling supported and hopeful with a sense of increasing confidence",
+      "Energized": "feeling like you are wide awake and ready to get up and go",
+      "Engaged": "paying full attention or participating fully in something",
+      "Engrossed": "fully focused on someone or something"
+    }
+  },
+  green: {
+    label: "Low Energy Pleasant",
+    emotions: {
+      "Accepted": "feeling acknowledged and seen",
+      "Affectionate": "feeling or showing fondness",
+      "Appreciated": "feeling recognized and worthy",
+      "At Ease": "feeling content and comfortable",
+      "Balanced": "feeling stable and satisfied",
+      "Blessed": "feeling thankful and fortunate for what you have",
+      "Blissful": "feeling full of joy",
+      "Calm": "feeling free of stress, agitation, and worry",
+      "Carefree": "feeling free of worry and lighthearted",
+      "Chill": "feeling relaxed and easygoing",
+      "Clear": "the feeling that you can perceive, understand, or interpret events or situations you are facing",
+      "Comfortable": "feeling reassured both in mind and body",
+      "Compassionate": "showing care and concern for someone",
+      "Connected": "feeling close to someone or part of a community",
+      "Contemplative": "a reflective and thoughtful state, usually for a prolonged time",
+      "Content": "feeling complete and like you are enough",
+      "Copacetic": "feeling agreeable and free of problems",
+      "Fulfilled": "feeling like you have accomplished important personal goals or have become the person you want to be"
+    }
+  },
+  blue: {
+    label: "Low Energy Unpleasant",
+    emotions: {
+      "Abandoned": "feeling left behind and not considered, wanted, or cared about",
+      "Alienated": "feeling like you have been made a stranger to others, like they have no feelings or affection towards you",
+      "Apathetic": "lacking enthusiasm or interest",
+      "Ashamed": "feeling lower self-worth as a result of who you are or what you did",
+      "Avoidant": "unwilling to face or engage with someone or something",
+      "Bereft": "suffering a loss of someone or something",
+      "Betrayed": "feeling hurt when someone breaks your trust",
+      "Bleh": "feeling indifference or mild discomfort",
+      "Blue": "feeling sad, gloom, or dispirited",
+      "Bored": "lacking interest in something or someone",
+      "Brooding": "preoccupied with depressing or painful thoughts",
+      "Burdened": "feeling encumbered by and responsible for something or someone",
+      "Burned Out": "feeling exhausted from ongoing stress",
+      "Cancelled": "feeling cast out because of a perceived offense",
+      "Crushed": "overwhelmingly disappointed or let down",
+      "Dead Inside": "depressed to the point of feeling you've lost your spirit or soul",
+      "Defeated": "feeling demoralized or overcome by adversity",
+      "Deficient": "feeling inadequate or like you lack a desired quality",
+      "Dejected": "feeling unhappy, low in spirits",
+      "Desolate": "feeling bleak and miserable",
+      "Despair": "a feeling of complete hopelessness",
+      "Disappointed": "sad because your expectations were not met",
+      "Disconnected": "feeling separate from others",
+      "Discontented": "dissatisfied with your circumstances",
+      "Discouraged": "feeling a loss of confidence and enthusiasm",
+      "Disenchanted": "feeling let down by someone or something you once admired",
+      "Disengaged": "feeling like you cannot focus; disinterested",
+      "Disgruntled": "feeling annoyed and disappointed",
+      "Disgusted": "feeling a strong dislike of someone or something",
+      "Disheartened": "loss of resolve or determination",
+      "Disillusioned": "disappointed in someone who has not lived up to your belief in them",
+      "Dispirited": "having lost enthusiasm and hope",
+      "Disrespected": "not being treated as if your ideas and feelings matter",
+      "Dissatisfied": "unhappy with someone or something",
+      "Empty": "lacking meaning or connection",
+      "Forlorn": "feeling both sad and alone",
+      "Fragile": "feeling delicate and like you could easily break"
+    }
+  },
+  red: {
+    label: "High Energy Unpleasant",
+    emotions: {
+      "Afraid": "experiencing fear or threat",
+      "Agitated": "very troubled and restless",
+      "Alarmed": "a sense of urgent fear or concern",
+      "Ambivalent": "having contradictory attitudes or feelings about something",
+      "Angry": "strongly bothered about a perceived injustice",
+      "Anguished": "experiencing severe physiological pain or suffering",
+      "Annoyed": "bothered by something displeasing or uncomfortable",
+      "Anxious": "worried and uneasy about an uncertain outcome",
+      "Apprehensive": "unease and worry about something that might happen",
+      "Astonished": "greatly surprised or impressed",
+      "Confused": "feeling unable to make sense of something",
+      "Contempt": "feeling a combination of anger and disgust",
+      "Conflicted": "having mutually inconsistent feelings about something",
+      "Concerned": "wondering if someone or something is okay",
+      "Discombobulated": "thrown into a state of confusion or uncertainty",
+      "Discomfort": "feeling of unease or pain",
+      "Distracted": "feeling diverted or far away from the present focus",
+      "Distressed": "feeling unwell and agitated physiologically, can have different causes (emotional pain, threat, loss, etc.)",
+      "Dread": "anxiety because of expecting something unpleasant or upsetting",
+      "Dumbfounded": "being speechless with shock",
+      "Dysregulated": "feeling you can't steady your emotions",
+      "Embarrassed": "self-conscious and uncomfortable about how you think others are perceiving you",
+      "Frazzled": "feeling exhausted, disorganized, and emotionally frayed",
+      "Frightened": "afraid or fearful",
+      "Frozen": "feeling you cannot act due to overwhelming anxiety or fear",
+      "Frustrated": "upset because you cannot do something you want to do",
+      "Furious": "full of extreme or wild anger"
+    }
+  }
+};
+
+const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
+  const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
+  const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
+  const [filter, setFilter] = useState<'red' | 'yellow' | 'blue' | 'green' | 'all'>('all');
+
+  useEffect(() => {
+    // Process mood files
+    const entries: MoodEntry[] = [];
+    
+    files.forEach(file => {
+      if (!file.content) return;
+      
+      const content = file.content;
+      const fileName = file.name;
+      
+      // Extract date from filename (format: YYYYMMDD_HHMMSS.txt)
+      const dateMatch = fileName.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+      if (!dateMatch) return;
+      
+      const [, year, month, day, hour, minute, second] = dateMatch;
+      const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
+
+      // Analyze content to determine mood category
+      const lowerContent = content.toLowerCase();
+      let color: 'red' | 'yellow' | 'blue' | 'green' = 'blue'; // default
+      let mood = 'Unknown';
+      
+      // Try to match known moods
+      Object.entries(EMOTIONS).forEach(([categoryColor, category]) => {
+        Object.keys(category.emotions).forEach(emotion => {
+          if (lowerContent.includes(emotion.toLowerCase())) {
+            color = categoryColor as 'red' | 'yellow' | 'blue' | 'green';
+            mood = emotion;
+          }
+        });
+      });
+
+      // Determine energy and pleasantness based on color
+      const energy = (color === 'red' || color === 'yellow') ? 'high' : 'low';
+      const pleasant = (color === 'yellow' || color === 'green');
+      
+      entries.push({
+        id: fileName,
+        date: date.toISOString(),
+        mood,
+        description: content.split('\n')[0]?.trim() || 'No description',
+        energy,
+        pleasant,
+        color,
+        content
+      });
+    });
+    
+    // Sort by date (newest first)
+    entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    setMoodEntries(entries);
+  }, [files]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+  };
+
+  const getMoodColor = (color: string) => {
+    switch (color) {
+      case 'red': return 'bg-red-500';
+      case 'yellow': return 'bg-yellow-400';
+      case 'blue': return 'bg-blue-400';
+      case 'green': return 'bg-green-400';
+      default: return 'bg-gray-400';
+    }
+  };
+
+  const filteredEntries = filter === 'all' 
+    ? moodEntries 
+    : moodEntries.filter(entry => entry.color === filter);
+
+  return (
+    <div className="p-4 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4">Mood Timeline</h2>
+        
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded ${
+              filter === 'all' ? 'bg-gray-200' : 'bg-gray-100'
+            }`}
+          >
+            All
+          </button>
+          {Object.entries(EMOTIONS).map(([color, { label }]) => (
+            <button
+              key={color}
+              onClick={() => setFilter(color as any)}
+              className={`px-4 py-2 rounded ${
+                filter === color ? 'bg-gray-200' : 'bg-gray-100'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Timeline */}
+        <div className="md:col-span-1 bg-white rounded-lg shadow p-4 overflow-y-auto max-h-[80vh]">
+          <div className="space-y-3">
+            {filteredEntries.map(entry => (
+              <div 
+                key={entry.id}
+                className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                  selectedEntry?.id === entry.id 
+                    ? 'bg-gray-100 border border-gray-200' 
+                    : 'hover:bg-gray-50 border border-gray-100'
+                }`}
+                onClick={() => setSelectedEntry(entry)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-gray-500" />
+                    <span className="text-sm font-medium">{formatDate(entry.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock size={14} className="text-gray-500" />
+                    <span className="text-xs text-gray-500">{formatTime(entry.date)}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${getMoodColor(entry.color)}`} />
+                  <span className="font-medium">{entry.mood}</span>
+                </div>
+                
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                  {entry.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Detail view */}
+        <div className="md:col-span-2 bg-white rounded-lg shadow p-4">
+          {selectedEntry ? (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">
+                  {formatDate(selectedEntry.date)} at {formatTime(selectedEntry.date)}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full ${getMoodColor(selectedEntry.color)}`} />
+                  <span className="font-medium">{EMOTIONS[selectedEntry.color].label}</span>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <h4 className="text-lg font-medium mb-2">Mood</h4>
+                <div className="flex flex-col gap-2">
+                  <span className="text-xl">{selectedEntry.mood}</span>
+                  <span className="text-gray-600">
+                    {EMOTIONS[selectedEntry.color].emotions[selectedEntry.mood]}
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-lg font-medium mb-2">Full Entry</h4>
+                <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-line">
+                  {selectedEntry.content}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <p>Select a mood entry to view details</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MoodsPlugin; 
