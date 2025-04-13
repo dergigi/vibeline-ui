@@ -297,29 +297,55 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
 
       // Analyze content to determine mood category
       const lowerContent = content.toLowerCase();
-      let color: MoodColor = 'blue'; // default
-      let mood = 'Unknown';
       
-      // Try to match known moods
+      // Track emotion matches by category
+      const emotionMatches = {
+        yellow: 0, // high energy pleasant
+        green: 0,  // low energy pleasant
+        red: 0,    // high energy unpleasant
+        blue: 0    // low energy unpleasant
+      };
+      
+      let dominantEmotion = '';
+      let maxMatches = 0;
+      
+      // Count matches for each emotion category
       Object.entries(EMOTIONS).forEach(([categoryColor, category]) => {
         Object.keys(category.emotions).forEach(emotion => {
-          if (lowerContent.includes(emotion.toLowerCase())) {
-            color = categoryColor as MoodColor;
-            mood = emotion;
+          const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
+          const matches = (lowerContent.match(regex) || []).length;
+          emotionMatches[categoryColor as MoodColor] += matches;
+          
+          // Track the most frequently mentioned individual emotion
+          if (matches > 0 && matches > maxMatches) {
+            maxMatches = matches;
+            dominantEmotion = emotion;
           }
         });
       });
 
-      // Determine energy and pleasantness based on color
-      const moodEnergy = ['red', 'yellow'].includes(color) ? 'high' : 'low' as const;
-      const isPleasant = ['yellow', 'green'].includes(color);
+      // Determine overall pleasantness and energy level
+      const pleasantCount = emotionMatches.yellow + emotionMatches.green;
+      const unpleasantCount = emotionMatches.red + emotionMatches.blue;
+      const highEnergyCount = emotionMatches.yellow + emotionMatches.red;
+      const lowEnergyCount = emotionMatches.green + emotionMatches.blue;
+      
+      const isPleasant = pleasantCount > unpleasantCount;
+      const isHighEnergy = highEnergyCount > lowEnergyCount;
+      
+      // Determine color based on the quadrant with most matches
+      let color: MoodColor;
+      if (isPleasant && isHighEnergy) color = 'yellow';
+      else if (isPleasant && !isHighEnergy) color = 'green';
+      else if (!isPleasant && isHighEnergy) color = 'red';
+      else color = 'blue';
       
       entries.push({
         id: fileName,
         date: date.toISOString(),
-        mood,
+        mood: dominantEmotion || 'Unknown',
         description: content.split('\n')[0]?.trim() || 'No description',
-        energy: moodEnergy,
+        energy: isHighEnergy ? 'high' : 'low',
         pleasant: isPleasant,
         color,
         content,
@@ -369,9 +395,22 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
 
   const renderContent = (content: string, isMarkdown: boolean = true) => {
     // Replace mood color words at the start with Pleasant/Unpleasant
-    const processedContent = content.replace(/^(Blue|Red|Yellow|Green)/, 
+    let processedContent = content.replace(/^(Blue|Red|Yellow|Green)/, 
       selectedEntry?.pleasant ? 'Pleasant' : 'Unpleasant'
     );
+
+    // Filter out empty lines starting with ":" and "None present" lines
+    processedContent = processedContent
+      .split('\n')
+      .filter(line => {
+        const trimmedLine = line.trim();
+        return !(
+          trimmedLine === ':' || 
+          trimmedLine.startsWith(': None present in this transcript') ||
+          trimmedLine.match(/^:\s*$/)
+        );
+      })
+      .join('\n');
 
     if (!isMarkdown) {
       // For non-markdown content, just highlight emotions
@@ -392,29 +431,29 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                 .map(child => (typeof child === 'string' ? child : ''))
                 .join('');
               return (
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                   <EmotionalText text={text} />
-                </p>
+                </div>
               );
             },
             ul: ({children}) => (
-              <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <div className="list-disc list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
                 {children}
-              </ul>
+              </div>
             ),
             ol: ({children}) => (
-              <ol className="list-decimal list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <div className="list-decimal list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
                 {children}
-              </ol>
+              </div>
             ),
             li: ({children}) => {
               const text = React.Children.toArray(children)
                 .map(child => (typeof child === 'string' ? child : ''))
                 .join('');
               return (
-                <li className="mt-1">
+                <div className="mt-1">
                   <EmotionalText text={text} />
-                </li>
+                </div>
               );
             }
           }}
