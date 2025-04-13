@@ -166,42 +166,63 @@ const EMOTIONS: EmotionsType = {
 };
 
 // Color utility functions
-const getMoodColor = (color: string) => {
-  const colors = {
-    red: {
-      bg: 'bg-red-50 dark:bg-red-900/20',
-      text: 'text-red-700 dark:text-red-300',
-      border: 'border-red-200 dark:border-red-800',
-      dot: 'bg-red-500 dark:bg-red-400',
-      hover: 'hover:bg-red-100 dark:hover:bg-red-900/30',
-      button: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800'
-    },
-    yellow: {
-      bg: 'bg-amber-50 dark:bg-amber-900/20',
-      text: 'text-amber-700 dark:text-amber-300',
-      border: 'border-amber-200 dark:border-amber-800',
-      dot: 'bg-amber-500 dark:bg-amber-400',
-      hover: 'hover:bg-amber-100 dark:hover:bg-amber-900/30',
-      button: 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800'
-    },
-    blue: {
-      bg: 'bg-blue-50 dark:bg-blue-900/20',
-      text: 'text-blue-700 dark:text-blue-300',
-      border: 'border-blue-200 dark:border-blue-800',
-      dot: 'bg-blue-500 dark:bg-blue-400',
-      hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/30',
-      button: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
-    },
-    green: {
-      bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-      text: 'text-emerald-700 dark:text-emerald-300',
-      border: 'border-emerald-200 dark:border-emerald-800',
-      dot: 'bg-emerald-500 dark:bg-emerald-400',
-      hover: 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30',
-      button: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800'
+const MOOD_COLORS = {
+  red: {
+    bg: 'bg-red-50 dark:bg-red-900/20',
+    text: 'text-red-700 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800',
+    dot: 'bg-red-500 dark:bg-red-400',
+    hover: 'hover:bg-red-100 dark:hover:bg-red-900/30',
+    button: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800',
+    hex: {
+      fill: '#EF4444',    // red-500
+      stroke: '#DC2626',  // red-600
+      text: '#DC2626'     // red-600
     }
-  };
-  return colors[color as keyof typeof colors] || colors.blue;
+  },
+  yellow: {
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    text: 'text-amber-700 dark:text-amber-300',
+    border: 'border-amber-200 dark:border-amber-800',
+    dot: 'bg-amber-500 dark:bg-amber-400',
+    hover: 'hover:bg-amber-100 dark:hover:bg-amber-900/30',
+    button: 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800',
+    hex: {
+      fill: '#F59E0B',    // amber-500
+      stroke: '#D97706',  // amber-600
+      text: '#D97706'     // amber-600
+    }
+  },
+  blue: {
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    text: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800',
+    dot: 'bg-blue-500 dark:bg-blue-400',
+    hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/30',
+    button: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800',
+    hex: {
+      fill: '#3B82F6',    // blue-500
+      stroke: '#2563EB',  // blue-600
+      text: '#2563EB'     // blue-600
+    }
+  },
+  green: {
+    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    text: 'text-emerald-700 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-800',
+    dot: 'bg-emerald-500 dark:bg-emerald-400',
+    hover: 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30',
+    button: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800',
+    hex: {
+      fill: '#10B981',    // emerald-500
+      stroke: '#059669',  // emerald-600
+      text: '#059669'     // emerald-600
+    }
+  }
+} as const;
+
+const getMoodColor = (color: string) => {
+  return MOOD_COLORS[color as keyof typeof MOOD_COLORS] || MOOD_COLORS.blue;
 };
 
 const EmotionalText: React.FC<{ text: string }> = ({ text }) => {
@@ -661,10 +682,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                           date: day.date
                         }] : []
                       )}
-                      fill={color === 'red' ? '#EF4444' : 
-                            color === 'yellow' ? '#F59E0B' : 
-                            color === 'green' ? '#10B981' : 
-                            '#3B82F6'}
+                      fill={getMoodColor(color).hex.fill}
                     />
                   ))}
                 </ScatterChart>
@@ -678,28 +696,50 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="80%">
-                  <PolarGrid stroke="#374151" />
+                  <PolarGrid 
+                    stroke="#374151" 
+                    strokeOpacity={0.15}
+                    strokeDasharray="3 3"
+                  />
                   <PolarAngleAxis
                     dataKey="emotion"
-                    tick={{ fill: '#6B7280', fontSize: 10 }}
+                    tick={(props) => {
+                      const { x, y, payload } = props;
+                      const matchingEmotion = radarData.find(d => d.emotion === payload.value);
+                      const color = matchingEmotion?.category ? getMoodColor(matchingEmotion.category).hex.text : '#6B7280';
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          textAnchor={x > props.cx ? 'start' : 'end'}
+                          fill={color}
+                          fontSize={10}
+                          fillOpacity={0.85}
+                        >
+                          {payload.value}
+                        </text>
+                      );
+                    }}
                   />
                   <PolarRadiusAxis
                     angle={30}
                     domain={[0, 'auto']}
-                    tick={{ fill: '#6B7280', fontSize: 10 }}
+                    tick={{ 
+                      fill: '#6B7280',
+                      fontSize: 10,
+                      fillOpacity: 0.7
+                    }}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <Radar
                     name="Emotions"
                     dataKey="count"
                     data={radarData}
-                    fill={(entry) => {
-                      const color = entry.category;
-                      return color === 'red' ? '#EF4444' : 
-                             color === 'yellow' ? '#F59E0B' : 
-                             color === 'green' ? '#10B981' : 
-                             '#3B82F6';
-                    }}
-                    fillOpacity={0.6}
+                    stroke={(entry) => getMoodColor(entry.category).hex.stroke}
+                    fill={(entry) => getMoodColor(entry.category).hex.fill}
+                    fillOpacity={0.3}
+                    strokeWidth={2}
                   />
                   <Tooltip
                     contentStyle={{
@@ -709,10 +749,17 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                       fontSize: '12px',
                       color: '#F3F4F6'
                     }}
-                    formatter={(value: number, name: string, props: any) => [
-                      `Count: ${value}`,
-                      props.payload.emotion
-                    ]}
+                    formatter={(value: number, name: string, props: any) => {
+                      const color = props.payload.category;
+                      const colorClass = color === 'red' ? 'text-red-400' :
+                                       color === 'yellow' ? 'text-amber-400' :
+                                       color === 'green' ? 'text-emerald-400' :
+                                       'text-blue-400';
+                      return [
+                        <span className={colorClass}>{`Count: ${value}`}</span>,
+                        <span className={colorClass}>{props.payload.emotion}</span>
+                      ];
+                    }}
                   />
                 </RadarChart>
               </ResponsiveContainer>
