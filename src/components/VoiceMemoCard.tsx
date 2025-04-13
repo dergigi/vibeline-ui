@@ -287,7 +287,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           {memo.transcript && (
             <div>
               <div 
-                className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded"
                 onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
               >
                 <div className="flex items-center gap-2">
@@ -306,7 +306,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   )}
                 </div>
               </div>
-              <p className={`text-sm text-gray-600 dark:text-gray-400 ${isTranscriptExpanded ? '' : 'line-clamp-5'}`}>
+              <p className={`text-sm text-gray-600 dark:text-gray-400 text-left ${isTranscriptExpanded ? '' : 'line-clamp-5'}`}>
                 {memo.transcript}
               </p>
             </div>
@@ -315,7 +315,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           {memo.summary && (
             <div>
               <div 
-                className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded"
                 onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
               >
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -329,7 +329,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   )}
                 </div>
               </div>
-              <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line`}>
+              <p className={`text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line text-left`}>
                 {isSummaryExpanded ? memo.summary.trim() : getLastParagraph(memo.summary)}
               </p>
             </div>
@@ -347,7 +347,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             {hasTodos && (
               <div>
                 <div 
-                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded"
                   onClick={() => setIsTodosExpanded(!isTodosExpanded)}
                 >
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -419,7 +419,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             {hasPrompts && (
               <div>
                 <div 
-                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded"
                   onClick={() => setIsPromptsExpanded(!isPromptsExpanded)}
                 >
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -455,7 +455,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   </div>
                 </div>
                 {isPromptsExpanded && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line text-left">
                     {memo.prompts.trim()}
                   </p>
                 )}
@@ -465,7 +465,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             {hasDrafts && (
               <div>
                 <div 
-                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded px-1"
+                  className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 rounded"
                   onClick={() => setIsDraftsExpanded(!isDraftsExpanded)}
                 >
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -492,7 +492,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   </div>
                 </div>
                 {isDraftsExpanded && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line text-left">
                     {memo.drafts.trim()}
                   </p>
                 )}
