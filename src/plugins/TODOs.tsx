@@ -25,8 +25,11 @@ interface TodosPluginProps {
   }[];
 }
 
+type FilterState = 'all' | 'open' | 'done';
+
 const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
   const [sections, setSections] = useState<TodoSection[]>([]);
+  const [filter, setFilter] = useState<FilterState>('all');
 
   useEffect(() => {
     // Parse todos from markdown files
@@ -164,59 +167,107 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
     return `${months[month]} ${day} · ${timeFormatted}`;
   };
 
+  const filterTodos = (todos: Todo[]) => {
+    switch (filter) {
+      case 'open':
+        return todos.filter(todo => !todo.completed);
+      case 'done':
+        return todos.filter(todo => todo.completed);
+      default:
+        return todos;
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {sections.map((section, index) => (
-        <div key={section.title} className="rounded-lg bg-gray-50">
-          <button
-            onClick={() => toggleSection(index)}
-            className="flex w-full items-center px-4 py-3"
-          >
-            {section.isExpanded ? (
-              <ChevronDown className="h-4 w-4 text-gray-500" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-gray-500" />
-            )}
-            <span className="ml-2 text-sm font-medium text-gray-900">
-              {section.title}
-            </span>
-            <span className="ml-2 text-sm text-gray-500">
-              ({section.todos.length})
-            </span>
-          </button>
-          <div className="px-4 pb-3">
-            {(section.isExpanded ? section.todos : section.todos.slice(0, 5)).map((todo) => (
-              <div
-                key={todo.id}
-                className="flex items-center py-2"
-              >
-                <Square
-                  className={`h-4 w-4 ${
-                    todo.completed ? "text-gray-400" : "text-blue-500"
-                  }`}
-                  onClick={() => toggleTodo(todo.id, todo.completed)}
-                />
-                <span className={`ml-3 text-sm ${
-                  todo.completed ? "text-gray-400 line-through" : "text-gray-900"
-                }`}>
-                  {todo.text}
-                </span>
-                <span className="ml-auto text-xs text-gray-400">
-                  {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
-                </span>
-              </div>
-            ))}
-            {!section.isExpanded && section.todos.length > 5 && (
-              <button
-                onClick={() => toggleSection(index)}
-                className="mt-2 text-sm text-blue-500 hover:text-blue-600"
-              >
-                Show {section.todos.length - 5} more...
-              </button>
-            )}
+      <div className="flex gap-2 px-4">
+        <button
+          onClick={() => setFilter('all')}
+          className={`text-sm px-3 py-1 rounded-full ${
+            filter === 'all'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setFilter('open')}
+          className={`text-sm px-3 py-1 rounded-full ${
+            filter === 'open'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Open
+        </button>
+        <button
+          onClick={() => setFilter('done')}
+          className={`text-sm px-3 py-1 rounded-full ${
+            filter === 'done'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Done
+        </button>
+      </div>
+      {sections.map((section, index) => {
+        const filteredTodos = filterTodos(section.todos);
+        if (filteredTodos.length === 0) return null;
+        
+        return (
+          <div key={section.title} className="rounded-lg bg-gray-50">
+            <button
+              onClick={() => toggleSection(index)}
+              className="flex w-full items-center px-4 py-3"
+            >
+              {section.isExpanded ? (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              )}
+              <span className="ml-2 text-sm font-medium text-gray-900">
+                {section.title}
+              </span>
+              <span className="ml-2 text-sm text-gray-500">
+                ({filteredTodos.length})
+              </span>
+            </button>
+            <div className="px-4 pb-3">
+              {(section.isExpanded ? filteredTodos : filteredTodos.slice(0, 5)).map((todo) => (
+                <div
+                  key={todo.id}
+                  className="flex items-center py-2"
+                >
+                  <Square
+                    className={`h-4 w-4 ${
+                      todo.completed ? "text-gray-400" : "text-blue-500"
+                    }`}
+                    onClick={() => toggleTodo(todo.id, todo.completed)}
+                  />
+                  <span className={`ml-3 text-sm ${
+                    todo.completed ? "text-gray-400 line-through" : "text-gray-900"
+                  }`}>
+                    {todo.text}
+                  </span>
+                  <span className="ml-auto text-xs text-gray-400">
+                    {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
+                  </span>
+                </div>
+              ))}
+              {!section.isExpanded && filteredTodos.length > 5 && (
+                <button
+                  onClick={() => toggleSection(index)}
+                  className="mt-2 text-sm text-blue-500 hover:text-blue-600"
+                >
+                  Show {filteredTodos.length - 5} more...
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
