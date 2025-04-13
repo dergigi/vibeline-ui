@@ -42,14 +42,12 @@ function PluginUIWrapper({ pluginId, files }: PluginUIWrapperProps) {
         files.map(async (file) => {
           try {
             // Try to read matching transcript file
-            const transcriptPath = file.path.replace(/^plugins\//, 'transcripts/');
-            console.log('Loading transcript:', {
-              originalPath: file.path,
-              transcriptPath: transcriptPath
-            });
-            const transcriptModule = await import(`../../${transcriptPath}`);
-            console.log('Transcript loaded:', transcriptModule.default);
-            return { ...file, transcript: transcriptModule.default };
+            const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+            const response = await fetch(`/api/memos/transcript/${fileName}`);
+            if (!response.ok) throw new Error('Transcript not found');
+            const transcript = await response.text();
+            console.log('Transcript loaded:', transcript);
+            return { ...file, transcript };
           } catch (error) {
             // If transcript doesn't exist, return original file
             console.error('Failed to load transcript:', {
