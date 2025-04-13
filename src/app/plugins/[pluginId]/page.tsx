@@ -95,7 +95,13 @@ function FileContent({ file }: { file: PluginFile }) {
   }
 
   // Default text display
-  return <pre className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded overflow-auto">{file.content}</pre>;
+  return (
+    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded overflow-auto">
+      <div className="whitespace-pre-wrap break-words max-w-3xl">
+        {file.content}
+      </div>
+    </div>
+  );
 }
 
 async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]; hasCustomUI: boolean }> {
@@ -140,7 +146,7 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
 
 function DefaultPluginUI({ files, pluginId }: { files: PluginFile[]; pluginId: string }) {
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">
           {pluginId.replace(/_/g, ' ')}
