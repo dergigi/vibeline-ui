@@ -5,6 +5,15 @@ import path from 'path';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 
+// Define default plugins and their file extensions
+const DEFAULT_PLUGINS = {
+  TRANSCRIPTS: { dir: 'transcripts', ext: '.txt' },
+  SUMMARIES: { dir: 'summaries', ext: '.txt' },
+  TODOS: { dir: 'TODOs', ext: '.md' }
+} as const;
+
+type PluginKey = keyof typeof DEFAULT_PLUGINS;
+
 interface Memo {
   filename: string;
   path: string;
@@ -36,9 +45,26 @@ async function getPluginDirectories() {
     const dirs = entries
       .filter(entry => entry.isDirectory() && !entry.name.startsWith('.'))
       .reduce((acc, dir) => {
-        acc[dir.name.toUpperCase()] = path.join(VOICE_MEMOS_DIR, dir.name);
+        const upperKey = dir.name.toUpperCase() as PluginKey;
+        acc[upperKey] = {
+          path: path.join(VOICE_MEMOS_DIR, dir.name),
+          ext: DEFAULT_PLUGINS[upperKey]?.ext || '.md'
+        };
         return acc;
-      }, {} as Record<string, string>);
+      }, {} as Record<string, { path: string; ext: string }>);
+
+    // Ensure default plugins are included
+    for (const [key, value] of Object.entries(DEFAULT_PLUGINS)) {
+      if (!dirs[key]) {
+        const dirPath = path.join(VOICE_MEMOS_DIR, value.dir);
+        // Create directory if it doesn't exist
+        if (!existsSync(dirPath)) {
+          await fs.mkdir(dirPath, { recursive: true });
+        }
+        dirs[key] = { path: dirPath, ext: value.ext };
+      }
+    }
+
     return dirs;
   } catch (error) {
     console.error('Error reading plugin directories:', error);
@@ -51,15 +77,15 @@ export async function GET() {
     const pluginDirs = await getPluginDirectories();
     const memos: Memo[] = [];
 
-    // Read all markdown files from each plugin directory
+    // Read all files from each plugin directory
     await Promise.all(
-      Object.entries(pluginDirs).map(async ([pluginType, dirPath]) => {
+      Object.entries(pluginDirs).map(async ([pluginType, { path: dirPath, ext }]) => {
         if (!existsSync(dirPath)) return;
 
         const files = await fs.readdir(dirPath);
         await Promise.all(
           files
-            .filter(file => file.endsWith('.md'))
+            .filter(file => file.endsWith(ext))
             .map(async file => {
               const filePath = path.join(dirPath, file);
               try {
