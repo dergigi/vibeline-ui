@@ -25,11 +25,11 @@ interface TodosPluginProps {
   }[];
 }
 
-type FilterState = 'all' | 'open' | 'done';
+type FilterState = 'all' | 'open-first' | 'open' | 'done';
 
 const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
   const [sections, setSections] = useState<TodoSection[]>([]);
-  const [filter, setFilter] = useState<FilterState>('all');
+  const [filter, setFilter] = useState<FilterState>('open-first');
 
   useEffect(() => {
     // Parse todos from markdown files
@@ -159,6 +159,8 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
         return todos.filter(todo => !todo.completed);
       case 'done':
         return todos.filter(todo => todo.completed);
+      case 'open-first':
+        return [...todos.filter(todo => !todo.completed), ...todos.filter(todo => todo.completed)];
       default:
         return todos;
     }
@@ -177,6 +179,16 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             }`}
           >
             All
+          </button>
+          <button
+            onClick={() => setFilter('open-first')}
+            className={`text-sm px-3 py-1 rounded-full ${
+              filter === 'open-first'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Open First
           </button>
           <button
             onClick={() => setFilter('open')}
