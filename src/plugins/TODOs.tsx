@@ -26,12 +26,10 @@ interface TodosPluginProps {
 }
 
 type FilterState = 'all' | 'open' | 'done';
-type SortDirection = 'newest' | 'oldest';
 
 const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
   const [sections, setSections] = useState<TodoSection[]>([]);
   const [filter, setFilter] = useState<FilterState>('all');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('newest');
 
   useEffect(() => {
     // Parse todos from markdown files
@@ -60,12 +58,10 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       });
     });
 
-    // Sort todos by creation date
+    // Sort todos by creation date (newest first)
     const sortTodos = (a: Todo, b: Todo) => {
       // First compare dates
-      const dateComparison = sortDirection === 'newest' 
-        ? b.createdAt.localeCompare(a.createdAt)
-        : a.createdAt.localeCompare(b.createdAt);
+      const dateComparison = b.createdAt.localeCompare(a.createdAt);
 
       // If dates are equal, use the line number to maintain original order
       if (dateComparison === 0) {
@@ -76,7 +72,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       return dateComparison;
     };
 
-    // First sort all todos
     allTodos.sort(sortTodos);
 
     // Get date boundaries
@@ -102,7 +97,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       { title: 'This Week', todos: weekTodos, isExpanded: false },
       { title: 'Older', todos: olderTodos, isExpanded: false }
     ]);
-  }, [files, sortDirection]);
+  }, [files]);
 
   const toggleSection = (sectionIndex: number) => {
     setSections(prevSections => 
@@ -171,7 +166,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-4">
+      <div className="flex items-center px-4">
         <div className="flex gap-2">
           <button
             onClick={() => setFilter('all')}
@@ -204,12 +199,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             Done
           </button>
         </div>
-        <button
-          onClick={() => setSortDirection(prev => prev === 'newest' ? 'oldest' : 'newest')}
-          className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
-        >
-          {sortDirection === 'newest' ? 'Newest first' : 'Oldest first'}
-        </button>
       </div>
       {sections.map((section, index) => {
         const filteredTodos = filterTodos(section.todos);
