@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, 
-         RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+         RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, AreaChart, Area, CartesianGrid } from 'recharts';
+import { groupBy, countBy, mean } from 'lodash';
 
 interface MoodEntry {
   id: string;
@@ -587,6 +588,28 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     );
   };
 
+  // Process data for timeline
+  const timelineData = useMemo(() => {
+    const groupedByDate = groupBy(moodEntries, entry => 
+      new Date(entry.timestamp).toISOString().split('T')[0]
+    );
+
+    return Object.entries(groupedByDate).map(([date, entries]) => {
+      const colorCounts = countBy(entries, 'color');
+      const avgIntensity = mean(entries.map(e => e.intensity));
+      
+      return {
+        date,
+        entries,
+        intensity: avgIntensity || 0,
+        red: colorCounts.red || 0,
+        yellow: colorCounts.yellow || 0,
+        green: colorCounts.green || 0,
+        blue: colorCounts.blue || 0
+      };
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [moodEntries]);
+
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="mb-8">
@@ -595,97 +618,63 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Timeline Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timeline</h3>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mood Timeline</h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart
-                  margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-                  onClick={(data) => {
-                    if (data && data.activePayload && data.activePayload[0]) {
-                      const entry = data.activePayload[0].payload.entries[0];
-                      setSelectedEntry(entry);
-                    }
-                  }}
+                <AreaChart
+                  data={timelineData}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 >
+                  <defs>
+                    {Object.keys(MOOD_COLORS).map((color) => (
+                      <linearGradient key={color} id={`color${color}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={getMoodColor(color).hex.fill} stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor={getMoodColor(color).hex.fill} stopOpacity={0}/>
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.15} />
                   <XAxis 
-                    dataKey="timestamp"
-                    type="number"
-                    domain={[timeRange.start.getTime(), timeRange.end.getTime()]}
-                    tickFormatter={(timestamp) => formatDate(new Date(timestamp).toISOString())}
+                    dataKey="date" 
                     stroke="#6B7280"
-                    fontSize={12}
+                    fontSize={10}
+                    tickFormatter={(date) => new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   />
                   <YAxis 
-                    type="number"
-                    dataKey="intensity"
-                    domain={[0, 1]}
-                    tickFormatter={(value) => {
-                      if (value === 0) return "Pleasant";
-                      if (value === 0.5) return "Neutral";
-                      if (value === 1) return "Unpleasant";
-                      return "";
-                    }}
                     stroke="#6B7280"
-                    fontSize={12}
-                  />
-                  <ZAxis 
-                    type="number"
-                    range={[50, 400]}
-                    dataKey="size"
+                    fontSize={10}
+                    tickFormatter={(value) => Math.round(value)}
                   />
                   <Tooltip
-                    cursor={{ strokeDasharray: '3 3' }}
                     contentStyle={{
                       backgroundColor: '#1F2937',
                       border: 'none',
                       borderRadius: '0.375rem',
-                      fontSize: '12px'
+                      fontSize: '12px',
+                      color: '#F3F4F6'
                     }}
-                    content={({ active, payload }) => {
-                      if (!active || !payload || !payload.length) return null;
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-gray-800 dark:bg-gray-700 p-2 rounded shadow text-white">
-                          <p className="font-medium">{formatDateTime(data.date)}</p>
-                          {data.entries.map((entry: MoodEntry & { intensity: number }, i: number) => (
-                            <div key={i} className="text-sm mt-1 cursor-pointer hover:opacity-80">
-                              <span className={getMoodColor(entry.color).text}>
-                                {entry.mood}
-                              </span>
-                              <span className="text-xs ml-2 text-gray-400">
-                                {entry.intensity >= 0.7 ? "Very Unpleasant" :
-                                 entry.intensity >= 0.4 ? "Unpleasant" :
-                                 entry.intensity >= 0.2 ? "Slightly Unpleasant" :
-                                 "Pleasant"}
-                              </span>
-                            </div>
-                          ))}
-                          <div className="text-xs text-gray-400 mt-2 italic">
-                            Click to view details
-                          </div>
-                        </div>
-                      );
+                    formatter={(value: number, name: string) => {
+                      const color = name.toLowerCase();
+                      return [
+                        <span className={getMoodColor(color).text}>{`Count: ${value}`}</span>,
+                        <span className={getMoodColor(color).text}>{name}</span>
+                      ];
                     }}
+                    labelFormatter={(date) => new Date(date).toLocaleDateString()}
                   />
-                  {['red', 'yellow', 'green', 'blue'].map((color) => (
-                    <Scatter
+                  {Object.keys(MOOD_COLORS).map((color) => (
+                    <Area
                       key={color}
-                      name={color}
-                      className="cursor-pointer"
-                      data={timelineData.flatMap(day => 
-                        day[color] > 0 ? [{
-                          timestamp: new Date(day.date).getTime(),
-                          intensity: day.intensity,
-                          color,
-                          size: day[color] * 100,
-                          entries: day.entries.filter((e: MoodEntry) => e.color === color),
-                          date: day.date
-                        }] : []
-                      )}
-                      fill={getMoodColor(color).hex.fill}
+                      type="monotone"
+                      dataKey={color}
+                      name={color.charAt(0).toUpperCase() + color.slice(1)}
+                      stroke={getMoodColor(color).hex.stroke}
+                      fillOpacity={1}
+                      fill={`url(#color${color})`}
+                      stackId="1"
                     />
                   ))}
-                </ScatterChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
