@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Trash2, Plus, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Todo {
   id: string;
@@ -27,8 +27,6 @@ interface TodosPluginProps {
 
 const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
   const [sections, setSections] = useState<TodoSection[]>([]);
-  const [newTodoText, setNewTodoText] = useState('');
-  const [isAddingTodo, setIsAddingTodo] = useState(false);
 
   useEffect(() => {
     // Parse todos from markdown files
@@ -93,34 +91,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
           : section
       )
     );
-  };
-
-  const addTodo = async () => {
-    if (!newTodoText.trim()) return;
-
-    try {
-      const response = await fetch('/api/todos/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: newTodoText,
-          pluginId: 'TODOs'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add todo');
-      }
-
-      window.location.reload();
-    } catch (error) {
-      console.error('Error adding todo:', error);
-    }
-
-    setNewTodoText('');
-    setIsAddingTodo(false);
   };
 
   const toggleTodo = async (todoId: string, currentCompleted: boolean) => {
@@ -191,49 +161,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">TODOs</h1>
-      </div>
-
-      <div className="mb-6">
-        {!isAddingTodo ? (
-          <button
-            onClick={() => setIsAddingTodo(true)}
-            className="flex items-center space-x-2 text-blue-500 hover:text-blue-600"
-          >
-            <Plus size={20} />
-            <span>Add Todo</span>
-          </button>
-        ) : (
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              value={newTodoText}
-              onChange={(e) => setNewTodoText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-              placeholder="Enter new todo..."
-              className="flex-1 p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              autoFocus
-            />
-            <button
-              onClick={addTodo}
-              className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Add
-            </button>
-            <button
-              onClick={() => {
-                setIsAddingTodo(false);
-                setNewTodoText('');
-              }}
-              className="p-2 text-gray-500 hover:text-gray-600"
-            >
-              <X size={20} />
-            </button>
-          </div>
-        )}
-      </div>
-
       <div className="space-y-6">
         {sections.map((section, index) => (
           <div key={section.title} className="space-y-2">
