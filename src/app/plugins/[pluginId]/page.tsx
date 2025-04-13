@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { notFound } from 'next/navigation';
 import { existsSync } from 'fs';
+import PluginUIWrapper from '@/components/PluginUIWrapper';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 
@@ -12,7 +13,7 @@ interface PluginFile {
   content?: string;
 }
 
-async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]; customUI?: string }> {
+async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]; hasCustomUI: boolean }> {
   const pluginDir = path.join(VOICE_MEMOS_DIR, pluginId);
   const customUIPath = path.join(pluginDir, 'page.tsx');
   
@@ -36,17 +37,12 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
       });
 
     const files = await Promise.all(filePromises);
-
-    // Check if custom UI exists
-    let customUI: string | undefined;
-    if (existsSync(customUIPath)) {
-      customUI = await fs.readFile(customUIPath, 'utf-8');
-    }
+    const hasCustomUI = existsSync(customUIPath);
     
-    return { files, customUI };
+    return { files, hasCustomUI };
   } catch (error) {
     console.error(`Error reading plugin ${pluginId}:`, error);
-    return { files: [] };
+    return { files: [], hasCustomUI: false };
   }
 }
 
@@ -82,45 +78,21 @@ function DefaultPluginUI({ files, pluginId }: { files: PluginFile[]; pluginId: s
 
 export default async function PluginPage({ params }: { params: Promise<{ pluginId: string }> }) {
   const { pluginId } = await params;
-  const { files, customUI } = await getPluginContent(pluginId);
+  const { files, hasCustomUI } = await getPluginContent(pluginId);
   
-  if (!files.length && !customUI) {
+  if (!files.length && !hasCustomUI) {
     notFound();
   }
 
-  // If there's a custom UI component, dynamically import and use it
-  if (customUI) {
-    // Create a temporary file in the app directory to import the custom UI
-    const tempUIPath = path.join(process.cwd(), 'src/app/plugins/[pluginId]/_temp_ui.tsx');
-    await fs.writeFile(tempUIPath, customUI);
-    
-    try {
-      // Dynamic import of the custom UI component
-      const CustomUI = (await import('./_temp_ui')).default;
-      return (
-        <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-4xl mx-auto px-4 py-8">
-            <Suspense fallback={<div>Loading custom plugin UI...</div>}>
-              <CustomUI files={files} />
-            </Suspense>
-          </div>
-        </main>
-      );
-    } catch (error) {
-      console.error('Error loading custom UI:', error);
-      // Fall back to default UI if custom UI fails to load
-    } finally {
-      // Clean up temporary file
-      await fs.unlink(tempUIPath).catch(console.error);
-    }
-  }
-
-  // Default UI
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Suspense fallback={<div>Loading...</div>}>
-          <DefaultPluginUI files={files} pluginId={pluginId} />
+          {hasCustomUI ? (
+            <PluginUIWrapper pluginId={pluginId} files={files} />
+          ) : (
+            <DefaultPluginUI files={files} pluginId={pluginId} />
+          )}
         </Suspense>
       </div>
     </main>
