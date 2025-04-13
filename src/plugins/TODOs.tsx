@@ -119,7 +119,24 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
     }
   };
 
-  const renderTodoItem = (todo: Todo) => (
+  const formatTimestamp = (filename: string, section: string) => {
+    // Extract date and time from filename format: YYYYMMDD_HHMMSS
+    const [date, time] = filename.split('_');
+    if (!time) return '';
+    
+    const timeFormatted = `${time.slice(0, 2)}:${time.slice(2, 4)}`;
+    
+    if (section === 'Today' || section === 'Yesterday') {
+      return timeFormatted;
+    }
+    
+    // Format date as MM/DD
+    const month = date.slice(4, 6);
+    const day = date.slice(6, 8);
+    return `${month}/${day} ${timeFormatted}`;
+  };
+
+  const renderTodoItem = (todo: Todo, section: string) => (
     <div
       key={todo.id}
       className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
@@ -135,10 +152,13 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             <Square size={24} />
           )}
         </button>
-        <span className={`text-gray-900 dark:text-white ${
+        <span className={`text-gray-900 dark:text-white flex-1 ${
           todo.completed ? 'line-through text-gray-500' : ''
         }`}>
           {todo.text}
+        </span>
+        <span className="text-[10px] text-gray-400 tabular-nums">
+          {formatTimestamp(todo.filePath?.split('/').pop() || '', section)}
         </span>
       </div>
     </div>
@@ -162,7 +182,8 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
               <span className="text-sm text-gray-500">({section.todos.length})</span>
             </button>
             <div className="space-y-2 ml-6">
-              {(section.isExpanded ? section.todos : section.todos.slice(0, 5)).map(renderTodoItem)}
+              {(section.isExpanded ? section.todos : section.todos.slice(0, 5))
+                .map(todo => renderTodoItem(todo, section.title))}
               {!section.isExpanded && section.todos.length > 5 && (
                 <button
                   onClick={() => toggleSection(index)}
