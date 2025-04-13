@@ -152,6 +152,45 @@ const EMOTIONS = {
   }
 };
 
+// Color utility functions
+const getMoodColor = (color: string) => {
+  const colors = {
+    red: {
+      bg: 'bg-red-50 dark:bg-red-900/20',
+      text: 'text-red-700 dark:text-red-300',
+      border: 'border-red-200 dark:border-red-800',
+      dot: 'bg-red-500 dark:bg-red-400',
+      hover: 'hover:bg-red-100 dark:hover:bg-red-900/30',
+      button: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800'
+    },
+    yellow: {
+      bg: 'bg-amber-50 dark:bg-amber-900/20',
+      text: 'text-amber-700 dark:text-amber-300',
+      border: 'border-amber-200 dark:border-amber-800',
+      dot: 'bg-amber-500 dark:bg-amber-400',
+      hover: 'hover:bg-amber-100 dark:hover:bg-amber-900/30',
+      button: 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800'
+    },
+    blue: {
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      text: 'text-blue-700 dark:text-blue-300',
+      border: 'border-blue-200 dark:border-blue-800',
+      dot: 'bg-blue-500 dark:bg-blue-400',
+      hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/30',
+      button: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
+    },
+    green: {
+      bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      border: 'border-emerald-200 dark:border-emerald-800',
+      dot: 'bg-emerald-500 dark:bg-emerald-400',
+      hover: 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30',
+      button: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800'
+    }
+  };
+  return colors[color as keyof typeof colors] || colors.blue;
+};
+
 const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
@@ -229,16 +268,6 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     });
   };
 
-  const getMoodColor = (color: string) => {
-    switch (color) {
-      case 'red': return 'bg-red-500';
-      case 'yellow': return 'bg-yellow-400';
-      case 'blue': return 'bg-blue-400';
-      case 'green': return 'bg-green-400';
-      default: return 'bg-gray-400';
-    }
-  };
-
   const filteredEntries = filter === 'all' 
     ? moodEntries 
     : moodEntries.filter(entry => entry.color === filter);
@@ -248,94 +277,97 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-4">Mood Timeline</h2>
         
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 mb-4">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded ${
-              filter === 'all' ? 'bg-gray-200' : 'bg-gray-100'
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+              ${filter === 'all' 
+                ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
           >
             All
           </button>
-          {Object.entries(EMOTIONS).map(([color, { label }]) => (
-            <button
-              key={color}
-              onClick={() => setFilter(color as any)}
-              className={`px-4 py-2 rounded ${
-                filter === color ? 'bg-gray-200' : 'bg-gray-100'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+          {Object.entries(EMOTIONS).map(([color, { label }]) => {
+            const colorClasses = getMoodColor(color);
+            return (
+              <button
+                key={color}
+                onClick={() => setFilter(color as any)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                  ${filter === color ? colorClasses.button : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Timeline */}
         <div className="md:col-span-1 bg-white rounded-lg shadow p-4 overflow-y-auto max-h-[80vh]">
-          <div className="space-y-3">
-            {filteredEntries.map(entry => (
-              <div 
-                key={entry.id}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                  selectedEntry?.id === entry.id 
-                    ? 'bg-gray-100 border border-gray-200' 
-                    : 'hover:bg-gray-50 border border-gray-100'
-                }`}
-                onClick={() => setSelectedEntry(entry)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={16} className="text-gray-500" />
-                    <span className="text-sm font-medium">{formatDate(entry.date)}</span>
+          <div className="space-y-4">
+            {filteredEntries.map(entry => {
+              const colorClasses = getMoodColor(entry.color);
+              return (
+                <div
+                  key={entry.id}
+                  onClick={() => setSelectedEntry(entry)}
+                  className={`p-4 rounded-lg border cursor-pointer transition-colors
+                    ${colorClasses.bg} ${colorClasses.border} ${colorClasses.hover}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${colorClasses.dot}`} />
+                      <span className={`font-medium ${colorClasses.text}`}>{entry.mood}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                      <Calendar className="w-4 h-4" />
+                      <span>{formatDate(entry.date)}</span>
+                      <Clock className="w-4 h-4 ml-2" />
+                      <span>{formatTime(entry.date)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Clock size={14} className="text-gray-500" />
-                    <span className="text-xs text-gray-500">{formatTime(entry.date)}</span>
-                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 line-clamp-2">{entry.description}</p>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${getMoodColor(entry.color)}`} />
-                  <span className="font-medium">{entry.mood}</span>
-                </div>
-                
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                  {entry.description}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         
         {/* Detail view */}
         <div className="md:col-span-2 bg-white rounded-lg shadow p-4">
           {selectedEntry ? (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold">
-                  {formatDate(selectedEntry.date)} at {formatTime(selectedEntry.date)}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full ${getMoodColor(selectedEntry.color)}`} />
-                  <span className="font-medium">{EMOTIONS[selectedEntry.color].label}</span>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-4 h-4 rounded-full ${getMoodColor(selectedEntry.color).dot}`} />
+                      <span className={`font-medium ${getMoodColor(selectedEntry.color).text}`}>
+                        {EMOTIONS[selectedEntry.color].label}
+                      </span>
+                    </div>
+                    <div className="mb-6">
+                      <h4 className="text-lg font-medium mb-2">Mood</h4>
+                      <div className="flex flex-col gap-2">
+                        <span className={`text-xl ${getMoodColor(selectedEntry.color).text}`}>
+                          {selectedEntry.mood}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {EMOTIONS[selectedEntry.color].emotions[selectedEntry.mood]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedEntry(null)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    Close
+                  </button>
                 </div>
-              </div>
-              
-              <div className="mb-6">
-                <h4 className="text-lg font-medium mb-2">Mood</h4>
-                <div className="flex flex-col gap-2">
-                  <span className="text-xl">{selectedEntry.mood}</span>
-                  <span className="text-gray-600">
-                    {EMOTIONS[selectedEntry.color].emotions[selectedEntry.mood]}
-                  </span>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-medium mb-2">Full Entry</h4>
-                <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-line">
+                <div className="prose dark:prose-invert max-w-none">
                   {selectedEntry.content}
                 </div>
               </div>
