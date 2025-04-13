@@ -193,37 +193,52 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="space-y-6">
-        {sections.map((section, index) => (
-          <div key={section.title} className="space-y-2">
-            <button
-              onClick={() => toggleSection(index)}
-              className="flex items-center space-x-2 text-lg font-semibold text-gray-900 dark:text-white"
-            >
-              {section.isExpanded ? (
-                <ChevronDown size={20} />
-              ) : (
-                <ChevronRight size={20} />
-              )}
-              <span>{section.title}</span>
-              <span className="text-sm text-gray-500">({section.todos.length})</span>
-            </button>
-            <div className="space-y-2 ml-6">
-              {(section.isExpanded ? section.todos : section.todos.slice(0, 5))
-                .map(todo => renderTodoItem(todo, section.title))}
-              {!section.isExpanded && section.todos.length > 5 && (
-                <button
-                  onClick={() => toggleSection(index)}
-                  className="text-sm text-blue-500 hover:text-blue-600 mt-2"
+    <div className="space-y-4">
+      {sections.map((section, index) => (
+        <div key={section.title} className="rounded-lg bg-gray-50">
+          <button
+            onClick={() => toggleSection(index)}
+            className="flex w-full items-center px-4 py-3"
+          >
+            {section.isExpanded ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+            <span className="ml-2 text-sm font-medium text-gray-900">
+              {section.title}
+            </span>
+            <span className="ml-2 text-sm text-gray-500">
+              ({section.todos.length})
+            </span>
+          </button>
+          {section.isExpanded && (
+            <div className="px-4 pb-3">
+              {section.todos.map((todo) => (
+                <div
+                  key={todo.id}
+                  className="flex items-center py-2"
                 >
-                  Show {section.todos.length - 5} more...
-                </button>
-              )}
+                  <Square
+                    className={`h-4 w-4 ${
+                      todo.completed ? "text-gray-400" : "text-blue-500"
+                    }`}
+                    onClick={() => toggleTodo(todo.id, todo.completed)}
+                  />
+                  <span className={`ml-3 text-sm ${
+                    todo.completed ? "text-gray-400" : "text-gray-900"
+                  }`}>
+                    {todo.text}
+                  </span>
+                  <span className="ml-auto text-xs text-gray-400">
+                    {formatTimestamp(todo.filePath?.split('/').pop() || '', section)}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 };
