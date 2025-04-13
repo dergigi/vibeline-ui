@@ -67,13 +67,40 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       .toISOString().split('T')[0].replace(/-/g, '');
 
     // Organize todos into sections
-    const todayTodos = allTodos.filter(todo => todo.createdAt === today);
-    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday);
+    const todayTodos = allTodos.filter(todo => todo.createdAt === today)
+      .sort((a, b) => {
+        // Sort by completion status first, then by creation date
+        if (a.completed === b.completed) {
+          return b.createdAt.localeCompare(a.createdAt);
+        }
+        return a.completed ? 1 : -1;
+      });
+
+    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday)
+      .sort((a, b) => {
+        if (a.completed === b.completed) {
+          return b.createdAt.localeCompare(a.createdAt);
+        }
+        return a.completed ? 1 : -1;
+      });
+
     const weekTodos = allTodos.filter(todo => 
       todo.createdAt < yesterday && 
       todo.createdAt > weekAgo
-    );
-    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo);
+    ).sort((a, b) => {
+      if (a.completed === b.completed) {
+        return b.createdAt.localeCompare(a.createdAt);
+      }
+      return a.completed ? 1 : -1;
+    });
+
+    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo)
+      .sort((a, b) => {
+        if (a.completed === b.completed) {
+          return b.createdAt.localeCompare(a.createdAt);
+        }
+        return a.completed ? 1 : -1;
+      });
 
     setSections([
       { title: 'Today', todos: todayTodos, isExpanded: false },
