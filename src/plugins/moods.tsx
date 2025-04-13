@@ -289,6 +289,10 @@ const EmotionalText: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
+// Add proper types for the formatter functions
+type TooltipFormatter = (value: number, name: string, props: { payload: { category: string } }) => [JSX.Element, JSX.Element];
+type LabelFormatter = (label: string) => string;
+
 const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
@@ -330,7 +334,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       .forEach(entry => {
         const lowerContent = entry.content.toLowerCase();
         Object.entries(EMOTIONS).forEach(([color, category]) => {
-          Object.entries(category.emotions).forEach(([emotion, description]) => {
+          Object.entries(category.emotions).forEach(([emotion]) => {
             const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
             const matches = (lowerContent.match(regex) || []).length;
             if (matches > 0) {
@@ -340,7 +344,6 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
         });
       });
 
-    // Convert to radar format and get top emotions
     return Object.entries(emotionTotals)
       .map(([emotion, count]) => ({
         emotion,
@@ -350,8 +353,31 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
         )?.[0] || ''
       }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 8); // Show top 8 emotions
-  }, [moodEntries, timeRange]);
+      .slice(0, 8);
+  }, [moodEntries, timeRange.start]);
+
+  // Fix tooltip formatter types
+  const tooltipFormatter: TooltipFormatter = (value, name, props) => {
+    const color = props.payload.category;
+    const colorClass = color === 'red' ? 'text-red-400' :
+                      color === 'yellow' ? 'text-amber-400' :
+                      color === 'green' ? 'text-emerald-400' :
+                      'text-blue-400';
+    return [
+      <span key="value" className={colorClass}>{`Count: ${value}`}</span>,
+      <span key="name" className={colorClass}>{props.payload.emotion}</span>
+    ];
+  };
+
+  const timelineTooltipFormatter = (value: number, name: string) => {
+    const color = name.toLowerCase();
+    return [
+      <span key="value" className={getMoodColor(color).text}>{`Count: ${value}`}</span>,
+      <span key="name" className={getMoodColor(color).text}>{name}</span>
+    ];
+  };
+
+  const labelFormatter: LabelFormatter = (date) => new Date(date).toLocaleDateString();
 
   useEffect(() => {
     // Process mood files
@@ -552,12 +578,12 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       <div className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Timeline Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={timelineData}
-                  margin={{ top: 5, right: 0, left: -20, bottom: -10 }}
+                  margin={{ top: 0, right: -5, left: -25, bottom: -5 }}
                 >
                   <defs>
                     {Object.keys(MOOD_COLORS).map((color) => (
@@ -573,17 +599,19 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(date) => new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    tickMargin={2}
+                    tickMargin={0}
                     axisLine={false}
                     tickLine={false}
+                    dy={-3}
                   />
                   <YAxis 
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(value) => Math.round(value)}
-                    tickMargin={2}
+                    tickMargin={0}
                     axisLine={false}
                     tickLine={false}
+                    dx={-3}
                   />
                   <Tooltip
                     contentStyle={{
@@ -593,14 +621,8 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                       fontSize: '12px',
                       color: '#F3F4F6'
                     }}
-                    formatter={(value: number, name: string) => {
-                      const color = name.toLowerCase();
-                      return [
-                        <span className={getMoodColor(color).text}>{`Count: ${value}`}</span>,
-                        <span className={getMoodColor(color).text}>{name}</span>
-                      ];
-                    }}
-                    labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                    formatter={timelineTooltipFormatter}
+                    labelFormatter={labelFormatter}
                   />
                   {Object.keys(MOOD_COLORS).map((color) => (
                     <Area
@@ -633,14 +655,14 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                   <PolarAngleAxis
                     dataKey="emotion"
                     tick={(props) => {
-                      const { x, y, payload } = props;
+                      const { x, y, payload, cx = 0 } = props;
                       const matchingEmotion = radarData.find(d => d.emotion === payload.value);
                       const color = matchingEmotion?.category ? getMoodColor(matchingEmotion.category).hex.text : '#6B7280';
                       return (
                         <text
                           x={x}
                           y={y}
-                          textAnchor={x > props.cx ? 'start' : 'end'}
+                          textAnchor={x > cx ? 'start' : 'end'}
                           fill={color}
                           fontSize={10}
                           fillOpacity={0.85}
@@ -678,17 +700,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                       fontSize: '12px',
                       color: '#F3F4F6'
                     }}
-                    formatter={(value: number, name: string, props: any) => {
-                      const color = props.payload.category;
-                      const colorClass = color === 'red' ? 'text-red-400' :
-                                       color === 'yellow' ? 'text-amber-400' :
-                                       color === 'green' ? 'text-emerald-400' :
-                                       'text-blue-400';
-                      return [
-                        <span className={colorClass}>{`Count: ${value}`}</span>,
-                        <span className={colorClass}>{props.payload.emotion}</span>
-                      ];
-                    }}
+                    formatter={tooltipFormatter}
                   />
                 </RadarChart>
               </ResponsiveContainer>
