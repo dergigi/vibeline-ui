@@ -4,6 +4,7 @@ import path from 'path';
 import { notFound } from 'next/navigation';
 import { existsSync } from 'fs';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const PLUGINS_DIR = path.join(process.cwd(), 'src', 'plugins');
@@ -12,6 +13,89 @@ interface PluginFile {
   name: string;
   path: string;
   content?: string;
+  mimeType?: string;
+}
+
+function getMimeType(filename: string): string {
+  const ext = path.extname(filename).toLowerCase();
+  const mimeTypes: { [key: string]: string } = {
+    '.txt': 'text/plain',
+    '.md': 'text/markdown',
+    '.json': 'application/json',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.pdf': 'application/pdf',
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
+function FileContent({ file }: { file: PluginFile }) {
+  const mimeType = file.mimeType || getMimeType(file.name);
+
+  if (!file.content) {
+    return <p className="text-gray-500 dark:text-gray-400">No content available</p>;
+  }
+
+  if (mimeType.startsWith('image/')) {
+    return (
+      <div className="relative w-full h-64">
+        <Image
+          src={`/api/files/${file.path}`}
+          alt={file.name}
+          fill
+          className="object-contain"
+        />
+      </div>
+    );
+  }
+
+  if (mimeType.startsWith('audio/')) {
+    return (
+      <audio controls className="w-full">
+        <source src={`/api/files/${file.path}`} type={mimeType} />
+        Your browser does not support the audio element.
+      </audio>
+    );
+  }
+
+  if (mimeType.startsWith('video/')) {
+    return (
+      <video controls className="w-full">
+        <source src={`/api/files/${file.path}`} type={mimeType} />
+        Your browser does not support the video element.
+      </video>
+    );
+  }
+
+  if (mimeType === 'application/json') {
+    try {
+      const formattedJson = JSON.stringify(JSON.parse(file.content), null, 2);
+      return (
+        <pre className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded overflow-auto">
+          <code>{formattedJson}</code>
+        </pre>
+      );
+    } catch {
+      return <pre className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded overflow-auto">{file.content}</pre>;
+    }
+  }
+
+  if (mimeType === 'text/markdown') {
+    return (
+      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded overflow-auto prose dark:prose-invert max-w-none">
+        {file.content}
+      </div>
+    );
+  }
+
+  // Default text display
+  return <pre className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded overflow-auto">{file.content}</pre>;
 }
 
 async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]; hasCustomUI: boolean }> {
@@ -29,7 +113,7 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
   try {
     const entries = await fs.readdir(pluginDir, { withFileTypes: true });
     const filePromises = entries
-      .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+      .filter(entry => entry.isFile())
       .map(async entry => {
         const filePath = path.join(pluginDir, entry.name);
         let content: string | undefined;
@@ -41,7 +125,8 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
         return {
           name: entry.name,
           path: path.join(pluginId, entry.name),
-          content
+          content,
+          mimeType: getMimeType(entry.name)
         };
       });
 
@@ -61,24 +146,33 @@ function DefaultPluginUI({ files, pluginId }: { files: PluginFile[]; pluginId: s
           {pluginId.replace(/_/g, ' ')}
         </h1>
       </div>
-      {files.map((file) => (
-        <div
-          key={file.path}
-          className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
-        >
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            {file.name}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Path: {file.path}
+      {files.length === 0 ? (
+        <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <p className="text-gray-600 dark:text-gray-400 mb-2">
+            No files found in this plugin directory yet.
           </p>
-          {file.content && (
-            <pre className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded overflow-auto">
-              {file.content}
-            </pre>
-          )}
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            Voice memos that generate {pluginId.toLowerCase()} content will appear here.
+          </p>
         </div>
-      ))}
+      ) : (
+        files.map((file) => (
+          <div
+            key={file.path}
+            className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {file.name}
+              </h2>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {file.mimeType}
+              </span>
+            </div>
+            <FileContent file={file} />
+          </div>
+        ))
+      )}
     </div>
   );
 }
