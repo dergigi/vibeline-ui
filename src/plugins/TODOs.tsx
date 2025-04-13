@@ -73,6 +73,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       return dateComparison;
     };
 
+    // First sort all todos
     allTodos.sort(sortTodos);
 
     // Get date boundaries
@@ -84,13 +85,13 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       .toISOString().split('T')[0].replace(/-/g, '');
 
     // Organize todos into sections
-    const todayTodos = allTodos.filter(todo => todo.createdAt === today).sort(sortTodos);
-    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday).sort(sortTodos);
+    const todayTodos = allTodos.filter(todo => todo.createdAt === today);
+    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday);
     const weekTodos = allTodos.filter(todo => 
       todo.createdAt < yesterday && 
       todo.createdAt > weekAgo
-    ).sort(sortTodos);
-    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo).sort(sortTodos);
+    );
+    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo);
 
     setSections([
       { title: 'Today', todos: todayTodos, isExpanded: false },
