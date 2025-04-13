@@ -312,7 +312,7 @@ const EmotionalText: React.FC<{ text: string }> = ({ text }) => {
 type TooltipFormatter = (value: number, name: string, props: { payload?: { category: string; emotion: string } }) => [React.ReactElement, React.ReactElement];
 type LabelFormatter = (label: string) => string;
 
-const extractTopEmotions = (content: string): string => {
+const extractTopEmotions = (content: string, topN: number = 3): { topEmotion: string; allEmotions: string } => {
   const emotionCounts: Record<string, number> = {};
   const lowerContent = content.toLowerCase();
 
@@ -326,11 +326,16 @@ const extractTopEmotions = (content: string): string => {
     });
   });
 
-  return Object.entries(emotionCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([emotion]) => emotion)
-    .join(', ');
+  const sortedEmotions = Object.entries(emotionCounts)
+    .sort((a, b) => b[1] - a[1]);
+
+  return {
+    topEmotion: sortedEmotions[0]?.[0] || '',
+    allEmotions: sortedEmotions
+      .slice(0, topN)
+      .map(([emotion]) => emotion)
+      .join(', ')
+  };
 };
 
 const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
@@ -823,7 +828,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     <div className="flex items-center gap-1.5">
                       <div className={`w-2 h-2 rounded-full ${colorClasses.dot}`} />
                       <span className={`text-sm font-medium ${colorClasses.text}`}>
-                        {entry.pleasant ? 'Pleasant' : 'Unpleasant'}
+                        {extractTopEmotions(entry.content).topEmotion || (entry.pleasant ? 'Pleasant' : 'Unpleasant')}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
@@ -831,7 +836,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     </div>
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-1">
-                    {extractTopEmotions(entry.content) || 'No emotions detected'}
+                    {extractTopEmotions(entry.content).allEmotions || 'No emotions detected'}
                   </p>
                 </div>
               );
