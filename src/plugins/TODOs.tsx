@@ -62,13 +62,16 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
 
     // Sort todos by creation date
     const sortTodos = (a: Todo, b: Todo) => {
+      // First compare dates
       const dateComparison = sortDirection === 'newest' 
         ? b.createdAt.localeCompare(a.createdAt)
         : a.createdAt.localeCompare(b.createdAt);
 
-      // If dates are equal, sort by completion status
+      // If dates are equal, use the line number to maintain original order
       if (dateComparison === 0) {
-        return a.completed ? 1 : -1;
+        const aLine = parseInt(a.id.split('-')[1], 10);
+        const bLine = parseInt(b.id.split('-')[1], 10);
+        return aLine - bLine;
       }
       return dateComparison;
     };
