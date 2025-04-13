@@ -210,7 +210,11 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     // Process mood files
     const entries: MoodEntry[] = [];
     
-    console.log('Processing files:', files);
+    console.log('Processing files with transcripts:', files.map(f => ({
+      name: f.name,
+      hasTranscript: !!f.transcript,
+      transcriptLength: f.transcript?.length
+    })));
     
     files.forEach(file => {
       if (!file.content) return;
@@ -384,17 +388,17 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                   {formatDate(selectedEntry.date)} {formatTime(selectedEntry.date)}
                 </div>
               </div>
-              <div className="prose prose-sm dark:prose-invert max-w-none space-y-4">
+              <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Analysis</h3>
-                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                     {selectedEntry.content.replace(/^(Blue|Red|Yellow|Green)/, selectedEntry.pleasant ? 'Pleasant' : 'Unpleasant')}
                   </div>
                 </div>
                 {selectedEntry.transcript && (
-                  <div>
+                  <div className="border-t dark:border-gray-700 pt-4">
                     <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Full Transcript</h3>
-                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                    <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
                       {selectedEntry.transcript}
                     </div>
                   </div>

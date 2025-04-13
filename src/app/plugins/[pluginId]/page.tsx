@@ -8,6 +8,7 @@ import Image from 'next/image';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const PLUGINS_DIR = path.join(process.cwd(), 'src', 'plugins');
+const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
 
 interface PluginFile {
   name: string;
@@ -129,8 +130,8 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
         try {
           content = await fs.readFile(filePath, 'utf-8');
           
-          // Try to read matching transcript file
-          const transcriptPath = path.join(pluginDir, 'transcripts', entry.name.replace(/\.[^/.]+$/, '.txt'));
+          // Try to read matching transcript file from the root transcripts directory
+          const transcriptPath = path.join(TRANSCRIPTS_DIR, entry.name.replace(/\.[^/.]+$/, '.txt'));
           if (existsSync(transcriptPath)) {
             transcript = await fs.readFile(transcriptPath, 'utf-8');
           }
