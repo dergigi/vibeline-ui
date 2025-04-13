@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, 
-         RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, AreaChart, Area, CartesianGrid } from 'recharts';
+import { 
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, 
+  AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer 
+} from 'recharts';
 import { groupBy, countBy, mean } from 'lodash';
 
 interface MoodEntry {
@@ -16,6 +18,7 @@ interface MoodEntry {
   color: MoodColor;
   content: string;
   transcript?: string;
+  intensity?: number;
 }
 
 type MoodColor = 'red' | 'yellow' | 'blue' | 'green';
@@ -34,6 +37,22 @@ interface MoodsPluginProps {
     content?: string;
     transcript?: string;
   }[];
+}
+
+interface RadarDataPoint {
+  emotion: string;
+  count: number;
+  category: string;
+}
+
+interface TimelineDataPoint {
+  date: string;
+  entries: MoodEntry[];
+  intensity: number;
+  red: number;
+  yellow: number;
+  green: number;
+  blue: number;
 }
 
 const EMOTIONS: EmotionsType = {
@@ -290,14 +309,14 @@ const EmotionalText: React.FC<{ text: string }> = ({ text }) => {
 };
 
 // Add proper types for the formatter functions
-type TooltipFormatter = (value: number, name: string, props: { payload: { category: string } }) => [JSX.Element, JSX.Element];
+type TooltipFormatter = (value: number, name: string, props: { payload?: { category: string; emotion: string } }) => [React.ReactElement, React.ReactElement];
 type LabelFormatter = (label: string) => string;
 
 const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
-  const [filter, setFilter] = useState<'red' | 'yellow' | 'blue' | 'green' | 'all'>('all');
-  const [timeRange, setTimeRange] = useState<{ start: Date; end: Date }>(() => {
+  const [filter, setFilter] = useState<MoodColor | 'all'>('all');
+  const [timeRange] = useState<{ start: Date; end: Date }>(() => {
     const now = new Date();
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -305,18 +324,19 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   });
 
   // Process data for timeline
-  const timelineData = useMemo(() => {
-    const groupedByDate = groupBy(moodEntries, entry => 
+  const timelineData = useMemo<TimelineDataPoint[]>(() => {
+    const groupedByDate = groupBy(moodEntries, (entry: MoodEntry) => 
       new Date(entry.date).toISOString().split('T')[0]
     );
 
     return Object.entries(groupedByDate).map(([date, entries]) => {
-      const colorCounts = countBy(entries, 'color');
-      const avgIntensity = mean(entries.map(e => e.intensity || 0));
+      const typedEntries = entries as MoodEntry[];
+      const colorCounts = countBy(typedEntries, 'color');
+      const avgIntensity = mean(typedEntries.map(e => e.intensity || 0));
       
       return {
         date,
-        entries,
+        entries: typedEntries,
         intensity: avgIntensity || 0,
         red: colorCounts.red || 0,
         yellow: colorCounts.yellow || 0,
@@ -327,13 +347,13 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   }, [moodEntries]);
 
   // Process radar data
-  const radarData = useMemo(() => {
+  const radarData = useMemo<RadarDataPoint[]>(() => {
     const emotionTotals: Record<string, number> = {};
     moodEntries
       .filter(entry => new Date(entry.date) >= timeRange.start)
       .forEach(entry => {
         const lowerContent = entry.content.toLowerCase();
-        Object.entries(EMOTIONS).forEach(([color, category]) => {
+        Object.entries(EMOTIONS).forEach(([, category]) => {
           Object.entries(category.emotions).forEach(([emotion]) => {
             const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
             const matches = (lowerContent.match(regex) || []).length;
@@ -348,7 +368,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       .map(([emotion, count]) => ({
         emotion,
         count,
-        category: Object.entries(EMOTIONS).find(([_, category]) => 
+        category: Object.entries(EMOTIONS).find(([, category]) => 
           Object.keys(category.emotions).includes(emotion)
         )?.[0] || ''
       }))
@@ -358,14 +378,14 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
 
   // Fix tooltip formatter types
   const tooltipFormatter: TooltipFormatter = (value, name, props) => {
-    const color = props.payload.category;
+    const color = props.payload?.category;
     const colorClass = color === 'red' ? 'text-red-400' :
                       color === 'yellow' ? 'text-amber-400' :
                       color === 'green' ? 'text-emerald-400' :
                       'text-blue-400';
     return [
       <span key="value" className={colorClass}>{`Count: ${value}`}</span>,
-      <span key="name" className={colorClass}>{props.payload.emotion}</span>
+      <span key="name" className={colorClass}>{props.payload?.emotion}</span>
     ];
   };
 
@@ -477,15 +497,6 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       });
     }
   }, [selectedEntry]);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric'
-    });
-  };
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -607,7 +618,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                   <YAxis 
                     stroke="#6B7280"
                     fontSize={10}
-                    tickFormatter={(value) => Math.round(value)}
+                    tickFormatter={(value: number) => Math.round(value).toString()}
                     tickMargin={0}
                     axisLine={false}
                     tickLine={false}
@@ -687,10 +698,11 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     name="Emotions"
                     dataKey="count"
                     data={radarData}
-                    stroke={(entry) => getMoodColor(entry.category).hex.stroke}
-                    fill={(entry) => getMoodColor(entry.category).hex.fill}
+                    stroke={getMoodColor(radarData[0]?.category || 'blue').hex.stroke}
+                    fill={getMoodColor(radarData[0]?.category || 'blue').hex.fill}
                     fillOpacity={0.3}
                     strokeWidth={2}
+                    type="monotone"
                   />
                   <Tooltip
                     contentStyle={{
@@ -723,7 +735,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
           {Object.keys(MOOD_COLORS).map((color) => (
             <button
               key={color}
-              onClick={() => setFilter(color as any)}
+              onClick={() => setFilter(color as MoodColor)}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors
                 ${filter === color 
                   ? getMoodColor(color).button

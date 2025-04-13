@@ -33,6 +33,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
+    "@types/lodash": "^4.17.16",
     "@types/node": "^20.17.24",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
