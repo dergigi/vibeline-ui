@@ -8,7 +8,26 @@ const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 interface Memo {
   filename: string;
   path: string;
+  createdAt: string;
   [key: string]: string;
+}
+
+function parseTimestampFromFilename(filename: string): string {
+  // Extract YYYYMMDD_HHMMSS from the filename
+  const match = filename.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+  if (!match) {
+    return new Date().toISOString(); // Fallback to current time if pattern doesn't match
+  }
+  
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(
+    parseInt(year),
+    parseInt(month) - 1, // JavaScript months are 0-based
+    parseInt(day),
+    parseInt(hour),
+    parseInt(minute),
+    parseInt(second)
+  ).toISOString();
 }
 
 async function getPluginDirectories() {
@@ -49,6 +68,7 @@ export async function GET() {
                 memos.push({
                   filename: file,
                   path: filePath,
+                  createdAt: parseTimestampFromFilename(file),
                   [pluginKey]: content,
                 });
               } catch (error) {
@@ -66,7 +86,9 @@ export async function GET() {
     const groupedMemos = memos.reduce((acc, memo) => {
       const baseFilename = memo.filename.replace(/\.[^/.]+$/, '');
       if (!acc[baseFilename]) {
-        acc[baseFilename] = {};
+        acc[baseFilename] = {
+          createdAt: memo.createdAt // Preserve the createdAt timestamp
+        };
       }
       Object.entries(memo).forEach(([key, value]) => {
         if (key !== 'filename') {
