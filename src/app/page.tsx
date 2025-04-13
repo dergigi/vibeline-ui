@@ -30,7 +30,10 @@ export default async function Home() {
     <SearchProvider>
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center justify-end mb-8">
+          <div className="flex items-center justify-between mb-8">
+            <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+              Call 555-vibe to vibe it into existence 🤙
+            </p>
             <div className="flex items-center gap-4">
               <FilterButtons />
               <div className="w-64">
