@@ -1,19 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, Trash2, Plus, X } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, Plus, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
   createdAt: string;
-  filePath?: string; // Add filePath to track which file the todo came from
+  filePath?: string;
 }
 
 interface TodoSection {
   title: string;
   todos: Todo[];
+  isExpanded: boolean;
 }
 
 interface TodosPluginProps {
@@ -27,20 +28,17 @@ interface TodosPluginProps {
 const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
   const [sections, setSections] = useState<TodoSection[]>([]);
   const [newTodoText, setNewTodoText] = useState('');
-  const [activeSection, setActiveSection] = useState<string>('Open');
   const [isAddingTodo, setIsAddingTodo] = useState(false);
 
   useEffect(() => {
     // Parse todos from markdown files
-    const openTodos: Todo[] = [];
-    const completedTodos: Todo[] = [];
-
+    const allTodos: Todo[] = [];
+    
     files.forEach(file => {
       const content = file.content || '';
       const lines = content.split('\n');
       
       lines.forEach((line, index) => {
-        // Match markdown checkbox format: "- [ ] text" or "- [x] text"
         const match = line.match(/^(\s*-\s*\[)([ x])(\]\s*)(.*)/);
         if (match) {
           const isCompleted = match[2] === 'x';
@@ -50,24 +48,52 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             id: `${file.path}-${index}`,
             text: todoText,
             completed: isCompleted,
-            createdAt: file.name.split('_')[0], // Extract date from filename
+            createdAt: file.name.split('_')[0], // Format: YYYYMMDD
             filePath: file.path
           };
-
-          if (isCompleted) {
-            completedTodos.push(todo);
-          } else {
-            openTodos.push(todo);
-          }
+          
+          allTodos.push(todo);
         }
       });
     });
 
+    // Sort todos by creation date (newest first)
+    allTodos.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    // Get date boundaries
+    const now = new Date();
+    const today = now.toISOString().split('T')[0].replace(/-/g, '');
+    const yesterday = new Date(now.setDate(now.getDate() - 1))
+      .toISOString().split('T')[0].replace(/-/g, '');
+    const weekAgo = new Date(now.setDate(now.getDate() - 6))
+      .toISOString().split('T')[0].replace(/-/g, '');
+
+    // Organize todos into sections
+    const todayTodos = allTodos.filter(todo => todo.createdAt === today);
+    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday);
+    const weekTodos = allTodos.filter(todo => 
+      todo.createdAt < yesterday && 
+      todo.createdAt > weekAgo
+    );
+    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo);
+
     setSections([
-      { title: 'Open', todos: openTodos },
-      { title: 'Completed', todos: completedTodos }
+      { title: 'Today', todos: todayTodos, isExpanded: false },
+      { title: 'Yesterday', todos: yesterdayTodos, isExpanded: false },
+      { title: 'This Week', todos: weekTodos, isExpanded: false },
+      { title: 'Older', todos: olderTodos, isExpanded: false }
     ]);
   }, [files]);
+
+  const toggleSection = (sectionIndex: number) => {
+    setSections(prevSections => 
+      prevSections.map((section, index) => 
+        index === sectionIndex
+          ? { ...section, isExpanded: !section.isExpanded }
+          : section
+      )
+    );
+  };
 
   const addTodo = async () => {
     if (!newTodoText.trim()) return;
@@ -88,7 +114,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
         throw new Error('Failed to add todo');
       }
 
-      // Refresh the page to show the new todo
       window.location.reload();
     } catch (error) {
       console.error('Error adding todo:', error);
@@ -118,7 +143,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
         throw new Error('Failed to toggle todo');
       }
 
-      // Refresh the page to show the updated todo
       window.location.reload();
     } catch (error) {
       console.error('Error toggling todo:', error);
@@ -134,101 +158,110 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
     );
   };
 
+  const renderTodoItem = (todo: Todo) => (
+    <div
+      key={todo.id}
+      className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
+    >
+      <div className="flex items-center space-x-3">
+        <button
+          onClick={() => toggleTodo(todo.id, todo.completed)}
+          className="text-blue-500 hover:text-blue-600"
+        >
+          {todo.completed ? (
+            <CheckCircle size={24} />
+          ) : (
+            <Circle size={24} />
+          )}
+        </button>
+        <span className={`text-gray-900 dark:text-white ${
+          todo.completed ? 'line-through text-gray-500' : ''
+        }`}>
+          {todo.text}
+        </span>
+      </div>
+      <button
+        onClick={() => deleteTodo(todo.id)}
+        className="text-red-500 hover:text-red-600"
+      >
+        <Trash2 size={20} />
+      </button>
+    </div>
+  );
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">TODOs</h1>
-        <div className="flex space-x-2">
-          {sections.map(section => (
-            <button
-              key={section.title}
-              onClick={() => setActiveSection(section.title)}
-              className={`px-4 py-2 rounded-lg ${
-                activeSection === section.title
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-              }`}
-            >
-              {section.title}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {activeSection === 'Open' && (
-        <div className="mb-4">
-          {!isAddingTodo ? (
+      <div className="mb-6">
+        {!isAddingTodo ? (
+          <button
+            onClick={() => setIsAddingTodo(true)}
+            className="flex items-center space-x-2 text-blue-500 hover:text-blue-600"
+          >
+            <Plus size={20} />
+            <span>Add Todo</span>
+          </button>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={newTodoText}
+              onChange={(e) => setNewTodoText(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+              placeholder="Enter new todo..."
+              className="flex-1 p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              autoFocus
+            />
             <button
-              onClick={() => setIsAddingTodo(true)}
-              className="flex items-center space-x-2 text-blue-500 hover:text-blue-600"
+              onClick={addTodo}
+              className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
             >
-              <Plus size={20} />
-              <span>Add Todo</span>
+              Add
             </button>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={newTodoText}
-                onChange={(e) => setNewTodoText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-                placeholder="Enter new todo..."
-                className="flex-1 p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                autoFocus
-              />
-              <button
-                onClick={addTodo}
-                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => {
-                  setIsAddingTodo(false);
-                  setNewTodoText('');
-                }}
-                className="p-2 text-gray-500 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {sections
-          .find(section => section.title === activeSection)
-          ?.todos.map(todo => (
-            <div
-              key={todo.id}
-              className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
+            <button
+              onClick={() => {
+                setIsAddingTodo(false);
+                setNewTodoText('');
+              }}
+              className="p-2 text-gray-500 hover:text-gray-600"
             >
-              <div className="flex items-center space-x-3">
+              <X size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        {sections.map((section, index) => (
+          <div key={section.title} className="space-y-2">
+            <button
+              onClick={() => toggleSection(index)}
+              className="flex items-center space-x-2 text-lg font-semibold text-gray-900 dark:text-white"
+            >
+              {section.isExpanded ? (
+                <ChevronDown size={20} />
+              ) : (
+                <ChevronRight size={20} />
+              )}
+              <span>{section.title}</span>
+              <span className="text-sm text-gray-500">({section.todos.length})</span>
+            </button>
+            <div className="space-y-2 ml-6">
+              {(section.isExpanded ? section.todos : section.todos.slice(0, 5)).map(renderTodoItem)}
+              {!section.isExpanded && section.todos.length > 5 && (
                 <button
-                  onClick={() => toggleTodo(todo.id, todo.completed)}
-                  className="text-blue-500 hover:text-blue-600"
+                  onClick={() => toggleSection(index)}
+                  className="text-sm text-blue-500 hover:text-blue-600 mt-2"
                 >
-                  {todo.completed ? (
-                    <CheckCircle size={24} />
-                  ) : (
-                    <Circle size={24} />
-                  )}
+                  Show {section.todos.length - 5} more...
                 </button>
-                <span className={`text-gray-900 dark:text-white ${
-                  todo.completed ? 'line-through text-gray-500' : ''
-                }`}>
-                  {todo.text}
-                </span>
-              </div>
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                className="text-red-500 hover:text-red-600"
-              >
-                <Trash2 size={20} />
-              </button>
+              )}
             </div>
-          ))}
+          </div>
+        ))}
       </div>
     </div>
   );
