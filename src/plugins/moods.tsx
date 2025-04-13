@@ -594,7 +594,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={timelineData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 10 }}
                 >
                   <defs>
                     {Object.keys(MOOD_COLORS).map((color) => (
@@ -656,7 +656,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
+                <RadarChart cx="50%" cy="50%" outerRadius="90%" data={radarData}>
                   <PolarGrid stroke="#374151" strokeOpacity={0.15} strokeDasharray="3 3" />
                   <PolarAngleAxis 
                     dataKey="emotion"
@@ -670,7 +670,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                           y={y}
                           textAnchor={x > cx ? 'start' : 'end'}
                           fill={color}
-                          fontSize={8}
+                          fontSize={10}
                           fillOpacity={0.85}
                           dy={1}
                         >
