@@ -77,24 +77,53 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
     // Get date boundaries
     const now = new Date();
     const today = now.toISOString().split('T')[0].replace(/-/g, '');
-    const yesterday = new Date(now.setDate(now.getDate() - 1))
-      .toISOString().split('T')[0].replace(/-/g, '');
-    const weekAgo = new Date(now.setDate(now.getDate() - 6))
-      .toISOString().split('T')[0].replace(/-/g, '');
+    
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0].replace(/-/g, '');
+    
+    const weekAgo = new Date(now);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekAgoStr = weekAgo.toISOString().split('T')[0].replace(/-/g, '');
+    
+    const twoWeeksAgo = new Date(now);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    const twoWeeksAgoStr = twoWeeksAgo.toISOString().split('T')[0].replace(/-/g, '');
+
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthStartStr = monthStart.toISOString().split('T')[0].replace(/-/g, '');
+    
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthStartStr = lastMonthStart.toISOString().split('T')[0].replace(/-/g, '');
 
     // Organize todos into sections
     const todayTodos = allTodos.filter(todo => todo.createdAt === today);
-    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday);
-    const weekTodos = allTodos.filter(todo => 
-      todo.createdAt < yesterday && 
-      todo.createdAt > weekAgo
+    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterdayStr);
+    const thisWeekTodos = allTodos.filter(todo => 
+      todo.createdAt < yesterdayStr && 
+      todo.createdAt > weekAgoStr
     );
-    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo);
+    const lastWeekTodos = allTodos.filter(todo =>
+      todo.createdAt <= weekAgoStr &&
+      todo.createdAt > twoWeeksAgoStr
+    );
+    const thisMonthTodos = allTodos.filter(todo =>
+      todo.createdAt <= twoWeeksAgoStr &&
+      todo.createdAt >= monthStartStr
+    );
+    const lastMonthTodos = allTodos.filter(todo =>
+      todo.createdAt < monthStartStr &&
+      todo.createdAt >= lastMonthStartStr
+    );
+    const olderTodos = allTodos.filter(todo => todo.createdAt < lastMonthStartStr);
 
     setSections([
       { title: 'Today', todos: todayTodos, isExpanded: false },
       { title: 'Yesterday', todos: yesterdayTodos, isExpanded: false },
-      { title: 'This Week', todos: weekTodos, isExpanded: false },
+      { title: 'This Week', todos: thisWeekTodos, isExpanded: false },
+      { title: 'Last Week', todos: lastWeekTodos, isExpanded: false },
+      { title: 'This Month', todos: thisMonthTodos, isExpanded: false },
+      { title: 'Last Month', todos: lastMonthTodos, isExpanded: false },
       { title: 'Older', todos: olderTodos, isExpanded: false }
     ]);
   }, [files]);
