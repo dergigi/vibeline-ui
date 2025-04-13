@@ -147,13 +147,13 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
 function DefaultPluginUI({ files, pluginId }: { files: PluginFile[]; pluginId: string }) {
   return (
     <div className="space-y-6">
-      <div>
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">
           {pluginId.replace(/_/g, ' ')}
         </h1>
       </div>
       {files.length === 0 ? (
-        <div className="p-6 text-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <p className="text-gray-600 dark:text-gray-400 mb-2">
             No files found in this plugin directory yet.
           </p>
@@ -165,7 +165,7 @@ function DefaultPluginUI({ files, pluginId }: { files: PluginFile[]; pluginId: s
         files.map((file) => (
           <div
             key={file.path}
-            className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+            className="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
           >
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -200,7 +200,7 @@ export default async function PluginPage({ params }: { params: Promise<{ pluginI
 
     return (
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-4 py-8">
           <Suspense fallback={<div>Loading...</div>}>
             <CustomUI files={files} />
           </Suspense>
@@ -211,7 +211,7 @@ export default async function PluginPage({ params }: { params: Promise<{ pluginI
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <Suspense fallback={<div>Loading...</div>}>
           <DefaultPluginUI files={files} pluginId={pluginId} />
         </Suspense>
