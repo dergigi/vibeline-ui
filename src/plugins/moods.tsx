@@ -589,12 +589,12 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       <div className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Timeline Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={timelineData}
-                  margin={{ top: 5, right: 0, left: -15, bottom: 0 }}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
                 >
                   <defs>
                     {Object.keys(MOOD_COLORS).map((color) => (
@@ -610,19 +610,19 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(date) => new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    tickMargin={5}
+                    tickMargin={8}
                     axisLine={false}
                     tickLine={false}
-                    dy={0}
+                    dy={10}
                   />
                   <YAxis 
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(value: number) => Math.round(value).toString()}
-                    tickMargin={5}
+                    tickMargin={8}
                     axisLine={false}
                     tickLine={false}
-                    dx={0}
+                    dx={-10}
                   />
                   <Tooltip
                     contentStyle={{
@@ -654,10 +654,9 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
 
           {/* Radar Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Emotion Distribution</h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
                   <PolarGrid stroke="#374151" strokeOpacity={0.15} strokeDasharray="3 3" />
                   <PolarAngleAxis 
                     dataKey="emotion"
