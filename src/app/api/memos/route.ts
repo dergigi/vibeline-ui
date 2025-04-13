@@ -1,31 +1,19 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { VoiceMemo } from '@/types/VoiceMemo';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
 const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
 const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
-const PROMPTS_DIR = path.join(VOICE_MEMOS_DIR, 'app_ideas');
-const DRAFTS_DIR = path.join(VOICE_MEMOS_DIR, 'blog_posts');
 
-function parseTimestampFromFilename(filename: string): Date {
-  // Extract YYYYMMDD_HHMMSS from the filename
-  const match = filename.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
-  if (!match) {
-    return new Date(); // Fallback to current time if pattern doesn't match
-  }
-  
-  const [, year, month, day, hour, minute, second] = match;
-  return new Date(
-    parseInt(year),
-    parseInt(month) - 1, // JavaScript months are 0-based
-    parseInt(day),
-    parseInt(hour),
-    parseInt(minute),
-    parseInt(second)
-  );
+interface Memo {
+  filename: string;
+  transcript?: string;
+  summary?: string;
+  todos?: string;
+  createdAt: string;
+  path: string;
 }
 
 async function readFileIfExists(filePath: string): Promise<string> {
@@ -36,53 +24,68 @@ async function readFileIfExists(filePath: string): Promise<string> {
   }
 }
 
-export async function GET(): Promise<NextResponse> {
-  try {
-    const files = await fs.readdir(VOICE_MEMOS_DIR);
-    const memos: VoiceMemo[] = [];
+function parseTimestampFromFilename(filename: string): string {
+  // Extract YYYYMMDD_HHMMSS from the filename
+  const match = filename.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+  if (!match) {
+    return new Date().toISOString(); // Fallback to current time if pattern doesn't match
+  }
+  
+  const [, year, month, day, hour, minute, second] = match;
+  return new Date(
+    parseInt(year),
+    parseInt(month) - 1, // JavaScript months are 0-based
+    parseInt(day),
+    parseInt(hour),
+    parseInt(minute),
+    parseInt(second)
+  ).toISOString();
+}
 
-    for (const file of files) {
-      if (file.endsWith('.m4a')) {
-        const baseFilename = path.basename(file, '.m4a');
-        const transcriptPath = path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`);
-        const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}.txt`);
-        const todosPath = path.join(TODOS_DIR, `${baseFilename}.md`);
-        const promptsPath = path.join(PROMPTS_DIR, `${baseFilename}.txt`);
-        const draftsPath = path.join(DRAFTS_DIR, `${baseFilename}.md`);
+export async function GET() {
+  try {
+    // Ensure default directories exist
+    await Promise.all([
+      fs.mkdir(TRANSCRIPTS_DIR, { recursive: true }),
+      fs.mkdir(SUMMARIES_DIR, { recursive: true }),
+      fs.mkdir(TODOS_DIR, { recursive: true })
+    ]);
+
+    // Get all audio files as the source of truth
+    const audioFiles = (await fs.readdir(VOICE_MEMOS_DIR))
+      .filter(file => file.endsWith('.m4a'));
+
+    // Process each audio file and gather related content
+    const memos = await Promise.all(
+      audioFiles.map(async (audioFile) => {
+        const baseFilename = path.basename(audioFile, '.m4a');
         
-        // Read all files if they exist
-        const [transcript, summary, todos, prompts, drafts] = await Promise.all([
-          readFileIfExists(transcriptPath),
-          readFileIfExists(summaryPath),
-          readFileIfExists(todosPath),
-          readFileIfExists(promptsPath),
-          readFileIfExists(draftsPath)
+        // Get content from each plugin directory
+        const [transcript, summary, todos] = await Promise.all([
+          readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
+          readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
+          readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`))
         ]);
-        
-        memos.push({
-          id: baseFilename,
-          filename: file, // Keep the audio filename here
-          path: todosPath, // Assign the path to the TODOs markdown file
+
+        const memo: Memo = {
+          filename: baseFilename,
           transcript,
           summary,
           todos,
-          prompts,
-          drafts,
-          audioUrl: `/api/audio/${encodeURIComponent(file)}`,
+          path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
           createdAt: parseTimestampFromFilename(baseFilename)
-        });
-      }
-    }
+        };
 
-    const sortedMemos = memos.sort((a, b) => {
-      // Ensure both are Date objects before comparing
-      const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt;
-      const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt;
-      return dateB.getTime() - dateA.getTime();
-    });
-    return NextResponse.json(sortedMemos);
-  } catch (err) {
-    console.error('Error reading voice memos:', err instanceof Error ? err.message : 'Unknown error');
-    return NextResponse.json([], { status: 500 });
+        return memo;
+      })
+    );
+
+    // Sort by creation date (newest first)
+    memos.sort((a, b) => b.filename.localeCompare(a.filename));
+
+    return NextResponse.json(memos);
+  } catch (error) {
+    console.error('Error processing memos:', error);
+    return NextResponse.json({ error: 'Failed to process memos' }, { status: 500 });
   }
 } 
