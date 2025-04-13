@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckSquare, Square, ChevronDown, ChevronRight } from 'lucide-react';
+import { Square, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Todo {
   id: string;
@@ -103,10 +103,10 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       });
 
     setSections([
-      { title: 'Today', todos: todayTodos, isExpanded: false },
-      { title: 'Yesterday', todos: yesterdayTodos, isExpanded: false },
-      { title: 'This Week', todos: weekTodos, isExpanded: false },
-      { title: 'Older', todos: olderTodos, isExpanded: false }
+      { title: 'Today', todos: todayTodos, isExpanded: true },
+      { title: 'Yesterday', todos: yesterdayTodos, isExpanded: true },
+      { title: 'This Week', todos: weekTodos, isExpanded: true },
+      { title: 'Older', todos: olderTodos, isExpanded: true }
     ]);
   }, [files]);
 
@@ -164,34 +164,6 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
     return `${months[month]} ${day} · ${timeFormatted}`;
   };
 
-  const renderTodoItem = (todo: Todo, section: string) => (
-    <div
-      key={todo.id}
-      className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
-    >
-      <div className="flex items-center space-x-3 flex-1">
-        <button
-          onClick={() => toggleTodo(todo.id, todo.completed)}
-          className="text-blue-500 hover:text-blue-600"
-        >
-          {todo.completed ? (
-            <CheckSquare size={24} />
-          ) : (
-            <Square size={24} />
-          )}
-        </button>
-        <span className={`text-gray-900 dark:text-white flex-1 ${
-          todo.completed ? 'line-through text-gray-500' : ''
-        }`}>
-          {todo.text}
-        </span>
-        <span className="text-[10px] text-gray-400 tabular-nums">
-          {formatTimestamp(todo.filePath?.split('/').pop() || '', section)}
-        </span>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-4">
       {sections.map((section, index) => (
@@ -226,12 +198,12 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
                     onClick={() => toggleTodo(todo.id, todo.completed)}
                   />
                   <span className={`ml-3 text-sm ${
-                    todo.completed ? "text-gray-400" : "text-gray-900"
+                    todo.completed ? "text-gray-400 line-through" : "text-gray-900"
                   }`}>
                     {todo.text}
                   </span>
                   <span className="ml-auto text-xs text-gray-400">
-                    {formatTimestamp(todo.filePath?.split('/').pop() || '', section)}
+                    {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
                   </span>
                 </div>
               ))}
