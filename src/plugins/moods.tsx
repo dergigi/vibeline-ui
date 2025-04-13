@@ -312,6 +312,27 @@ const EmotionalText: React.FC<{ text: string }> = ({ text }) => {
 type TooltipFormatter = (value: number, name: string, props: { payload?: { category: string; emotion: string } }) => [React.ReactElement, React.ReactElement];
 type LabelFormatter = (label: string) => string;
 
+const extractTopEmotions = (content: string): string => {
+  const emotionCounts: Record<string, number> = {};
+  const lowerContent = content.toLowerCase();
+
+  Object.entries(EMOTIONS).forEach(([, category]) => {
+    Object.keys(category.emotions).forEach(emotion => {
+      const regex = new RegExp(`\\b${emotion.toLowerCase()}\\b`, 'gi');
+      const matches = (lowerContent.match(regex) || []).length;
+      if (matches > 0) {
+        emotionCounts[emotion] = matches;
+      }
+    });
+  });
+
+  return Object.entries(emotionCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([emotion]) => emotion)
+    .join(', ');
+};
+
 const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
@@ -810,7 +831,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     </div>
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-1">
-                    {entry.description.replace(/^(Blue|Red|Yellow|Green): /, '')}
+                    {extractTopEmotions(entry.content) || 'No emotions detected'}
                   </p>
                 </div>
               );
