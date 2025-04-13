@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises'; // Use promises API for async operations
-import { existsSync } from 'fs'; // Use existsSync for initial check
+import { existsSync, realpathSync } from 'fs'; // Use existsSync for initial check and realpathSync for resolving symlinks
 
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
+const VOICE_MEMOS_DIR = realpathSync(path.join(process.cwd(), 'VoiceMemos'));
 
 // Ensure the VoiceMemos directory exists
 if (!existsSync(VOICE_MEMOS_DIR)) {
@@ -19,8 +19,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       throw new Error('filePath is required');
     }
     
-    // Read the file
-    const fullPath = path.join(process.cwd(), 'VoiceMemos', filePath);
+    // Read the file using the real path
+    const fullPath = path.join(VOICE_MEMOS_DIR, filePath);
     const content = await fs.readFile(fullPath, 'utf-8');
     const lines = content.split('\n');
 
