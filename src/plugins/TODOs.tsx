@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckSquare, Square, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Todo {
   id: string;
@@ -130,9 +130,9 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
           className="text-blue-500 hover:text-blue-600"
         >
           {todo.completed ? (
-            <CheckCircle size={24} />
+            <CheckSquare size={24} />
           ) : (
-            <Circle size={24} />
+            <Square size={24} />
           )}
         </button>
         <span className={`text-gray-900 dark:text-white ${
