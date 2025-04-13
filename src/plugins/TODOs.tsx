@@ -184,31 +184,29 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
               ({section.todos.length})
             </span>
           </button>
-          {section.isExpanded && (
-            <div className="px-4 pb-3">
-              {section.todos.map((todo) => (
-                <div
-                  key={todo.id}
-                  className="flex items-center py-2"
-                >
-                  <Square
-                    className={`h-4 w-4 ${
-                      todo.completed ? "text-gray-400" : "text-blue-500"
-                    }`}
-                    onClick={() => toggleTodo(todo.id, todo.completed)}
-                  />
-                  <span className={`ml-3 text-sm ${
-                    todo.completed ? "text-gray-400 line-through" : "text-gray-900"
-                  }`}>
-                    {todo.text}
-                  </span>
-                  <span className="ml-auto text-xs text-gray-400">
-                    {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="px-4 pb-3">
+            {(section.isExpanded ? section.todos : section.todos.slice(0, 5)).map((todo) => (
+              <div
+                key={todo.id}
+                className="flex items-center py-2"
+              >
+                <Square
+                  className={`h-4 w-4 ${
+                    todo.completed ? "text-gray-400" : "text-blue-500"
+                  }`}
+                  onClick={() => toggleTodo(todo.id, todo.completed)}
+                />
+                <span className={`ml-3 text-sm ${
+                  todo.completed ? "text-gray-400 line-through" : "text-gray-900"
+                }`}>
+                  {todo.text}
+                </span>
+                <span className="ml-auto text-xs text-gray-400">
+                  {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
