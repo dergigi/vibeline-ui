@@ -267,20 +267,22 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
               {(section.isExpanded ? filteredTodos : filteredTodos.slice(0, 5)).map((todo) => (
                 <div
                   key={todo.id}
-                  className="flex items-center py-2"
+                  className="flex items-start py-2"
                 >
-                  <Square
-                    className={`h-4 w-4 ${
-                      todo.completed ? "text-gray-400" : "text-blue-500"
-                    }`}
-                    onClick={() => toggleTodo(todo.id, todo.completed)}
-                  />
-                  <span className={`ml-3 text-sm ${
+                  <div className="flex-shrink-0 pt-1">
+                    <Square
+                      className={`h-4 w-4 ${
+                        todo.completed ? "text-gray-400" : "text-blue-500"
+                      }`}
+                      onClick={() => toggleTodo(todo.id, todo.completed)}
+                    />
+                  </div>
+                  <span className={`ml-3 text-sm flex-1 break-words ${
                     todo.completed ? "text-gray-400 line-through" : "text-gray-900"
                   }`}>
                     {todo.text}
                   </span>
-                  <span className="ml-auto text-xs text-gray-400">
+                  <span className="ml-3 flex-shrink-0 text-xs text-gray-400">
                     {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
                   </span>
                 </div>
