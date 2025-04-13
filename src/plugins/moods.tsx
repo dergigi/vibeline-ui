@@ -594,7 +594,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={timelineData}
-                  margin={{ top: 0, right: -5, left: -25, bottom: -5 }}
+                  margin={{ top: 5, right: 0, left: -15, bottom: 0 }}
                 >
                   <defs>
                     {Object.keys(MOOD_COLORS).map((color) => (
@@ -610,19 +610,19 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(date) => new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    tickMargin={0}
+                    tickMargin={5}
                     axisLine={false}
                     tickLine={false}
-                    dy={-3}
+                    dy={0}
                   />
                   <YAxis 
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(value: number) => Math.round(value).toString()}
-                    tickMargin={0}
+                    tickMargin={5}
                     axisLine={false}
                     tickLine={false}
-                    dx={-3}
+                    dx={0}
                   />
                   <Tooltip
                     contentStyle={{
@@ -658,9 +658,40 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="emotion" />
-                  <PolarRadiusAxis />
+                  <PolarGrid stroke="#374151" strokeOpacity={0.15} strokeDasharray="3 3" />
+                  <PolarAngleAxis 
+                    dataKey="emotion"
+                    tick={(props) => {
+                      const { x, y, payload, cx = 0 } = props;
+                      const matchingEmotion = radarData.find(d => d.emotion === payload.value);
+                      const color = matchingEmotion?.category ? getMoodColor(matchingEmotion.category).hex.text : '#6B7280';
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          textAnchor={x > cx ? 'start' : 'end'}
+                          fill={color}
+                          fontSize={8}
+                          fillOpacity={0.85}
+                          dy={1}
+                        >
+                          {payload.value}
+                        </text>
+                      );
+                    }}
+                  />
+                  <PolarRadiusAxis
+                    angle={30}
+                    domain={[0, 'auto']}
+                    tick={{ 
+                      fill: '#6B7280',
+                      fontSize: 8,
+                      fillOpacity: 0.7
+                    }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickCount={4}
+                  />
                   <Radar
                     name="Emotions"
                     dataKey="count"
