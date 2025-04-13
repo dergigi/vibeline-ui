@@ -185,7 +185,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   
   // Function to handle toggling a todo item
   const handleTodoToggle = useCallback(async (lineNumber: number, currentChecked: boolean) => {
-    const markdownPath = memo.path; // Use memo.path instead of memo.filename
+    // Get the relative path by taking just the filename part
+    const filePath = memo.path.split('/').pop() || '';
     const newChecked = !currentChecked;
   
     // Optimistic UI update
@@ -206,7 +207,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          filePath: markdownPath, 
+          filePath, 
           lineNumber, 
           completed: newChecked 
         }),
@@ -215,16 +216,11 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       if (!response.ok) {
         throw new Error(`API Error: ${response.statusText}`);
       }
-      // Optionally: Refetch memos or confirm update based on API response
-      // For now, the optimistic update handles the UI change.
-      // If the API fails, revert the optimistic update:
     } catch (error) {
       console.error('Failed to toggle todo:', error);
-      // Revert optimistic update on failure
       setOptimisticTodos(null);
-      // Optionally show an error message to the user
-      }
-      }, [memo.path, memo.todos, optimisticTodos]); // Update dependency array
+    }
+  }, [memo.path, memo.todos, optimisticTodos]);
   
   const handleShare = async (): Promise<void> => {
     try {
