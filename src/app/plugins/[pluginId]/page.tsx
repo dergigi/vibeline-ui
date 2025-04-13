@@ -14,6 +14,7 @@ interface PluginFile {
   path: string;
   content?: string;
   mimeType?: string;
+  transcript?: string;
 }
 
 function getMimeType(filename: string): string {
@@ -123,15 +124,25 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
       .map(async entry => {
         const filePath = path.join(pluginDir, entry.name);
         let content: string | undefined;
+        let transcript: string | undefined;
+
         try {
           content = await fs.readFile(filePath, 'utf-8');
+          
+          // Try to read matching transcript file
+          const transcriptPath = path.join(pluginDir, 'transcripts', entry.name.replace(/\.[^/.]+$/, '.txt'));
+          if (existsSync(transcriptPath)) {
+            transcript = await fs.readFile(transcriptPath, 'utf-8');
+          }
         } catch (error) {
           console.error(`Error reading file ${filePath}:`, error);
         }
+
         return {
           name: entry.name,
           path: path.join(pluginId, entry.name),
           content,
+          transcript,
           mimeType: getMimeType(entry.name)
         };
       });

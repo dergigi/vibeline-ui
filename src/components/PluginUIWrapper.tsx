@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 
 interface PluginFile {
@@ -34,36 +34,6 @@ LoadingDisplay.displayName = 'LoadingDisplay';
 
 function PluginUIWrapper({ pluginId, files }: PluginUIWrapperProps) {
   const [error, setError] = useState<string | null>(null);
-  const [enhancedFiles, setEnhancedFiles] = useState<PluginFile[]>(files);
-
-  useEffect(() => {
-    async function loadTranscripts() {
-      const filesWithTranscripts = await Promise.all(
-        files.map(async (file) => {
-          try {
-            // Try to read matching transcript file
-            const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
-            const response = await fetch(`/api/memos/transcript/${fileName}`);
-            if (!response.ok) throw new Error('Transcript not found');
-            const transcript = await response.text();
-            console.log('Transcript loaded:', transcript);
-            return { ...file, transcript };
-          } catch (error) {
-            // If transcript doesn't exist, return original file
-            console.error('Failed to load transcript:', {
-              path: file.path,
-              error: error
-            });
-            return file;
-          }
-        })
-      );
-      console.log('Files with transcripts:', filesWithTranscripts);
-      setEnhancedFiles(filesWithTranscripts);
-    }
-
-    loadTranscripts();
-  }, [files]);
 
   // Create a dynamic import for the plugin UI
   const CustomUI = dynamic<PluginUIProps>(
@@ -84,7 +54,7 @@ function PluginUIWrapper({ pluginId, files }: PluginUIWrapperProps) {
     return <ErrorDisplay message={error} />;
   }
 
-  return <CustomUI files={enhancedFiles} />;
+  return <CustomUI files={files} />;
 }
 
 PluginUIWrapper.displayName = 'PluginUIWrapper';
