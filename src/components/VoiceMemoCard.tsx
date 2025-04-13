@@ -205,7 +205,11 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ markdownPath, lineNumber, isChecked: newChecked }), // Send markdownPath
+        body: JSON.stringify({ 
+          filePath: markdownPath, 
+          lineNumber, 
+          completed: newChecked 
+        }),
       });
   
       if (!response.ok) {

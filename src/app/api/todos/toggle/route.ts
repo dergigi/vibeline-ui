@@ -15,6 +15,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const { filePath, lineNumber, completed } = await request.json();
     
+    if (!filePath) {
+      throw new Error('filePath is required');
+    }
+    
     // Read the file
     const fullPath = path.join(process.cwd(), 'VoiceMemos', filePath);
     const content = await fs.readFile(fullPath, 'utf-8');
