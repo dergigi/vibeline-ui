@@ -557,7 +557,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={timelineData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  margin={{ top: 10, right: 10, left: -10, bottom: -10 }}
                 >
                   <defs>
                     {Object.keys(MOOD_COLORS).map((color) => (
@@ -573,11 +573,17 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(date) => new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    tickMargin={5}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <YAxis 
                     stroke="#6B7280"
                     fontSize={10}
                     tickFormatter={(value) => Math.round(value)}
+                    tickMargin={5}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <Tooltip
                     contentStyle={{
