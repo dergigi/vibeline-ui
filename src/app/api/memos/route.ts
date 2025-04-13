@@ -1,88 +1,92 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
-import { VoiceMemo } from '@/types/VoiceMemo';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
-const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
-const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
-const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
-const PROMPTS_DIR = path.join(VOICE_MEMOS_DIR, 'app_ideas');
-const DRAFTS_DIR = path.join(VOICE_MEMOS_DIR, 'blog_posts');
 
-function parseTimestampFromFilename(filename: string): Date {
-  // Extract YYYYMMDD_HHMMSS from the filename
-  const match = filename.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
-  if (!match) {
-    return new Date(); // Fallback to current time if pattern doesn't match
-  }
-  
-  const [, year, month, day, hour, minute, second] = match;
-  return new Date(
-    parseInt(year),
-    parseInt(month) - 1, // JavaScript months are 0-based
-    parseInt(day),
-    parseInt(hour),
-    parseInt(minute),
-    parseInt(second)
-  );
+interface Memo {
+  filename: string;
+  path: string;
+  [key: string]: string;
 }
 
-async function readFileIfExists(filePath: string): Promise<string> {
+async function getPluginDirectories() {
   try {
-    return await fs.readFile(filePath, 'utf-8');
-  } catch {
-    return '';
+    const entries = await fs.readdir(VOICE_MEMOS_DIR, { withFileTypes: true });
+    const dirs = entries
+      .filter(entry => entry.isDirectory() && !entry.name.startsWith('.'))
+      .reduce((acc, dir) => {
+        acc[dir.name.toUpperCase()] = path.join(VOICE_MEMOS_DIR, dir.name);
+        return acc;
+      }, {} as Record<string, string>);
+    return dirs;
+  } catch (error) {
+    console.error('Error reading plugin directories:', error);
+    return {};
   }
 }
 
-export async function GET(): Promise<NextResponse> {
+export async function GET() {
   try {
-    const files = await fs.readdir(VOICE_MEMOS_DIR);
-    const memos: VoiceMemo[] = [];
+    const pluginDirs = await getPluginDirectories();
+    const memos: Memo[] = [];
 
-    for (const file of files) {
-      if (file.endsWith('.m4a')) {
-        const baseFilename = path.basename(file, '.m4a');
-        const transcriptPath = path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`);
-        const summaryPath = path.join(SUMMARIES_DIR, `${baseFilename}.txt`);
-        const todosPath = path.join(TODOS_DIR, `${baseFilename}.md`);
-        const promptsPath = path.join(PROMPTS_DIR, `${baseFilename}.txt`);
-        const draftsPath = path.join(DRAFTS_DIR, `${baseFilename}.md`);
-        
-        // Read all files if they exist
-        const [transcript, summary, todos, prompts, drafts] = await Promise.all([
-          readFileIfExists(transcriptPath),
-          readFileIfExists(summaryPath),
-          readFileIfExists(todosPath),
-          readFileIfExists(promptsPath),
-          readFileIfExists(draftsPath)
-        ]);
-        
-        memos.push({
-          id: baseFilename,
-          filename: file, // Keep the audio filename here
-          path: todosPath, // Assign the path to the TODOs markdown file
-          transcript,
-          summary,
-          todos,
-          prompts,
-          drafts,
-          audioUrl: `/api/audio/${encodeURIComponent(file)}`,
-          createdAt: parseTimestampFromFilename(baseFilename)
-        });
+    // Read all markdown files from each plugin directory
+    await Promise.all(
+      Object.entries(pluginDirs).map(async ([pluginType, dirPath]) => {
+        if (!existsSync(dirPath)) return;
+
+        const files = await fs.readdir(dirPath);
+        await Promise.all(
+          files
+            .filter(file => file.endsWith('.md'))
+            .map(async file => {
+              const filePath = path.join(dirPath, file);
+              try {
+                const content = await fs.readFile(filePath, 'utf-8');
+                const pluginKey = pluginType.toLowerCase().replace(/_/g, '');
+                memos.push({
+                  filename: file,
+                  path: filePath,
+                  [pluginKey]: content,
+                });
+              } catch (error) {
+                console.error(`Error reading file ${filePath}:`, error);
+              }
+            })
+        );
+      })
+    );
+
+    // Sort memos by filename (which contains the timestamp)
+    memos.sort((a, b) => b.filename.localeCompare(a.filename));
+
+    // Group memos by their original filename (without extension)
+    const groupedMemos = memos.reduce((acc, memo) => {
+      const baseFilename = memo.filename.replace(/\.[^/.]+$/, '');
+      if (!acc[baseFilename]) {
+        acc[baseFilename] = {};
       }
-    }
+      Object.entries(memo).forEach(([key, value]) => {
+        if (key !== 'filename') {
+          acc[baseFilename][key] = value;
+        }
+      });
+      return acc;
+    }, {} as Record<string, Record<string, string>>);
 
-    const sortedMemos = memos.sort((a, b) => {
-      // Ensure both are Date objects before comparing
-      const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt;
-      const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt;
-      return dateB.getTime() - dateA.getTime();
-    });
-    return NextResponse.json(sortedMemos);
-  } catch (err) {
-    console.error('Error reading voice memos:', err instanceof Error ? err.message : 'Unknown error');
-    return NextResponse.json([], { status: 500 });
+    // Convert back to array and sort
+    const result = Object.entries(groupedMemos).map(([filename, content]) => ({
+      filename,
+      ...content,
+    }));
+
+    result.sort((a, b) => b.filename.localeCompare(a.filename));
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Error processing memos:', error);
+    return NextResponse.json({ error: 'Failed to process memos' }, { status: 500 });
   }
 } 
