@@ -11,6 +11,7 @@ interface MoodEntry {
   pleasant: boolean;
   color: MoodColor;
   content: string;
+  transcript?: string;
 }
 
 type MoodColor = 'red' | 'yellow' | 'blue' | 'green';
@@ -27,6 +28,7 @@ interface MoodsPluginProps {
     name: string;
     path: string;
     content?: string;
+    transcript?: string;
   }[];
 }
 
@@ -248,7 +250,8 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
         energy: moodEnergy,
         pleasant: isPleasant,
         color,
-        content
+        content,
+        transcript: file.transcript
       });
     });
     
@@ -365,8 +368,21 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                   {formatDate(selectedEntry.date)} {formatTime(selectedEntry.date)}
                 </div>
               </div>
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                {selectedEntry.content.replace(/^(Blue|Red|Yellow|Green)/, selectedEntry.pleasant ? 'Pleasant' : 'Unpleasant')}
+              <div className="prose prose-sm dark:prose-invert max-w-none space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Analysis</h3>
+                  <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                    {selectedEntry.content.replace(/^(Blue|Red|Yellow|Green)/, selectedEntry.pleasant ? 'Pleasant' : 'Unpleasant')}
+                  </div>
+                </div>
+                {selectedEntry.transcript && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Full Transcript</h3>
+                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                      {selectedEntry.transcript}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
