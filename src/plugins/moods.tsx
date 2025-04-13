@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface MoodEntry {
   id: string;
@@ -201,6 +202,113 @@ const getMoodColor = (color: string) => {
   return colors[color as keyof typeof colors] || colors.blue;
 };
 
+const sanitizeText = (text: string) => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+const highlightEmotionalWords = (text: string) => {
+  // First sanitize the text
+  let result = sanitizeText(text);
+  
+  // Create a map of all emotions with their colors
+  const emotionMap = Object.entries(EMOTIONS).reduce((acc, [color, category]) => {
+    Object.keys(category.emotions).forEach(emotion => {
+      acc[emotion.toLowerCase()] = color as MoodColor;
+    });
+    return acc;
+  }, {} as Record<string, MoodColor>);
+
+  // Sort emotions by length (longest first) to handle cases where one emotion is a substring of another
+  const sortedEmotions = Object.keys(emotionMap).sort((a, b) => b.length - a.length);
+
+  // Replace each emotion with a colored span
+  sortedEmotions.forEach(emotion => {
+    const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
+    const color = emotionMap[emotion];
+    const colorClasses = getMoodColor(color);
+    
+    // Extract just the color class name without the dark: variant
+    const colorClass = colorClasses.text.split(' ').find(cls => cls.includes('text-')) || '';
+    const darkColorClass = colorClasses.text.split(' ').find(cls => cls.includes('dark:')) || '';
+    
+    result = result.replace(
+      regex,
+      (match) => `<span class="${colorClass} ${darkColorClass} font-medium">${match}</span>`
+    );
+  });
+
+  // Preserve newlines for whitespace-pre-wrap
+  return result.replace(/\n/g, '<br />');
+};
+
+const EmotionalText: React.FC<{ text: string }> = ({ text }) => {
+  const parts: { text: string; color?: MoodColor }[] = [];
+  let currentIndex = 0;
+
+  // Create a map of all emotions with their colors
+  const emotionMap = Object.entries(EMOTIONS).reduce((acc, [color, category]) => {
+    Object.keys(category.emotions).forEach(emotion => {
+      acc[emotion.toLowerCase()] = color as MoodColor;
+    });
+    return acc;
+  }, {} as Record<string, MoodColor>);
+
+  // Sort emotions by length (longest first)
+  const sortedEmotions = Object.keys(emotionMap).sort((a, b) => b.length - a.length);
+
+  // Find all emotion matches
+  const matches: { start: number; end: number; color: MoodColor; text: string }[] = [];
+  sortedEmotions.forEach(emotion => {
+    const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      matches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        color: emotionMap[emotion.toLowerCase()],
+        text: match[0]
+      });
+    }
+  });
+
+  // Sort matches by start position
+  matches.sort((a, b) => a.start - b.start);
+
+  // Build parts array
+  matches.forEach(match => {
+    if (match.start > currentIndex) {
+      parts.push({ text: text.slice(currentIndex, match.start) });
+    }
+    parts.push({ text: match.text, color: match.color });
+    currentIndex = match.end;
+  });
+
+  if (currentIndex < text.length) {
+    parts.push({ text: text.slice(currentIndex) });
+  }
+
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.color) {
+          const colorClasses = getMoodColor(part.color);
+          return (
+            <span key={i} className={`${colorClasses.text} font-medium`}>
+              {part.text}
+            </span>
+          );
+        }
+        return part.text;
+      })}
+    </>
+  );
+};
+
 const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<MoodEntry | null>(null);
@@ -303,6 +411,64 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     ? moodEntries 
     : moodEntries.filter(entry => entry.color === filter);
 
+  const renderContent = (content: string, isMarkdown: boolean = true) => {
+    const processedContent = content.replace(/^(Blue|Red|Yellow|Green)/, 
+      selectedEntry?.pleasant ? 'Pleasant' : 'Unpleasant'
+    );
+    
+    if (isMarkdown) {
+      return (
+        <ReactMarkdown
+          components={{
+            p: ({children}) => (
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                <EmotionalText text={String(children)} />
+              </p>
+            ),
+            h1: ({children}) => (
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-4">
+                <EmotionalText text={String(children)} />
+              </h1>
+            ),
+            h2: ({children}) => (
+              <h2 className="text-md font-semibold text-gray-900 dark:text-gray-100 mt-3">
+                <EmotionalText text={String(children)} />
+              </h2>
+            ),
+            ul: ({children}) => (
+              <ul className="list-disc list-inside mt-2 text-sm text-gray-600 dark:text-gray-300">
+                {children}
+              </ul>
+            ),
+            ol: ({children}) => (
+              <ol className="list-decimal list-inside mt-2 text-sm text-gray-600 dark:text-gray-300">
+                {children}
+              </ol>
+            ),
+            li: ({children}) => (
+              <li className="mt-1">
+                <EmotionalText text={String(children)} />
+              </li>
+            ),
+            blockquote: ({children}) => (
+              <blockquote className="border-l-4 border-gray-200 dark:border-gray-700 pl-4 mt-2 italic text-gray-600 dark:text-gray-300">
+                <EmotionalText text={String(children)} />
+              </blockquote>
+            ),
+          }}
+        >
+          {processedContent}
+        </ReactMarkdown>
+      );
+    }
+    
+    return (
+      <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+        <EmotionalText text={processedContent} />
+      </div>
+    );
+  };
+
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="mb-4">
@@ -391,16 +557,12 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
               <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Analysis</h3>
-                  <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                    {selectedEntry.content.replace(/^(Blue|Red|Yellow|Green)/, selectedEntry.pleasant ? 'Pleasant' : 'Unpleasant')}
-                  </div>
+                  {renderContent(selectedEntry.content)}
                 </div>
                 {selectedEntry.transcript && (
                   <div className="border-t dark:border-gray-700 pt-4">
                     <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Full Transcript</h3>
-                    <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                      {selectedEntry.transcript}
-                    </div>
+                    {renderContent(selectedEntry.transcript, false)}
                   </div>
                 )}
               </div>
