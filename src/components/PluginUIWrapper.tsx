@@ -43,14 +43,24 @@ function PluginUIWrapper({ pluginId, files }: PluginUIWrapperProps) {
           try {
             // Try to read matching transcript file
             const transcriptPath = file.path.replace(/^plugins\//, 'transcripts/');
+            console.log('Loading transcript:', {
+              originalPath: file.path,
+              transcriptPath: transcriptPath
+            });
             const transcriptModule = await import(`../../${transcriptPath}`);
+            console.log('Transcript loaded:', transcriptModule.default);
             return { ...file, transcript: transcriptModule.default };
-          } catch {
+          } catch (error) {
             // If transcript doesn't exist, return original file
+            console.error('Failed to load transcript:', {
+              path: file.path,
+              error: error
+            });
             return file;
           }
         })
       );
+      console.log('Files with transcripts:', filesWithTranscripts);
       setEnhancedFiles(filesWithTranscripts);
     }
 
