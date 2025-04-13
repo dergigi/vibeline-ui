@@ -355,7 +355,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                 <div className="flex items-center gap-2">
                   <div className={`w-2.5 h-2.5 rounded-full ${getMoodColor(selectedEntry.color).dot}`} />
                   <span className={`text-sm font-medium ${getMoodColor(selectedEntry.color).text}`}>
-                    {selectedEntry.mood}
+                    {selectedEntry.pleasant ? 'Pleasant' : 'Unpleasant'}
                   </span>
                   <span className="text-xs text-gray-500">
                     {EMOTIONS[selectedEntry.color].emotions[selectedEntry.mood]}
@@ -366,7 +366,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                 </div>
               </div>
               <div className="prose prose-sm dark:prose-invert max-w-none">
-                {selectedEntry.content}
+                {selectedEntry.content.replace(/^(Blue|Red|Yellow|Green)/, selectedEntry.pleasant ? 'Pleasant' : 'Unpleasant')}
               </div>
             </div>
           ) : (
