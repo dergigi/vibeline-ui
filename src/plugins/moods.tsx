@@ -550,12 +550,9 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-3">Mood Analysis</h2>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Timeline Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mood Timeline</h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
