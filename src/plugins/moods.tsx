@@ -210,11 +210,15 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     // Process mood files
     const entries: MoodEntry[] = [];
     
+    console.log('Processing files:', files);
+    
     files.forEach(file => {
       if (!file.content) return;
       
       const content = file.content;
       const fileName = file.name;
+      
+      console.log('Processing file:', { fileName, hasTranscript: !!file.transcript });
       
       // Extract date from filename (format: YYYYMMDD_HHMMSS.txt)
       const dateMatch = fileName.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
@@ -258,8 +262,20 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     // Sort by date (newest first)
     entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
+    console.log('Processed entries:', entries.map(e => ({ id: e.id, hasTranscript: !!e.transcript })));
+    
     setMoodEntries(entries);
   }, [files]);
+
+  useEffect(() => {
+    if (selectedEntry) {
+      console.log('Selected entry details:', {
+        id: selectedEntry.id,
+        hasTranscript: !!selectedEntry.transcript,
+        transcript: selectedEntry.transcript
+      });
+    }
+  }, [selectedEntry]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
