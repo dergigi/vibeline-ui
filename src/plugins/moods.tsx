@@ -411,55 +411,54 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     ? moodEntries 
     : moodEntries.filter(entry => entry.color === filter);
 
+  const renderMarkdownContent = (content: string) => {
+    return (
+      <ReactMarkdown
+        components={{
+          p: ({children}) => {
+            const text = React.Children.toArray(children)
+              .map(child => (typeof child === 'string' ? child : ''))
+              .join('');
+            return (
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                <EmotionalText text={text} />
+              </p>
+            );
+          },
+          ul: ({children}) => (
+            <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              {children}
+            </ul>
+          ),
+          ol: ({children}) => (
+            <ol className="list-decimal list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              {children}
+            </ol>
+          ),
+          li: ({children}) => {
+            const text = React.Children.toArray(children)
+              .map(child => (typeof child === 'string' ? child : ''))
+              .join('');
+            return (
+              <li className="mt-1">
+                <EmotionalText text={text} />
+              </li>
+            );
+          }
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    );
+  };
+
   const renderContent = (content: string, isMarkdown: boolean = true) => {
     const processedContent = content.replace(/^(Blue|Red|Yellow|Green)/, 
       selectedEntry?.pleasant ? 'Pleasant' : 'Unpleasant'
     );
     
     if (isMarkdown) {
-      return (
-        <ReactMarkdown
-          components={{
-            p: ({children}) => (
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                <EmotionalText text={String(children)} />
-              </p>
-            ),
-            h1: ({children}) => (
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-4">
-                <EmotionalText text={String(children)} />
-              </h1>
-            ),
-            h2: ({children}) => (
-              <h2 className="text-md font-semibold text-gray-900 dark:text-gray-100 mt-3">
-                <EmotionalText text={String(children)} />
-              </h2>
-            ),
-            ul: ({children}) => (
-              <ul className="list-disc list-inside mt-2 text-sm text-gray-600 dark:text-gray-300">
-                {children}
-              </ul>
-            ),
-            ol: ({children}) => (
-              <ol className="list-decimal list-inside mt-2 text-sm text-gray-600 dark:text-gray-300">
-                {children}
-              </ol>
-            ),
-            li: ({children}) => (
-              <li className="mt-1">
-                <EmotionalText text={String(children)} />
-              </li>
-            ),
-            blockquote: ({children}) => (
-              <blockquote className="border-l-4 border-gray-200 dark:border-gray-700 pl-4 mt-2 italic text-gray-600 dark:text-gray-300">
-                <EmotionalText text={String(children)} />
-              </blockquote>
-            ),
-          }}
-        >
-          {processedContent}
-        </ReactMarkdown>
-      );
+      return renderMarkdownContent(processedContent);
     }
     
     return (
