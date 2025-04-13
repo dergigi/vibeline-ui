@@ -130,11 +130,11 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       return timeFormatted;
     }
     
-    // Format date as "Apr 11"
+    // Format date as "Apr 11 · 14:30"
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const month = parseInt(date.slice(4, 6), 10) - 1; // Convert to 0-based index
     const day = parseInt(date.slice(6, 8), 10);
-    return `${months[month]} ${day} ${timeFormatted}`;
+    return `${months[month]} ${day} · ${timeFormatted}`;
   };
 
   const renderTodoItem = (todo: Todo, section: string) => (
