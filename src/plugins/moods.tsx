@@ -202,50 +202,6 @@ const getMoodColor = (color: string) => {
   return colors[color as keyof typeof colors] || colors.blue;
 };
 
-const sanitizeText = (text: string) => {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-};
-
-const highlightEmotionalWords = (text: string) => {
-  // First sanitize the text
-  let result = sanitizeText(text);
-  
-  // Create a map of all emotions with their colors
-  const emotionMap = Object.entries(EMOTIONS).reduce((acc, [color, category]) => {
-    Object.keys(category.emotions).forEach(emotion => {
-      acc[emotion.toLowerCase()] = color as MoodColor;
-    });
-    return acc;
-  }, {} as Record<string, MoodColor>);
-
-  // Sort emotions by length (longest first) to handle cases where one emotion is a substring of another
-  const sortedEmotions = Object.keys(emotionMap).sort((a, b) => b.length - a.length);
-
-  // Replace each emotion with a colored span
-  sortedEmotions.forEach(emotion => {
-    const regex = new RegExp(`\\b${emotion}\\b`, 'gi');
-    const color = emotionMap[emotion];
-    const colorClasses = getMoodColor(color);
-    
-    // Extract just the color class name without the dark: variant
-    const colorClass = colorClasses.text.split(' ').find(cls => cls.includes('text-')) || '';
-    const darkColorClass = colorClasses.text.split(' ').find(cls => cls.includes('dark:')) || '';
-    
-    result = result.replace(
-      regex,
-      (match) => `<span class="${colorClass} ${darkColorClass} font-medium">${match}</span>`
-    );
-  });
-
-  // Preserve newlines for whitespace-pre-wrap
-  return result.replace(/\n/g, '<br />');
-};
-
 const EmotionalText: React.FC<{ text: string }> = ({ text }) => {
   const parts: { text: string; color?: MoodColor }[] = [];
   let currentIndex = 0;
@@ -411,59 +367,60 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
     ? moodEntries 
     : moodEntries.filter(entry => entry.color === filter);
 
-  const renderMarkdownContent = (content: string) => {
-    return (
-      <ReactMarkdown
-        components={{
-          p: ({children}) => {
-            const text = React.Children.toArray(children)
-              .map(child => (typeof child === 'string' ? child : ''))
-              .join('');
-            return (
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                <EmotionalText text={text} />
-              </p>
-            );
-          },
-          ul: ({children}) => (
-            <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
-              {children}
-            </ul>
-          ),
-          ol: ({children}) => (
-            <ol className="list-decimal list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
-              {children}
-            </ol>
-          ),
-          li: ({children}) => {
-            const text = React.Children.toArray(children)
-              .map(child => (typeof child === 'string' ? child : ''))
-              .join('');
-            return (
-              <li className="mt-1">
-                <EmotionalText text={text} />
-              </li>
-            );
-          }
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    );
-  };
-
   const renderContent = (content: string, isMarkdown: boolean = true) => {
+    // Replace mood color words at the start with Pleasant/Unpleasant
     const processedContent = content.replace(/^(Blue|Red|Yellow|Green)/, 
       selectedEntry?.pleasant ? 'Pleasant' : 'Unpleasant'
     );
-    
-    if (isMarkdown) {
-      return renderMarkdownContent(processedContent);
+
+    if (!isMarkdown) {
+      // For non-markdown content, just highlight emotions
+      return (
+        <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+          <EmotionalText text={processedContent} />
+        </div>
+      );
     }
-    
+
+    // For markdown content, use ReactMarkdown with our custom components
     return (
-      <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-        <EmotionalText text={processedContent} />
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <ReactMarkdown
+          components={{
+            p: ({children}) => {
+              const text = React.Children.toArray(children)
+                .map(child => (typeof child === 'string' ? child : ''))
+                .join('');
+              return (
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                  <EmotionalText text={text} />
+                </p>
+              );
+            },
+            ul: ({children}) => (
+              <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                {children}
+              </ul>
+            ),
+            ol: ({children}) => (
+              <ol className="list-decimal list-inside mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                {children}
+              </ol>
+            ),
+            li: ({children}) => {
+              const text = React.Children.toArray(children)
+                .map(child => (typeof child === 'string' ? child : ''))
+                .join('');
+              return (
+                <li className="mt-1">
+                  <EmotionalText text={text} />
+                </li>
+              );
+            }
+          }}
+        >
+          {processedContent}
+        </ReactMarkdown>
       </div>
     );
   };
