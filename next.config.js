@@ -8,6 +8,10 @@ const nextConfig = {
     };
     return config;
   },
+  // Allow importing TypeScript files from outside the src directory
+  experimental: {
+    externalDir: true,
+  },
 }
 
 module.exports = nextConfig; 
