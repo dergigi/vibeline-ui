@@ -8,12 +8,14 @@ import Image from 'next/image';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const PLUGINS_DIR = path.join(process.cwd(), 'src', 'plugins');
+const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
 
 interface PluginFile {
   name: string;
   path: string;
   content?: string;
   mimeType?: string;
+  transcript?: string;
 }
 
 function getMimeType(filename: string): string {
@@ -123,15 +125,25 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
       .map(async entry => {
         const filePath = path.join(pluginDir, entry.name);
         let content: string | undefined;
+        let transcript: string | undefined;
+
         try {
           content = await fs.readFile(filePath, 'utf-8');
+          
+          // Try to read matching transcript file from the root transcripts directory
+          const transcriptPath = path.join(TRANSCRIPTS_DIR, entry.name.replace(/\.[^/.]+$/, '.txt'));
+          if (existsSync(transcriptPath)) {
+            transcript = await fs.readFile(transcriptPath, 'utf-8');
+          }
         } catch (error) {
           console.error(`Error reading file ${filePath}:`, error);
         }
+
         return {
           name: entry.name,
           path: path.join(pluginId, entry.name),
           content,
+          transcript,
           mimeType: getMimeType(entry.name)
         };
       });
