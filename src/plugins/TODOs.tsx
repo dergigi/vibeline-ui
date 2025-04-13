@@ -26,10 +26,12 @@ interface TodosPluginProps {
 }
 
 type FilterState = 'all' | 'open' | 'done';
+type SortDirection = 'newest' | 'oldest';
 
 const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
   const [sections, setSections] = useState<TodoSection[]>([]);
   const [filter, setFilter] = useState<FilterState>('all');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('newest');
 
   useEffect(() => {
     // Parse todos from markdown files
@@ -58,8 +60,20 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       });
     });
 
-    // Sort todos by creation date (newest first)
-    allTodos.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Sort todos by creation date
+    const sortTodos = (a: Todo, b: Todo) => {
+      const dateComparison = sortDirection === 'newest' 
+        ? b.createdAt.localeCompare(a.createdAt)
+        : a.createdAt.localeCompare(b.createdAt);
+
+      // If dates are equal, sort by completion status
+      if (dateComparison === 0) {
+        return a.completed ? 1 : -1;
+      }
+      return dateComparison;
+    };
+
+    allTodos.sort(sortTodos);
 
     // Get date boundaries
     const now = new Date();
@@ -70,40 +84,13 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       .toISOString().split('T')[0].replace(/-/g, '');
 
     // Organize todos into sections
-    const todayTodos = allTodos.filter(todo => todo.createdAt === today)
-      .sort((a, b) => {
-        // Sort by completion status first, then by creation date
-        if (a.completed === b.completed) {
-          return b.createdAt.localeCompare(a.createdAt);
-        }
-        return a.completed ? 1 : -1;
-      });
-
-    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday)
-      .sort((a, b) => {
-        if (a.completed === b.completed) {
-          return b.createdAt.localeCompare(a.createdAt);
-        }
-        return a.completed ? 1 : -1;
-      });
-
+    const todayTodos = allTodos.filter(todo => todo.createdAt === today).sort(sortTodos);
+    const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterday).sort(sortTodos);
     const weekTodos = allTodos.filter(todo => 
       todo.createdAt < yesterday && 
       todo.createdAt > weekAgo
-    ).sort((a, b) => {
-      if (a.completed === b.completed) {
-        return b.createdAt.localeCompare(a.createdAt);
-      }
-      return a.completed ? 1 : -1;
-    });
-
-    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo)
-      .sort((a, b) => {
-        if (a.completed === b.completed) {
-          return b.createdAt.localeCompare(a.createdAt);
-        }
-        return a.completed ? 1 : -1;
-      });
+    ).sort(sortTodos);
+    const olderTodos = allTodos.filter(todo => todo.createdAt <= weekAgo).sort(sortTodos);
 
     setSections([
       { title: 'Today', todos: todayTodos, isExpanded: false },
@@ -111,7 +98,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
       { title: 'This Week', todos: weekTodos, isExpanded: false },
       { title: 'Older', todos: olderTodos, isExpanded: false }
     ]);
-  }, [files]);
+  }, [files, sortDirection]);
 
   const toggleSection = (sectionIndex: number) => {
     setSections(prevSections => 
@@ -180,36 +167,44 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 px-4">
+      <div className="flex items-center justify-between px-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`text-sm px-3 py-1 rounded-full ${
+              filter === 'all'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter('open')}
+            className={`text-sm px-3 py-1 rounded-full ${
+              filter === 'open'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Open
+          </button>
+          <button
+            onClick={() => setFilter('done')}
+            className={`text-sm px-3 py-1 rounded-full ${
+              filter === 'done'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Done
+          </button>
+        </div>
         <button
-          onClick={() => setFilter('all')}
-          className={`text-sm px-3 py-1 rounded-full ${
-            filter === 'all'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
+          onClick={() => setSortDirection(prev => prev === 'newest' ? 'oldest' : 'newest')}
+          className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
         >
-          All
-        </button>
-        <button
-          onClick={() => setFilter('open')}
-          className={`text-sm px-3 py-1 rounded-full ${
-            filter === 'open'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          Open
-        </button>
-        <button
-          onClick={() => setFilter('done')}
-          className={`text-sm px-3 py-1 rounded-full ${
-            filter === 'done'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          Done
+          {sortDirection === 'newest' ? 'Newest first' : 'Oldest first'}
         </button>
       </div>
       {sections.map((section, index) => {
