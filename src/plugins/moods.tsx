@@ -813,8 +813,8 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Timeline */}
-        <div className="md:col-span-1 bg-white rounded-lg shadow overflow-y-auto max-h-[70vh]">
-          <div className="divide-y">
+        <div className="md:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow overflow-y-auto max-h-[70vh]">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {filteredEntries.map(entry => {
               const colorClasses = getMoodColor(entry.color);
               return (
@@ -845,7 +845,7 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
         </div>
         
         {/* Detail view */}
-        <div className="md:col-span-2 bg-white rounded-lg shadow">
+        <div className="md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow">
           {selectedEntry ? (
             <div className="p-4 h-full overflow-y-auto">
               <div className="flex justify-between items-start mb-4">
