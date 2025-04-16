@@ -214,7 +214,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             className={`text-sm px-3 py-1 rounded-full ${
               filter === 'open-first'
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             Open First
@@ -224,7 +224,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             className={`text-sm px-3 py-1 rounded-full ${
               filter === 'open'
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             Open
@@ -234,7 +234,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             className={`text-sm px-3 py-1 rounded-full ${
               filter === 'done'
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             Done
@@ -244,7 +244,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
             className={`text-sm px-3 py-1 rounded-full ${
               filter === 'all'
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             Unfiltered
@@ -256,20 +256,20 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
         if (filteredTodos.length === 0) return null;
         
         return (
-          <div key={section.title} className="rounded-lg bg-gray-50">
+          <div key={section.title} className="rounded-lg bg-gray-50 dark:bg-gray-800">
             <button
               onClick={() => toggleSection(index)}
-              className="flex w-full items-center px-4 py-3 hover:bg-gray-100 transition-colors duration-200 rounded-t-lg bg-gray-100/50"
+              className="flex w-full items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 rounded-t-lg bg-gray-100/50 dark:bg-gray-700/50"
             >
               {section.isExpanded ? (
                 <ChevronDown className="h-4 w-4 text-blue-500" />
               ) : (
                 <ChevronRight className="h-4 w-4 text-blue-500" />
               )}
-              <span className="ml-2 text-sm font-semibold text-gray-900">
+              <span className="ml-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {section.title}
               </span>
-              <span className="ml-2 text-sm text-gray-500">
+              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
                 ({filteredTodos.length})
               </span>
             </button>
@@ -281,7 +281,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
                 >
                   <div className="flex-shrink-0 pt-1">
                     {todo.completed ? (
-                      <div className="text-gray-400 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.completed)}>
+                      <div className="text-gray-400 dark:text-gray-500 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.completed)}>
                         <Check className="h-4 w-4" />
                       </div>
                     ) : (
@@ -292,11 +292,11 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
                     )}
                   </div>
                   <span className={`ml-3 text-sm flex-1 break-words ${
-                    todo.completed ? "text-gray-400 line-through" : "text-gray-900"
+                    todo.completed ? "text-gray-400 dark:text-gray-500 line-through" : "text-gray-900 dark:text-gray-100"
                   }`}>
                     {todo.text}
                   </span>
-                  <span className="ml-3 flex-shrink-0 text-xs text-gray-400">
+                  <span className="ml-3 flex-shrink-0 text-xs text-gray-400 dark:text-gray-500">
                     {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
                   </span>
                 </div>
@@ -304,7 +304,7 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
               {!section.isExpanded && filteredTodos.length > 5 && (
                 <button
                   onClick={() => toggleSection(index)}
-                  className="mt-2 text-sm text-blue-500 hover:text-blue-600"
+                  className="mt-2 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   Show {filteredTodos.length - 5} more...
                 </button>
