@@ -158,7 +158,17 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
         throw new Error('Failed to toggle todo');
       }
 
-      window.location.reload();
+      // Update local state instead of reloading the page
+      setSections(prevSections => 
+        prevSections.map(section => ({
+          ...section,
+          todos: section.todos.map(todo => 
+            todo.id === todoId 
+              ? { ...todo, completed: !currentCompleted } 
+              : todo
+          )
+        }))
+      );
     } catch (error) {
       console.error('Error toggling todo:', error);
     }
