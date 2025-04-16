@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Square, ChevronDown, ChevronRight } from 'lucide-react';
+import { Square, ChevronDown, ChevronRight, Check } from 'lucide-react';
 
 interface Todo {
   id: string;
@@ -280,12 +280,16 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
                   className="flex items-start py-2"
                 >
                   <div className="flex-shrink-0 pt-1">
-                    <Square
-                      className={`h-4 w-4 ${
-                        todo.completed ? "text-gray-400" : "text-blue-500"
-                      }`}
-                      onClick={() => toggleTodo(todo.id, todo.completed)}
-                    />
+                    {todo.completed ? (
+                      <div className="text-gray-400 cursor-pointer" onClick={() => toggleTodo(todo.id, todo.completed)}>
+                        <Check className="h-4 w-4" />
+                      </div>
+                    ) : (
+                      <Square
+                        className="h-4 w-4 text-blue-500 cursor-pointer"
+                        onClick={() => toggleTodo(todo.id, todo.completed)}
+                      />
+                    )}
                   </div>
                   <span className={`ml-3 text-sm flex-1 break-words ${
                     todo.completed ? "text-gray-400 line-through" : "text-gray-900"
