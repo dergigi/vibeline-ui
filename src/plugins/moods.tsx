@@ -863,16 +863,16 @@ const MoodsPlugin: React.FC<MoodsPluginProps> = ({ files }) => {
                 </div>
               </div>
               <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Analysis</h3>
-                  {renderContent(selectedEntry.content)}
-                </div>
                 {selectedEntry.transcript && (
-                  <div className="border-t dark:border-gray-700 pt-4">
+                  <div>
                     <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Full Transcript</h3>
                     {renderContent(selectedEntry.transcript, false)}
                   </div>
                 )}
+                <div className={selectedEntry.transcript ? "border-t dark:border-gray-700 pt-4" : ""}>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Analysis</h3>
+                  {renderContent(selectedEntry.content)}
+                </div>
               </div>
             </div>
           ) : (
