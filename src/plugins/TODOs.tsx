@@ -86,45 +86,29 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
     weekAgo.setDate(weekAgo.getDate() - 7);
     const weekAgoStr = weekAgo.toISOString().split('T')[0].replace(/-/g, '');
     
-    const twoWeeksAgo = new Date(now);
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-    const twoWeeksAgoStr = twoWeeksAgo.toISOString().split('T')[0].replace(/-/g, '');
-
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthStartStr = monthStart.toISOString().split('T')[0].replace(/-/g, '');
-    
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthStartStr = lastMonthStart.toISOString().split('T')[0].replace(/-/g, '');
+    const monthAgo = new Date(now);
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    const monthAgoStr = monthAgo.toISOString().split('T')[0].replace(/-/g, '');
 
     // Organize todos into sections
     const todayTodos = allTodos.filter(todo => todo.createdAt === today);
     const yesterdayTodos = allTodos.filter(todo => todo.createdAt === yesterdayStr);
-    const thisWeekTodos = allTodos.filter(todo => 
+    const pastWeekTodos = allTodos.filter(todo => 
       todo.createdAt < yesterdayStr && 
       todo.createdAt > weekAgoStr
     );
-    const lastWeekTodos = allTodos.filter(todo =>
+    const pastMonthTodos = allTodos.filter(todo =>
       todo.createdAt <= weekAgoStr &&
-      todo.createdAt > twoWeeksAgoStr
+      todo.createdAt > monthAgoStr
     );
-    const thisMonthTodos = allTodos.filter(todo =>
-      todo.createdAt <= twoWeeksAgoStr &&
-      todo.createdAt >= monthStartStr
-    );
-    const lastMonthTodos = allTodos.filter(todo =>
-      todo.createdAt < monthStartStr &&
-      todo.createdAt >= lastMonthStartStr
-    );
-    const olderTodos = allTodos.filter(todo => todo.createdAt < lastMonthStartStr);
+    const longAgoTodos = allTodos.filter(todo => todo.createdAt <= monthAgoStr);
 
     setSections([
       { title: 'Today', todos: todayTodos, isExpanded: false },
       { title: 'Yesterday', todos: yesterdayTodos, isExpanded: false },
-      { title: 'This Week', todos: thisWeekTodos, isExpanded: false },
-      { title: 'Last Week', todos: lastWeekTodos, isExpanded: false },
-      { title: 'This Month', todos: thisMonthTodos, isExpanded: false },
-      { title: 'Last Month', todos: lastMonthTodos, isExpanded: false },
-      { title: 'Older', todos: olderTodos, isExpanded: false }
+      { title: 'Past 7 Days', todos: pastWeekTodos, isExpanded: false },
+      { title: 'Past Month', todos: pastMonthTodos, isExpanded: false },
+      { title: 'Long Ago', todos: longAgoTodos, isExpanded: false }
     ]);
   }, [files]);
 
