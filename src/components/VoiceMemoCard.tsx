@@ -27,6 +27,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [showDraftEditor, setShowDraftEditor] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSummaryRefreshing, setIsSummaryRefreshing] = useState(false);
+  const [isTodosRefreshing, setIsTodosRefreshing] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   // Add state to manage optimistic UI updates for todos
   const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
@@ -243,32 +245,67 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     }
   };
 
-  const handleRefreshTranscript = async (): Promise<void> => {
+  const handleDeletePluginFiles = async (plugin: string): Promise<void> => {
     if (!memo.filename) return;
     
-    setIsRefreshing(true);
+    // Set the appropriate loading state
+    switch (plugin) {
+      case 'transcripts':
+        setIsRefreshing(true);
+        break;
+      case 'summaries':
+        setIsSummaryRefreshing(true);
+        break;
+      case 'todos':
+        setIsTodosRefreshing(true);
+        break;
+    }
+    
     try {
-      const response = await fetch('/api/transcripts/delete', {
+      const response = await fetch('/api/plugins/delete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filename: memo.filename }),
+        body: JSON.stringify({ 
+          filename: memo.filename,
+          plugin
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete transcript files');
+        throw new Error(`Failed to delete ${plugin} files`);
       }
 
-      // Clear the transcript from the memo object
-      memo.transcript = undefined;
+      // Clear the appropriate field from the memo object
+      switch (plugin) {
+        case 'transcripts':
+          memo.transcript = undefined;
+          break;
+        case 'summaries':
+          memo.summary = undefined;
+          break;
+        case 'todos':
+          memo.todos = undefined;
+          break;
+      }
       
-      // Show success feedback (you might want to add a toast notification here)
-      console.log('Transcript files deleted successfully');
+      console.log(`${plugin} files deleted successfully`);
     } catch (error) {
-      console.error('Error deleting transcript files:', error);
+      console.error(`Error deleting ${plugin} files:`, error);
     } finally {
-      setIsRefreshing(false);
+      // Reset the appropriate loading state
+      switch (plugin) {
+        case 'transcripts':
+          setIsRefreshing(false);
+          break;
+        case 'summaries':
+          setIsSummaryRefreshing(false);
+          break;
+        case 'todos':
+          setIsTodosRefreshing(false);
+          break;
+      }
     }
   };
 
@@ -334,7 +371,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRefreshTranscript();
+                      handleDeletePluginFiles('transcripts');
                     }}
                     className={`p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors ${
                       isRefreshing ? 'animate-spin' : ''
@@ -364,9 +401,23 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                 onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
               >
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Summary
-                </h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Summary
+                  </h4>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeletePluginFiles('summaries');
+                    }}
+                    className={`p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors ${
+                      isSummaryRefreshing ? 'animate-spin' : ''
+                    }`}
+                    disabled={isSummaryRefreshing}
+                  >
+                    <ArrowPathIcon className="w-3 h-3" />
+                  </button>
+                </div>
                 <div className="text-gray-500 dark:text-gray-400">
                   {isSummaryExpanded ? (
                     <ChevronUpIcon className="w-4 h-4" />
@@ -396,9 +447,23 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                   onClick={() => setIsTodosExpanded(!isTodosExpanded)}
                 >
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    TODOs ({memo.todos ? countTodos(memo.todos) : 0})
-                  </h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      TODOs ({memo.todos ? countTodos(memo.todos) : 0})
+                    </h4>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePluginFiles('todos');
+                      }}
+                      className={`p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors ${
+                        isTodosRefreshing ? 'animate-spin' : ''
+                      }`}
+                      disabled={isTodosRefreshing}
+                    >
+                      <ArrowPathIcon className="w-3 h-3" />
+                    </button>
+                  </div>
                   <div className="flex items-center gap-1">
                     <div className="text-gray-500 dark:text-gray-400">
                       {isTodosExpanded ? (
