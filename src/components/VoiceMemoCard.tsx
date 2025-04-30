@@ -26,6 +26,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isPromptsCopied, setIsPromptsCopied] = useState(false);
   const [showDraftEditor, setShowDraftEditor] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   // Add state to manage optimistic UI updates for todos
   const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
@@ -242,6 +243,35 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     }
   };
 
+  const handleRefreshTranscript = async (): Promise<void> => {
+    if (!memo.filename) return;
+    
+    setIsRefreshing(true);
+    try {
+      const response = await fetch('/api/transcripts/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filename: memo.filename }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete transcript files');
+      }
+
+      // Clear the transcript from the memo object
+      memo.transcript = undefined;
+      
+      // Show success feedback (you might want to add a toast notification here)
+      console.log('Transcript files deleted successfully');
+    } catch (error) {
+      console.error('Error deleting transcript files:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -301,7 +331,16 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Transcript
                   </h4>
-                  <button className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRefreshTranscript();
+                    }}
+                    className={`p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors ${
+                      isRefreshing ? 'animate-spin' : ''
+                    }`}
+                    disabled={isRefreshing}
+                  >
                     <ArrowPathIcon className="w-3 h-3" />
                   </button>
                 </div>
