@@ -7,6 +7,7 @@ import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, Che
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
+import Link from 'next/link';
 
 interface VoiceMemoCardProps {
   memo: VoiceMemo;
@@ -250,14 +251,19 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       >
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-              {formatTimeAgo(memo.createdAt)}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {formatShortDate(memo.createdAt)}
-              {duration && ` · ${formatDuration(duration)}`}
-              {memo.transcript && ` · ${countWords(memo.transcript)} words`}
-            </p>
+            <Link
+              href={`/memos/${memo.filename}`}
+              className="block hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                {formatTimeAgo(memo.createdAt)}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {formatShortDate(memo.createdAt)}
+                {duration && ` · ${formatDuration(duration)}`}
+                {memo.transcript && ` · ${countWords(memo.transcript)} words`}
+              </p>
+            </Link>
           </div>
           <div className="flex items-center gap-1">
             <button
