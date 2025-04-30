@@ -42,8 +42,22 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const hasPrompts = memo.prompts?.trim().length > 0;
   const hasDrafts = memo.drafts?.trim().length > 0;
 
+  const cleanTodos = (todos: string): { lines: string[], originalIndices: number[] } => {
+    if (!todos) return { lines: [], originalIndices: [] };
+    const allLines = todos.split('\n');
+    const result = allLines.reduce((acc, line, index) => {
+      const trimmed = line.trim();
+      if (trimmed.length > 0 && !trimmed.startsWith('#')) {
+        acc.lines.push(line);
+        acc.originalIndices.push(index);
+      }
+      return acc;
+    }, { lines: [] as string[], originalIndices: [] as number[] });
+    return result;
+  };
+
   const countTodos = (todos: string): number => {
-    return todos.trim().split('\n').filter(line => line.trim().length > 0).length;
+    return cleanTodos(todos).lines.length;
   };
 
   const togglePlayPause = (): void => {
@@ -587,34 +601,36 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   </div>
                 </div>
                 {isTodosExpanded && (
-                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 pl-1"> {/* Added mt-2 and pl-1 for spacing */}
-                    {(optimisticTodos ?? memo.todos ?? '').trim().split('\n').map((line, index) => {
-                      // Match markdown checkbox format: "- [ ] text" or "- [x] text" (allowing for whitespace variations)
-                      const match = line.match(/^(\s*-\s*\[\s*)([ x])(\s*\]\s*)(.*)/);
-                      if (match) {
-                        const indent = match[1].match(/^\s*/)?.[0] || ''; // Capture leading whitespace for indentation
-                        const isChecked = match[2] === 'x';
-                        const text = match[4];
-                        return (
-                          <div key={index} className="flex items-center gap-2" style={{ paddingLeft: `${indent.length * 0.5}em` }}> {/* Basic indentation */}
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => handleTodoToggle(index, isChecked)}
-                              // Added Tailwind form plugin class and styling
-                              className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
-                            />
-                            <label className={`flex-1 ${isChecked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(index, isChecked)}>
-                              {text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>} {/* Handle empty todo text */}
-                            </label>
-                          </div>
-                        );
-                      }
-                      // Render non-checkbox lines as plain text, preserving indentation
-                      const indentMatch = line.match(/^\s*/);
-                      const indent = indentMatch ? indentMatch[0] : '';
-                      return <div key={index} style={{ paddingLeft: `${indent.length * 0.5}em` }}>{line.trim() || <br />}</div>; // Render empty lines as breaks
-                    })}
+                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 pl-1">
+                    {(() => {
+                      const { lines, originalIndices } = cleanTodos(optimisticTodos ?? memo.todos ?? '');
+                      return lines.map((line, displayIndex) => {
+                        const originalIndex = originalIndices[displayIndex];
+                        // Match markdown checkbox format: "- [ ] text" or "- [x] text" (allowing for whitespace variations)
+                        const match = line.match(/^(\s*-\s*\[\s*)([ x])(\s*\]\s*)(.*)/);
+                        if (match) {
+                          const indent = match[1].match(/^\s*/)?.[0] || '';
+                          const isChecked = match[2] === 'x';
+                          const text = match[4];
+                          return (
+                            <div key={displayIndex} className="flex items-center gap-2" style={{ paddingLeft: `${indent.length * 0.5}em` }}>
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleTodoToggle(originalIndex, isChecked)}
+                                className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
+                              />
+                              <label className={`flex-1 ${isChecked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(originalIndex, isChecked)}>
+                                {text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
+                              </label>
+                            </div>
+                          );
+                        }
+                        const indentMatch = line.match(/^\s*/);
+                        const indent = indentMatch ? indentMatch[0] : '';
+                        return <div key={displayIndex} style={{ paddingLeft: `${indent.length * 0.5}em` }}>{line.trim() || <br />}</div>;
+                      });
+                    })()}
                   </div>
                 )}
                 </div>
