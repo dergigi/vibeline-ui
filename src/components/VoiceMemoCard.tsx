@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/solid';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
@@ -29,6 +29,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSummaryRefreshing, setIsSummaryRefreshing] = useState(false);
   const [isTodosRefreshing, setIsTodosRefreshing] = useState(false);
+  const [countdown, setCountdown] = useState<{ [key: string]: number }>({});
+  const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
+  const deleteIntervals = useRef<{ [key: string]: NodeJS.Timeout | null }>({});
   const audioRef = useRef<HTMLAudioElement>(null);
   // Add state to manage optimistic UI updates for todos
   const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
@@ -306,8 +309,58 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           setIsTodosRefreshing(false);
           break;
       }
+      // Reset countdown and deleting states
+      setCountdown(prev => ({ ...prev, [plugin]: 0 }));
+      setIsDeleting(prev => ({ ...prev, [plugin]: false }));
     }
   };
+
+  const startDeleteCountdown = (plugin: string): void => {
+    // Clear any existing interval for this plugin
+    if (deleteIntervals.current[plugin]) {
+      clearInterval(deleteIntervals.current[plugin]);
+    }
+
+    setCountdown(prev => ({ ...prev, [plugin]: 5 }));
+    setIsDeleting(prev => ({ ...prev, [plugin]: true }));
+    
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        const newCount = prev[plugin] - 1;
+        if (newCount <= 0) {
+          clearInterval(interval);
+          handleDeletePluginFiles(plugin);
+          return { ...prev, [plugin]: 0 };
+        }
+        return { ...prev, [plugin]: newCount };
+      });
+    }, 1000);
+
+    // Store the interval ID
+    deleteIntervals.current[plugin] = interval;
+  };
+
+  const cancelDelete = (plugin: string): void => {
+    // Clear the interval
+    if (deleteIntervals.current[plugin]) {
+      clearInterval(deleteIntervals.current[plugin]);
+      deleteIntervals.current[plugin] = null;
+    }
+    
+    setCountdown(prev => ({ ...prev, [plugin]: 0 }));
+    setIsDeleting(prev => ({ ...prev, [plugin]: false }));
+  };
+
+  // Clean up intervals when component unmounts
+  React.useEffect(() => {
+    return () => {
+      Object.values(deleteIntervals.current).forEach(interval => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      });
+    };
+  }, []);
 
   return (
     <>
@@ -371,14 +424,27 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeletePluginFiles('transcripts');
+                      if (isDeleting['transcripts']) {
+                        cancelDelete('transcripts');
+                      } else {
+                        startDeleteCountdown('transcripts');
+                      }
                     }}
-                    className={`p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors ${
-                      isRefreshing ? 'animate-spin' : ''
+                    className={`p-1 transition-colors flex items-center gap-1 ${
+                      isDeleting['transcripts'] 
+                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                        : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                     }`}
                     disabled={isRefreshing}
                   >
-                    <ArrowPathIcon className="w-3 h-3" />
+                    {isDeleting['transcripts'] ? (
+                      <>
+                        <TrashIcon className="w-3 h-3" />
+                        <span className="text-xs">{countdown['transcripts']}s</span>
+                      </>
+                    ) : (
+                      <ArrowPathIcon className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
                 <div className="text-gray-500 dark:text-gray-400">
@@ -408,14 +474,27 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeletePluginFiles('summaries');
+                      if (isDeleting['summaries']) {
+                        cancelDelete('summaries');
+                      } else {
+                        startDeleteCountdown('summaries');
+                      }
                     }}
-                    className={`p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors ${
-                      isSummaryRefreshing ? 'animate-spin' : ''
+                    className={`p-1 transition-colors flex items-center gap-1 ${
+                      isDeleting['summaries'] 
+                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                        : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                     }`}
                     disabled={isSummaryRefreshing}
                   >
-                    <ArrowPathIcon className="w-3 h-3" />
+                    {isDeleting['summaries'] ? (
+                      <>
+                        <TrashIcon className="w-3 h-3" />
+                        <span className="text-xs">{countdown['summaries']}s</span>
+                      </>
+                    ) : (
+                      <ArrowPathIcon className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
                 <div className="text-gray-500 dark:text-gray-400">
@@ -454,14 +533,27 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeletePluginFiles('todos');
+                        if (isDeleting['todos']) {
+                          cancelDelete('todos');
+                        } else {
+                          startDeleteCountdown('todos');
+                        }
                       }}
-                      className={`p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors ${
-                        isTodosRefreshing ? 'animate-spin' : ''
+                      className={`p-1 transition-colors flex items-center gap-1 ${
+                        isDeleting['todos'] 
+                          ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                          : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                       }`}
                       disabled={isTodosRefreshing}
                     >
-                      <ArrowPathIcon className="w-3 h-3" />
+                      {isDeleting['todos'] ? (
+                        <>
+                          <TrashIcon className="w-3 h-3" />
+                          <span className="text-xs">{countdown['todos']}s</span>
+                        </>
+                      ) : (
+                        <ArrowPathIcon className="w-3 h-3" />
+                      )}
                     </button>
                   </div>
                   <div className="flex items-center gap-1">
