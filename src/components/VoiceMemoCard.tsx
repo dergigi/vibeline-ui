@@ -353,8 +353,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   // Clean up intervals when component unmounts
   React.useEffect(() => {
+    const intervals = deleteIntervals.current;
     return () => {
-      Object.values(deleteIntervals.current).forEach(interval => {
+      Object.values(intervals).forEach(interval => {
         if (interval) {
           clearInterval(interval);
         }
