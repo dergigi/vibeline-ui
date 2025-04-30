@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Square, ChevronDown, ChevronRight, Check } from 'lucide-react';
+import Link from 'next/link';
 
 interface Todo {
   id: string;
@@ -280,9 +281,12 @@ const TodosPlugin: React.FC<TodosPluginProps> = ({ files }) => {
                   }`}>
                     {todo.text}
                   </span>
-                  <span className="ml-3 flex-shrink-0 text-xs text-gray-400 dark:text-gray-500">
+                  <Link
+                    href={`/memos/${todo.filePath?.split('/').pop()?.replace('.md', '')}`}
+                    className="ml-3 flex-shrink-0 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
+                  >
                     {formatTimestamp(todo.filePath?.split('/').pop() || '', section.title)}
-                  </span>
+                  </Link>
                 </div>
               ))}
               {!section.isExpanded && filteredTodos.length > 5 && (
