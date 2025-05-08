@@ -38,9 +38,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
-  const hasTodos = memo.todos?.trim().length > 0;
-  const hasPrompts = memo.prompts?.trim().length > 0;
-  const hasDrafts = memo.drafts?.trim().length > 0;
+  const hasTodos = memo.todos ? memo.todos.trim().length > 0 : false;
+  const hasPrompts = memo.prompts ? memo.prompts.trim().length > 0 : false;
+  const hasDrafts = memo.drafts ? memo.drafts.trim().length > 0 : false;
 
   const cleanTodos = (todos: string): { lines: string[], originalIndices: number[] } => {
     if (!todos) return { lines: [], originalIndices: [] };
@@ -85,12 +85,12 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    
+
     const parts = [];
     if (hours > 0) parts.push(`${hours}h`);
     if (minutes > 0) parts.push(`${minutes}m`);
     if (remainingSeconds > 0 || parts.length === 0) parts.push(`${remainingSeconds}s`);
-    
+
     return parts.join(' ');
   };
 
@@ -103,7 +103,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const formatTimeAgo = (date: Date | string): string => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    
+
     // If years are different, return the formatted date with year
     if (dateObj.getFullYear() !== now.getFullYear()) {
       return new Intl.DateTimeFormat('en-US', {
@@ -117,7 +117,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const compareDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
     const diffInDays = Math.floor((today.getTime() - compareDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -203,14 +203,14 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const handleHashtagClick = (tag: string): void => {
     setSearchTerm(tag);
   };
-  
+
   // Function to handle toggling a todo item
   const handleTodoToggle = useCallback(async (lineNumber: number, currentChecked: boolean) => {
     // Get the relative path by taking the last two parts (TODOs/filename.md)
     const pathParts = memo.path.split('/');
     const filePath = pathParts.slice(-2).join('/');
     const newChecked = !currentChecked;
-  
+
     // Optimistic UI update
     const lines = (optimisticTodos ?? memo.todos ?? '').split('\n');
     if (lineNumber >= 0 && lineNumber < lines.length) {
@@ -221,20 +221,20 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         setOptimisticTodos(lines.join('\n'));
       }
     }
-  
+
     try {
       const response = await fetch('/api/todos/toggle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          filePath, 
-          lineNumber, 
-          completed: newChecked 
+        body: JSON.stringify({
+          filePath,
+          lineNumber,
+          completed: newChecked
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`API Error: ${response.statusText}`);
       }
@@ -243,7 +243,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       setOptimisticTodos(null);
     }
   }, [memo.path, memo.todos, optimisticTodos]);
-  
+
   const handleShare = async (): Promise<void> => {
     try {
       const response = await fetch('/api/open-in-finder', {
@@ -253,7 +253,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         },
         body: JSON.stringify({ filename: memo.filename }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to open file in Finder');
       }
@@ -264,7 +264,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   const handleDeletePluginFiles = async (plugin: string): Promise<void> => {
     if (!memo.filename) return;
-    
+
     // Set the appropriate loading state
     switch (plugin) {
       case 'transcripts':
@@ -277,14 +277,14 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         setIsTodosRefreshing(true);
         break;
     }
-    
+
     try {
       const response = await fetch('/api/plugins/delete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           filename: memo.filename,
           plugin
         }),
@@ -306,7 +306,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           memo.todos = undefined;
           break;
       }
-      
+
       console.log(`${plugin} files deleted successfully`);
     } catch (error) {
       console.error(`Error deleting ${plugin} files:`, error);
@@ -337,7 +337,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
     setCountdown(prev => ({ ...prev, [plugin]: 5 }));
     setIsDeleting(prev => ({ ...prev, [plugin]: true }));
-    
+
     const interval = setInterval(() => {
       setCountdown(prev => {
         const newCount = prev[plugin] - 1;
@@ -360,7 +360,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       clearInterval(deleteIntervals.current[plugin]);
       deleteIntervals.current[plugin] = null;
     }
-    
+
     setCountdown(prev => ({ ...prev, [plugin]: 0 }));
     setIsDeleting(prev => ({ ...prev, [plugin]: false }));
   };
@@ -428,7 +428,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         <div className="space-y-4">
           {memo.transcript && (
             <div>
-              <div 
+              <div
                 className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                 onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
               >
@@ -436,7 +436,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Transcript
                   </h4>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       if (isDeleting['transcripts']) {
@@ -446,8 +446,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                       }
                     }}
                     className={`p-1 transition-colors flex items-center gap-1 ${
-                      isDeleting['transcripts'] 
-                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                      isDeleting['transcripts']
+                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300'
                         : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                     }`}
                     disabled={isRefreshing}
@@ -478,7 +478,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
           {memo.summary && (
             <div>
-              <div 
+              <div
                 className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                 onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
               >
@@ -486,7 +486,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Summary
                   </h4>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       if (isDeleting['summaries']) {
@@ -496,8 +496,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                       }
                     }}
                     className={`p-1 transition-colors flex items-center gap-1 ${
-                      isDeleting['summaries'] 
-                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                      isDeleting['summaries']
+                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300'
                         : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                     }`}
                     disabled={isSummaryRefreshing}
@@ -537,7 +537,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           <div className="flex flex-col gap-4 mt-4 pt-4">
             {hasTodos && (
               <div>
-                <div 
+                <div
                   className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                   onClick={() => setIsTodosExpanded(!isTodosExpanded)}
                 >
@@ -545,7 +545,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       TODOs ({memo.todos ? countTodos(memo.todos) : 0})
                     </h4>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         if (isDeleting['todos']) {
@@ -555,8 +555,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                         }
                       }}
                       className={`p-1 transition-colors flex items-center gap-1 ${
-                        isDeleting['todos'] 
-                          ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                        isDeleting['todos']
+                          ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300'
                           : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                       }`}
                       disabled={isTodosRefreshing}
@@ -579,7 +579,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                         <ChevronDownIcon className="w-4 h-4" />
                       )}
                     </div>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCopyTodos();
@@ -638,7 +638,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
             {hasPrompts && (
               <div>
-                <div 
+                <div
                   className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                   onClick={() => setIsPromptsExpanded(!isPromptsExpanded)}
                 >
@@ -653,7 +653,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                         <ChevronDownIcon className="w-4 h-4" />
                       )}
                     </div>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCopyPrompts();
@@ -676,7 +676,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 </div>
                 {isPromptsExpanded && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line text-left">
-                    {memo.prompts.trim()}
+                    {memo.prompts?.trim() || ''}
                   </p>
                 )}
               </div>
@@ -684,7 +684,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
             {hasDrafts && (
               <div>
-                <div 
+                <div
                   className="flex items-center justify-between mb-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                   onClick={() => setIsDraftsExpanded(!isDraftsExpanded)}
                 >
@@ -699,7 +699,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                         <ChevronDownIcon className="w-4 h-4" />
                       )}
                     </div>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowDraftEditor(true);
@@ -713,7 +713,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 </div>
                 {isDraftsExpanded && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line text-left">
-                    {memo.drafts.trim()}
+                    {memo.drafts?.trim() || ''}
                   </p>
                 )}
               </div>
@@ -736,7 +736,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   onClick={handleShare}
                   className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                 >
@@ -756,4 +756,4 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       )}
     </>
   );
-} 
+}

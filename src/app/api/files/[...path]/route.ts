@@ -7,11 +7,11 @@ const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 
 export async function GET(
   request: Request,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const filePath = path.join(VOICE_MEMOS_DIR, ...params.path);
-    
+    const filePath = path.join(VOICE_MEMOS_DIR, ...(await params).path);
+
     // Security check: ensure the file is within VOICE_MEMOS_DIR
     const normalizedPath = path.normalize(filePath);
     if (!normalizedPath.startsWith(VOICE_MEMOS_DIR)) {
@@ -54,4 +54,4 @@ function getMimeType(filename: string): string {
     '.pdf': 'application/pdf',
   };
   return mimeTypes[ext] || 'application/octet-stream';
-} 
+}

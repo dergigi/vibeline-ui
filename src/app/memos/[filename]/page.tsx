@@ -45,4 +45,4 @@ export default async function MemoPage({ params }: { params: Promise<{ filename:
       </main>
     </SearchProvider>
   );
-} 
+}
