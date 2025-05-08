@@ -46,11 +46,11 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   // Filter memos based on search term and active filters
   const filteredMemos = useMemo(() => {
     let filtered = memos;
-    
+
     // Apply text search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      
+
       if (term.startsWith('#')) {
         // Handle hashtag search - extract hashtags without the # symbol
         const searchTag = term.slice(1);
@@ -68,11 +68,11 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
           const todos = memo.todos?.toLowerCase() || '';
           const prompts = memo.prompts?.toLowerCase() || '';
           const drafts = memo.drafts?.toLowerCase() || '';
-          
-          return transcript.includes(term) || 
-                 summary.includes(term) || 
-                 todos.includes(term) || 
-                 prompts.includes(term) || 
+
+          return transcript.includes(term) ||
+                 summary.includes(term) ||
+                 todos.includes(term) ||
+                 prompts.includes(term) ||
                  drafts.includes(term);
         });
       }
@@ -81,9 +81,9 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     // Apply filters
     if (activeFilters.size > 0) {
       filtered = filtered.filter(memo => {
-        const hasTodos = memo.todos?.trim().length > 0;
-        const hasPrompts = memo.prompts?.trim().length > 0;
-        const hasDrafts = memo.drafts?.trim().length > 0;
+        const hasTodos = memo.todos ? memo.todos.trim().length > 0 : false;
+        const hasPrompts = memo.prompts ? memo.prompts.trim().length > 0 : false;
+        const hasDrafts = memo.drafts ? memo.drafts.trim().length > 0 : false;
 
         if (activeFilters.has('todos') && !hasTodos) return false;
         if (activeFilters.has('prompts') && !hasPrompts) return false;
@@ -109,4 +109,4 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
       {children}
     </SearchContext.Provider>
   );
-}; 
+};

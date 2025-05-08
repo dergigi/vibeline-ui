@@ -41,4 +41,4 @@ export default async function PluginsPage() {
       </div>
     </main>
   );
-} 
+}
