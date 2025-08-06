@@ -3,13 +3,13 @@ import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
 
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
-
 export async function GET(
   request: Request,
   { params }: { params: { path: string[] } }
 ) {
   try {
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     const filePath = path.join(VOICE_MEMOS_DIR, ...params.path);
     
     // Security check: ensure the file is within VOICE_MEMOS_DIR

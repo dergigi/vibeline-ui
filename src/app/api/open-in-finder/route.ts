@@ -3,12 +3,15 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import { existsSync } from 'fs';
+import fs from 'fs/promises';
 
 const execAsync = promisify(exec);
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
+    
     const { filename } = await request.json();
     if (!filename) {
       return new NextResponse('Filename is required', { status: 400 });

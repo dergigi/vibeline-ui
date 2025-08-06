@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
 ): Promise<NextResponse> {
   try {
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
+    
     const { filename } = await params;
     const decodedFilename = decodeURIComponent(filename);
     const filePath = path.join(VOICE_MEMOS_DIR, decodedFilename);

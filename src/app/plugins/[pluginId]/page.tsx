@@ -107,7 +107,9 @@ function FileContent({ file }: { file: PluginFile }) {
 }
 
 async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]; hasCustomUI: boolean }> {
-  const pluginDir = path.join(VOICE_MEMOS_DIR, pluginId);
+  // Resolve the symlink to get the actual path
+  const resolvedVoiceMemosDir = await fs.realpath(VOICE_MEMOS_DIR);
+  const pluginDir = path.join(resolvedVoiceMemosDir, pluginId);
   const customUIPath = path.join(PLUGINS_DIR, `${pluginId}.tsx`);
   
   // Create the plugin directory if it doesn't exist
@@ -131,7 +133,8 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
           content = await fs.readFile(filePath, 'utf-8');
           
           // Try to read matching transcript file from the root transcripts directory
-          const transcriptPath = path.join(TRANSCRIPTS_DIR, entry.name.replace(/\.[^/.]+$/, '.txt'));
+          const resolvedTranscriptsDir = path.join(resolvedVoiceMemosDir, 'transcripts');
+          const transcriptPath = path.join(resolvedTranscriptsDir, entry.name.replace(/\.[^/.]+$/, '.txt'));
           if (existsSync(transcriptPath)) {
             transcript = await fs.readFile(transcriptPath, 'utf-8');
           }

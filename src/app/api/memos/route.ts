@@ -2,11 +2,6 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
-const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
-const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
-const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
-
 interface Memo {
   filename: string;
   transcript?: string;
@@ -14,6 +9,7 @@ interface Memo {
   todos?: string;
   createdAt: string;
   path: string;
+  audioUrl: string;
 }
 
 async function readFileIfExists(filePath: string): Promise<string> {
@@ -44,6 +40,12 @@ function parseTimestampFromFilename(filename: string): string {
 
 export async function GET() {
   try {
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
+    const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
+    const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
+    const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
+
     // Ensure default directories exist
     await Promise.all([
       fs.mkdir(TRANSCRIPTS_DIR, { recursive: true }),
@@ -73,7 +75,8 @@ export async function GET() {
           summary,
           todos,
           path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
-          createdAt: parseTimestampFromFilename(baseFilename)
+          createdAt: parseTimestampFromFilename(baseFilename),
+          audioUrl: `/api/audio/${baseFilename}.m4a`
         };
 
         return memo;
