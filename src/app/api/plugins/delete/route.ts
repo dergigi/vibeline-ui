@@ -3,10 +3,11 @@ import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
 
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
+    
     const { filename, plugin } = await request.json();
     
     if (!filename) {

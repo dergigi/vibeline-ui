@@ -2,11 +2,6 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
-const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
-const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
-const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
-
 async function readFileIfExists(filePath: string): Promise<string | undefined> {
   try {
     return await fs.readFile(filePath, 'utf-8');
@@ -30,6 +25,12 @@ export async function GET(
   { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
+    const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
+    const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
+    const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
+
     const { filename } = await params;
     const baseFilename = filename;
     

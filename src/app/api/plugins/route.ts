@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
-const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
-
 export async function GET(): Promise<NextResponse> {
   try {
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     const entries = await fs.readdir(VOICE_MEMOS_DIR, { withFileTypes: true });
     const plugins = entries
       .filter(entry => entry.isDirectory() && !entry.name.startsWith('.'))
