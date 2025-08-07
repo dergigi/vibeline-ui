@@ -82,12 +82,25 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   };
 
   const skipForward = (): void => {
-    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+    if (audioRef.current && !isNaN(audioRef.current.duration) && audioRef.current.readyState >= 2) {
       const currentTime = audioRef.current.currentTime;
       const duration = audioRef.current.duration;
       const newTime = Math.min(currentTime + 30, duration);
       console.log('Skip forward:', { currentTime, duration, newTime });
-      audioRef.current.currentTime = newTime;
+      
+      // Use a more reliable approach for seeking
+      try {
+        audioRef.current.currentTime = newTime;
+        // Force a small delay to ensure the seek operation completes
+        setTimeout(() => {
+          if (audioRef.current && Math.abs(audioRef.current.currentTime - newTime) > 1) {
+            console.log('Seek failed, retrying...', { expected: newTime, actual: audioRef.current.currentTime });
+            audioRef.current.currentTime = newTime;
+          }
+        }, 100);
+      } catch (error) {
+        console.error('Error seeking forward:', error);
+      }
     } else {
       console.log('Skip forward: Audio not ready', { 
         audioRef: !!audioRef.current, 
@@ -98,11 +111,24 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   };
 
   const skipBackward = (): void => {
-    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+    if (audioRef.current && !isNaN(audioRef.current.duration) && audioRef.current.readyState >= 2) {
       const currentTime = audioRef.current.currentTime;
       const newTime = Math.max(currentTime - 10, 0);
       console.log('Skip backward:', { currentTime, newTime });
-      audioRef.current.currentTime = newTime;
+      
+      // Use a more reliable approach for seeking
+      try {
+        audioRef.current.currentTime = newTime;
+        // Force a small delay to ensure the seek operation completes
+        setTimeout(() => {
+          if (audioRef.current && Math.abs(audioRef.current.currentTime - newTime) > 1) {
+            console.log('Seek failed, retrying...', { expected: newTime, actual: audioRef.current.currentTime });
+            audioRef.current.currentTime = newTime;
+          }
+        }, 100);
+      } catch (error) {
+        console.error('Error seeking backward:', error);
+      }
     } else {
       console.log('Skip backward: Audio not ready', { 
         audioRef: !!audioRef.current, 
