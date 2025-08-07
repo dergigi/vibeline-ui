@@ -82,16 +82,33 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   };
 
   const skipForward = (): void => {
-    if (audioRef.current) {
-      const newTime = Math.min(audioRef.current.currentTime + 30, audioRef.current.duration);
+    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+      const currentTime = audioRef.current.currentTime;
+      const duration = audioRef.current.duration;
+      const newTime = Math.min(currentTime + 30, duration);
+      console.log('Skip forward:', { currentTime, duration, newTime });
       audioRef.current.currentTime = newTime;
+    } else {
+      console.log('Skip forward: Audio not ready', { 
+        audioRef: !!audioRef.current, 
+        duration: audioRef.current?.duration,
+        readyState: audioRef.current?.readyState 
+      });
     }
   };
 
   const skipBackward = (): void => {
-    if (audioRef.current) {
-      const newTime = Math.max(audioRef.current.currentTime - 10, 0);
+    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+      const currentTime = audioRef.current.currentTime;
+      const newTime = Math.max(currentTime - 10, 0);
+      console.log('Skip backward:', { currentTime, newTime });
       audioRef.current.currentTime = newTime;
+    } else {
+      console.log('Skip backward: Audio not ready', { 
+        audioRef: !!audioRef.current, 
+        duration: audioRef.current?.duration,
+        readyState: audioRef.current?.readyState 
+      });
     }
   };
 
@@ -559,6 +576,11 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             src={memo.audioUrl}
             onEnded={() => setIsPlaying(false)}
             onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={() => {
+              if (audioRef.current) {
+                console.log('Audio time update:', audioRef.current.currentTime);
+              }
+            }}
             className="hidden"
           />
 
