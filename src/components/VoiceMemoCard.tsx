@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon } from '@heroicons/react/24/solid';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
@@ -78,6 +78,20 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       const newSpeed = SPEED_OPTIONS[nextIndex];
       audioRef.current.playbackRate = newSpeed;
       setPlaybackSpeed(newSpeed);
+    }
+  };
+
+  const skipForward = (): void => {
+    if (audioRef.current) {
+      const newTime = Math.min(audioRef.current.currentTime + 30, audioRef.current.duration);
+      audioRef.current.currentTime = newTime;
+    }
+  };
+
+  const skipBackward = (): void => {
+    if (audioRef.current) {
+      const newTime = Math.max(audioRef.current.currentTime - 10, 0);
+      audioRef.current.currentTime = newTime;
     }
   };
 
@@ -413,6 +427,13 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               {playbackSpeed}x
             </button>
             <button
+              onClick={skipBackward}
+              className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              title="Skip backward 10 seconds"
+            >
+              <BackwardIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            <button
               onClick={togglePlayPause}
               className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors duration-200"
             >
@@ -421,6 +442,13 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               ) : (
                 <PlayIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               )}
+            </button>
+            <button
+              onClick={skipForward}
+              className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              title="Skip forward 30 seconds"
+            >
+              <ForwardIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
             </button>
           </div>
         </div>
