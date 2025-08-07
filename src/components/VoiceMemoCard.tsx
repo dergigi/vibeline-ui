@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon } from '@heroicons/react/24/solid';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
@@ -35,6 +35,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   // Add state to manage optimistic UI updates for todos
   const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
@@ -81,6 +83,45 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     }
   };
 
+  const skipForward = (): void => {
+    if (audioRef.current && !isNaN(audioRef.current.duration) && audioRef.current.readyState >= 2) {
+      const currentTime = audioRef.current.currentTime;
+      const duration = audioRef.current.duration;
+      const newTime = Math.min(currentTime + 30, duration);
+      
+      try {
+        audioRef.current.currentTime = newTime;
+        // Force a small delay to ensure the seek operation completes
+        setTimeout(() => {
+          if (audioRef.current && Math.abs(audioRef.current.currentTime - newTime) > 1) {
+            audioRef.current.currentTime = newTime;
+          }
+        }, 100);
+      } catch (error) {
+        console.error('Error seeking forward:', error);
+      }
+    }
+  };
+
+  const skipBackward = (): void => {
+    if (audioRef.current && !isNaN(audioRef.current.duration) && audioRef.current.readyState >= 2) {
+      const currentTime = audioRef.current.currentTime;
+      const newTime = Math.max(currentTime - 10, 0);
+      
+      try {
+        audioRef.current.currentTime = newTime;
+        // Force a small delay to ensure the seek operation completes
+        setTimeout(() => {
+          if (audioRef.current && Math.abs(audioRef.current.currentTime - newTime) > 1) {
+            audioRef.current.currentTime = newTime;
+          }
+        }, 100);
+      } catch (error) {
+        console.error('Error seeking backward:', error);
+      }
+    }
+  };
+
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -98,6 +139,37 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
     }
+  };
+
+  const handleTimelineClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+    if (!audioRef.current || !duration) return;
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handleTimelineDrag = (event: React.MouseEvent<HTMLDivElement>): void => {
+    if (!audioRef.current || !duration) return;
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    
+    setCurrentTime(newTime);
+    setIsSeeking(true);
+  };
+
+  const handleTimelineDragEnd = (): void => {
+    if (!audioRef.current || !duration) return;
+    
+    audioRef.current.currentTime = currentTime;
+    setIsSeeking(false);
   };
 
   const formatTimeAgo = (date: Date | string): string => {
@@ -413,6 +485,13 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               {playbackSpeed}x
             </button>
             <button
+              onClick={skipBackward}
+              className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              title="Skip backward 10 seconds"
+            >
+              <BackwardIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
+            <button
               onClick={togglePlayPause}
               className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors duration-200"
             >
@@ -422,8 +501,50 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 <PlayIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               )}
             </button>
+            <button
+              onClick={skipForward}
+              className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              title="Skip forward 30 seconds"
+            >
+              <ForwardIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
           </div>
         </div>
+
+        {/* Timeline */}
+        {duration && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatDuration(currentTime)}
+              </span>
+              <div className="flex-1 relative">
+                <div
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer relative"
+                  onClick={handleTimelineClick}
+                  onMouseDown={handleTimelineDrag}
+                  onMouseMove={(e) => {
+                    if (e.buttons === 1) handleTimelineDrag(e);
+                  }}
+                  onMouseUp={handleTimelineDragEnd}
+                  onMouseLeave={handleTimelineDragEnd}
+                >
+                  <div
+                    className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full transition-all duration-100"
+                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                  />
+                  <div
+                    className="absolute top-1/2 transform -translate-y-1/2 w-3 h-3 bg-indigo-600 dark:bg-indigo-300 rounded-full shadow-sm"
+                    style={{ left: `${(currentTime / duration) * 100}%`, transform: 'translate(-50%, -50%)' }}
+                  />
+                </div>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatDuration(duration)}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           {memo.transcript && (
@@ -531,6 +652,11 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             src={memo.audioUrl}
             onEnded={() => setIsPlaying(false)}
             onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={() => {
+              if (audioRef.current && !isSeeking) {
+                setCurrentTime(audioRef.current.currentTime);
+              }
+            }}
             className="hidden"
           />
 
