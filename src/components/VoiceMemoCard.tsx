@@ -35,6 +35,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   // Add state to manage optimistic UI updates for todos
   const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
@@ -155,6 +157,37 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
     }
+  };
+
+  const handleTimelineClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+    if (!audioRef.current || !duration) return;
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handleTimelineDrag = (event: React.MouseEvent<HTMLDivElement>): void => {
+    if (!audioRef.current || !duration) return;
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickX = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    
+    setCurrentTime(newTime);
+    setIsSeeking(true);
+  };
+
+  const handleTimelineDragEnd = (): void => {
+    if (!audioRef.current || !duration) return;
+    
+    audioRef.current.currentTime = currentTime;
+    setIsSeeking(false);
   };
 
   const formatTimeAgo = (date: Date | string): string => {
@@ -496,6 +529,41 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           </div>
         </div>
 
+        {/* Timeline */}
+        {duration && (
+          <div className="mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatDuration(currentTime)}
+              </span>
+              <div className="flex-1 relative">
+                <div
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer relative"
+                  onClick={handleTimelineClick}
+                  onMouseDown={handleTimelineDrag}
+                  onMouseMove={(e) => {
+                    if (e.buttons === 1) handleTimelineDrag(e);
+                  }}
+                  onMouseUp={handleTimelineDragEnd}
+                  onMouseLeave={handleTimelineDragEnd}
+                >
+                  <div
+                    className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full transition-all duration-100"
+                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                  />
+                  <div
+                    className="absolute top-1/2 transform -translate-y-1/2 w-3 h-3 bg-indigo-600 dark:bg-indigo-300 rounded-full shadow-sm"
+                    style={{ left: `${(currentTime / duration) * 100}%`, transform: 'translate(-50%, -50%)' }}
+                  />
+                </div>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatDuration(duration)}
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           {memo.transcript && (
             <div>
@@ -603,7 +671,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
             onEnded={() => setIsPlaying(false)}
             onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={() => {
-              if (audioRef.current) {
+              if (audioRef.current && !isSeeking) {
+                setCurrentTime(audioRef.current.currentTime);
                 console.log('Audio time update:', audioRef.current.currentTime);
               }
             }}
