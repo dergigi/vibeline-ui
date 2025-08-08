@@ -12,19 +12,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
-    const { filename } = await request.json();
+    const { filename, fileType = 'audio' } = await request.json();
     if (!filename) {
       return new NextResponse('Filename is required', { status: 400 });
     }
 
-    // Try both with and without .m4a extension
-    let filePath = path.join(VOICE_MEMOS_DIR, filename);
-    let normalizedPath = path.normalize(filePath);
-    
-    // If the file doesn't exist, try adding .m4a extension
-    if (!existsSync(normalizedPath)) {
-      filePath = path.join(VOICE_MEMOS_DIR, `${filename}.m4a`);
+    let filePath: string;
+    let normalizedPath: string;
+
+    if (fileType === 'transcript') {
+      // For transcript files, look in the transcripts directory with .txt extension
+      const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
+      filePath = path.join(TRANSCRIPTS_DIR, `${filename}.txt`);
       normalizedPath = path.normalize(filePath);
+    } else {
+      // For audio files (default behavior)
+      filePath = path.join(VOICE_MEMOS_DIR, filename);
+      normalizedPath = path.normalize(filePath);
+      
+      // If the file doesn't exist, try adding .m4a extension
+      if (!existsSync(normalizedPath)) {
+        filePath = path.join(VOICE_MEMOS_DIR, `${filename}.m4a`);
+        normalizedPath = path.normalize(filePath);
+      }
     }
     
     // Security check: ensure the file is within the voice memos directory
@@ -32,7 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return new NextResponse('Forbidden', { status: 403 });
     }
 
-    // Check if the file exists after trying both paths
+    // Check if the file exists
     if (!existsSync(normalizedPath)) {
       return new NextResponse('File not found', { status: 404 });
     }
