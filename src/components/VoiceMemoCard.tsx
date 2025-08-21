@@ -29,6 +29,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSummaryRefreshing, setIsSummaryRefreshing] = useState(false);
   const [isTodosRefreshing, setIsTodosRefreshing] = useState(false);
+  const [isTitleRefreshing, setIsTitleRefreshing] = useState(false);
   const [countdown, setCountdown] = useState<{ [key: string]: number }>({});
   const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
   const deleteIntervals = useRef<{ [key: string]: NodeJS.Timeout | null }>({});
@@ -369,6 +370,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       case 'todos':
         setIsTodosRefreshing(true);
         break;
+      case 'titles':
+        setIsTitleRefreshing(true);
+        break;
     }
     
     try {
@@ -398,6 +402,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         case 'todos':
           memo.todos = undefined;
           break;
+        case 'titles':
+          memo.title = undefined;
+          break;
       }
       
       console.log(`${plugin} files deleted successfully`);
@@ -414,6 +421,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           break;
         case 'todos':
           setIsTodosRefreshing(false);
+          break;
+        case 'titles':
+          setIsTitleRefreshing(false);
           break;
       }
       // Reset countdown and deleting states
@@ -483,9 +493,39 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               href={`/memos/${memo.filename}`}
               className="block hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {memo.title || formatTimeAgo(memo.createdAt)}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                  {memo.title || formatTimeAgo(memo.createdAt)}
+                </h3>
+                {memo.title && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (isDeleting['titles']) {
+                        cancelDelete('titles');
+                      } else {
+                        startDeleteCountdown('titles');
+                      }
+                    }}
+                    className={`p-1 transition-colors flex items-center gap-1 ${
+                      isDeleting['titles'] 
+                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                        : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                    }`}
+                    title="Refresh title (delete and regenerate)"
+                  >
+                    {isDeleting['titles'] ? (
+                      <>
+                        <TrashIcon className="w-3 h-3" />
+                        <span className="text-xs">{countdown['titles']}s</span>
+                      </>
+                    ) : (
+                      <ArrowPathIcon className="w-3 h-3" />
+                    )}
+                  </button>
+                )}
+              </div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {memo.title && (
                   <>
