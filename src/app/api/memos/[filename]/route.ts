@@ -36,22 +36,22 @@ export async function GET(
     const baseFilename = filename;
     
     // Get content from each plugin directory
-    // Check for cleaned transcript first, fallback to regular transcript
-    const [regularTranscript, cleanedTranscript, summary, todos, title] = await Promise.all([
+    // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
+    const [transcript, originalTranscript, summary, todos, title] = await Promise.all([
       readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
-      readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}_cleaned.txt`)),
+      readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
       readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
       readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
       readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`))
     ]);
 
-    // Use cleaned transcript if available, otherwise use regular transcript
-    const transcript = cleanedTranscript || regularTranscript;
+    // If .txt.orig exists, it means the main .txt file is cleaned
+    const isCleanedTranscript = !!originalTranscript;
 
     const memo = {
       filename: baseFilename,
       transcript,
-      isCleanedTranscript: !!cleanedTranscript,
+      isCleanedTranscript,
       summary,
       todos,
       title: title?.trim() || undefined,
