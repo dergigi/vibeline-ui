@@ -887,53 +887,53 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                   </div>
                 </div>
                 {isTodosExpanded && (
-                  <div className="flex justify-end mb-2">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCheckAllTodos();
-                      }}
-                      className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
-                    >
-                      <CheckIcon className="w-3 h-3" />
-                      <span>all</span>
-                    </button>
+                  <div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 pl-1">
+                      {(() => {
+                        const { lines, originalIndices } = cleanTodos(optimisticTodos ?? memo.todos ?? '');
+                        return lines.map((line, displayIndex) => {
+                          const originalIndex = originalIndices[displayIndex];
+                          // Match markdown checkbox format: "- [ ] text" or "- [x] text" (allowing for whitespace variations)
+                          const match = line.match(/^(\s*-\s*\[\s*)([ x])(\s*\]\s*)(.*)/);
+                          if (match) {
+                            const indent = match[1].match(/^\s*/)?.[0] || '';
+                            const isChecked = match[2] === 'x';
+                            const text = match[4];
+                            return (
+                              <div key={displayIndex} className="flex items-center gap-2" style={{ paddingLeft: `${indent.length * 0.5}em` }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => handleTodoToggle(originalIndex, isChecked)}
+                                  className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
+                                />
+                                <label className={`flex-1 ${isChecked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(originalIndex, isChecked)}>
+                                  {text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
+                                </label>
+                              </div>
+                            );
+                          }
+                          const indentMatch = line.match(/^\s*/);
+                          const indent = indentMatch ? indentMatch[0] : '';
+                          return <div key={displayIndex} style={{ paddingLeft: `${indent.length * 0.5}em` }}>{line.trim() || <br />}</div>;
+                        });
+                      })()}
+                    </div>
+                    <div className="flex justify-start mt-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCheckAllTodos();
+                        }}
+                        className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                      >
+                        <CheckIcon className="w-3 h-3" />
+                        <span>all</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-                {isTodosExpanded && (
-                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 pl-1">
-                    {(() => {
-                      const { lines, originalIndices } = cleanTodos(optimisticTodos ?? memo.todos ?? '');
-                      return lines.map((line, displayIndex) => {
-                        const originalIndex = originalIndices[displayIndex];
-                        // Match markdown checkbox format: "- [ ] text" or "- [x] text" (allowing for whitespace variations)
-                        const match = line.match(/^(\s*-\s*\[\s*)([ x])(\s*\]\s*)(.*)/);
-                        if (match) {
-                          const indent = match[1].match(/^\s*/)?.[0] || '';
-                          const isChecked = match[2] === 'x';
-                          const text = match[4];
-                          return (
-                            <div key={displayIndex} className="flex items-center gap-2" style={{ paddingLeft: `${indent.length * 0.5}em` }}>
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => handleTodoToggle(originalIndex, isChecked)}
-                                className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-indigo-500 focus:ring-offset-0 dark:focus:ring-offset-gray-800 cursor-pointer"
-                              />
-                              <label className={`flex-1 ${isChecked ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`} onClick={() => handleTodoToggle(originalIndex, isChecked)}>
-                                {text || <span className="italic text-gray-400 dark:text-gray-600">(empty)</span>}
-                              </label>
-                            </div>
-                          );
-                        }
-                        const indentMatch = line.match(/^\s*/);
-                        const indent = indentMatch ? indentMatch[0] : '';
-                        return <div key={displayIndex} style={{ paddingLeft: `${indent.length * 0.5}em` }}>{line.trim() || <br />}</div>;
-                      });
-                    })()}
-                  </div>
-                )}
-                </div>
+              </div>
             )}
 
             {hasPrompts && (
