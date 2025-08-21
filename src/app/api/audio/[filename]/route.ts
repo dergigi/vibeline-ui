@@ -45,7 +45,7 @@ export async function GET(
             if (!isClosed) {
               try {
                 controller.enqueue(new Uint8Array(chunk as Buffer));
-              } catch (error) {
+              } catch {
                 isClosed = true;
               }
             }
@@ -56,7 +56,7 @@ export async function GET(
               try {
                 controller.close();
                 isClosed = true;
-              } catch (error) {
+              } catch {
                 // Controller already closed
               }
             }
@@ -67,7 +67,7 @@ export async function GET(
               try {
                 controller.error(error);
                 isClosed = true;
-              } catch (err) {
+              } catch {
                 // Controller already closed or errored
               }
             }
@@ -98,7 +98,7 @@ export async function GET(
             if (!isClosed) {
               try {
                 controller.enqueue(new Uint8Array(chunk as Buffer));
-              } catch (error) {
+              } catch {
                 isClosed = true;
               }
             }
@@ -109,7 +109,7 @@ export async function GET(
               try {
                 controller.close();
                 isClosed = true;
-              } catch (error) {
+              } catch {
                 // Controller already closed
               }
             }
@@ -120,7 +120,7 @@ export async function GET(
               try {
                 controller.error(error);
                 isClosed = true;
-              } catch (err) {
+              } catch {
                 // Controller already closed or errored
               }
             }
