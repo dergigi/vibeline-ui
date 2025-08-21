@@ -44,8 +44,8 @@ const TitlesPlugin: React.FC<TitlesPluginProps> = ({ files }) => {
       }
     });
 
-    // Sort by creation date (newest first)
-    allTitles.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Sort by full timestamp (newest first) - use filename for proper chronological ordering
+    allTitles.sort((a, b) => b.filename.localeCompare(a.filename));
     
     setTitles(allTitles);
     setDisplayedTitles(allTitles.slice(0, ITEMS_PER_PAGE));
