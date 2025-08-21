@@ -3,6 +3,7 @@ export interface VoiceMemo {
   filename: string;
   path: string;
   transcript?: string;
+  isCleanedTranscript?: boolean;
   summary?: string;
   todos?: string;
   prompts?: string;

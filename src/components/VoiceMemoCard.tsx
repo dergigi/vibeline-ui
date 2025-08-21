@@ -621,6 +621,11 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Transcript
+                    {memo.isCleanedTranscript && (
+                      <span className="ml-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded">
+                        cleaned
+                      </span>
+                    )}
                   </h4>
                   <button 
                     onClick={(e) => {

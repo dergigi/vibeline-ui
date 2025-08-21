@@ -5,6 +5,7 @@ import path from 'path';
 interface Memo {
   filename: string;
   transcript?: string;
+  isCleanedTranscript?: boolean;
   summary?: string;
   todos?: string;
   title?: string;
@@ -65,16 +66,22 @@ export async function GET() {
         const baseFilename = path.basename(audioFile, '.m4a');
         
         // Get content from each plugin directory
-        const [transcript, summary, todos, title] = await Promise.all([
+        // Check for cleaned transcript first, fallback to regular transcript
+        const [regularTranscript, cleanedTranscript, summary, todos, title] = await Promise.all([
           readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
+          readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}_cleaned.txt`)),
           readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
           readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
           readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`))
         ]);
 
+        // Use cleaned transcript if available, otherwise use regular transcript
+        const transcript = cleanedTranscript || regularTranscript;
+
         const memo: Memo = {
           filename: baseFilename,
           transcript,
+          isCleanedTranscript: !!cleanedTranscript,
           summary,
           todos,
           title: title.trim() || undefined,
