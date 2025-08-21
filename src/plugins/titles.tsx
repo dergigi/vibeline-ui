@@ -29,6 +29,11 @@ const TitlesPlugin: React.FC<TitlesPluginProps> = ({ files }) => {
     const allTitles: TitleEntry[] = [];
     
     files.forEach(file => {
+      // Skip hidden files (files that start with a dot)
+      if (file.name.startsWith('.')) {
+        return;
+      }
+      
       const content = file.content || '';
       const title = content.trim();
       
