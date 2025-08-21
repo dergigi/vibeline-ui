@@ -12,6 +12,9 @@
     "lint:all": "npm run type-check && npm run lint"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-solid-svg-icons": "^7.0.0",
+    "@fortawesome/react-fontawesome": "^0.2.5",
     "@heroicons/react": "^2.2.0",
     "@tiptap/pm": "^2.11.5",
     "@tiptap/react": "^2.11.5",
