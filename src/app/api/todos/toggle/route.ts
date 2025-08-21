@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
-import fs from 'fs/promises'; // Use promises API for async operations
-import { existsSync, realpathSync } from 'fs'; // Use existsSync for initial check and realpathSync for resolving symlinks
-
-const VOICE_MEMOS_DIR = realpathSync(path.join(process.cwd(), 'VoiceMemos'));
-
-// Ensure the VoiceMemos directory exists
-if (!existsSync(VOICE_MEMOS_DIR)) {
-  console.warn(`VoiceMemos directory not found at ${VOICE_MEMOS_DIR}. Creating it.`);
-  fs.mkdir(VOICE_MEMOS_DIR, { recursive: true });
-}
+import fs from 'fs/promises';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -18,6 +9,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!filePath) {
       throw new Error('filePath is required');
     }
+    
+    // Resolve the symlink to get the actual path
+    const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
     // Read the file using the real path
     const fullPath = path.join(VOICE_MEMOS_DIR, filePath);
