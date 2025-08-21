@@ -7,6 +7,7 @@ export interface VoiceMemo {
   todos?: string;
   prompts?: string;
   drafts?: string;
+  title?: string;
   audioUrl: string;
   createdAt: Date;
 }
