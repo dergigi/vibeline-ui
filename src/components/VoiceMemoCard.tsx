@@ -40,9 +40,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
-  const hasTodos = memo.todos?.trim().length > 0;
-  const hasPrompts = memo.prompts?.trim().length > 0;
-  const hasDrafts = memo.drafts?.trim().length > 0;
+  const hasTodos = (memo.todos?.trim().length ?? 0) > 0;
+  const hasPrompts = (memo.prompts?.trim().length ?? 0) > 0;
+  const hasDrafts = (memo.drafts?.trim().length ?? 0) > 0;
 
   const cleanTodos = (todos: string): { lines: string[], originalIndices: number[] } => {
     if (!todos) return { lines: [], originalIndices: [] };
@@ -370,7 +370,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
         setIsTodosRefreshing(true);
         break;
       case 'titles':
-        setIsTitleRefreshing(true);
+        setIsRefreshing(true);
         break;
     }
     
@@ -422,7 +422,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
           setIsTodosRefreshing(false);
           break;
         case 'titles':
-          setIsTitleRefreshing(false);
+          setIsRefreshing(false);
           break;
       }
       // Reset countdown and deleting states
@@ -867,7 +867,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 </div>
                 {isPromptsExpanded && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line text-left">
-                    {memo.prompts.trim()}
+                    {memo.prompts?.trim()}
                   </p>
                 )}
               </div>
@@ -904,7 +904,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 </div>
                 {isDraftsExpanded && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line text-left">
-                    {memo.drafts.trim()}
+                    {memo.drafts?.trim()}
                   </p>
                 )}
               </div>
