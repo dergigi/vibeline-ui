@@ -93,7 +93,7 @@ const TitlesPlugin: React.FC<TitlesPluginProps> = ({ files }) => {
           displayedTitles.map((titleEntry) => (
             <Link
               key={titleEntry.id}
-              href={`/memos/${titleEntry.filename}`}
+              href={`/memos/${titleEntry.filename.replace('.txt', '')}`}
               className="block p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <div className="flex items-center justify-between">
