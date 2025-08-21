@@ -39,14 +39,38 @@ export async function GET(
       // Convert Node.js ReadStream to Web ReadableStream
       const webStream = new ReadableStream({
         start(controller) {
+          let isClosed = false;
+          
           file.on('data', (chunk) => {
-            controller.enqueue(new Uint8Array(chunk as Buffer));
+            if (!isClosed) {
+              try {
+                controller.enqueue(new Uint8Array(chunk as Buffer));
+              } catch (error) {
+                isClosed = true;
+              }
+            }
           });
+          
           file.on('end', () => {
-            controller.close();
+            if (!isClosed) {
+              try {
+                controller.close();
+                isClosed = true;
+              } catch (error) {
+                // Controller already closed
+              }
+            }
           });
+          
           file.on('error', (error) => {
-            controller.error(error);
+            if (!isClosed) {
+              try {
+                controller.error(error);
+                isClosed = true;
+              } catch (err) {
+                // Controller already closed or errored
+              }
+            }
           });
         },
       });
@@ -68,14 +92,38 @@ export async function GET(
       // Convert Node.js ReadStream to Web ReadableStream
       const webStream = new ReadableStream({
         start(controller) {
+          let isClosed = false;
+          
           file.on('data', (chunk) => {
-            controller.enqueue(new Uint8Array(chunk as Buffer));
+            if (!isClosed) {
+              try {
+                controller.enqueue(new Uint8Array(chunk as Buffer));
+              } catch (error) {
+                isClosed = true;
+              }
+            }
           });
+          
           file.on('end', () => {
-            controller.close();
+            if (!isClosed) {
+              try {
+                controller.close();
+                isClosed = true;
+              } catch (error) {
+                // Controller already closed
+              }
+            }
           });
+          
           file.on('error', (error) => {
-            controller.error(error);
+            if (!isClosed) {
+              try {
+                controller.error(error);
+                isClosed = true;
+              } catch (err) {
+                // Controller already closed or errored
+              }
+            }
           });
         },
       });
