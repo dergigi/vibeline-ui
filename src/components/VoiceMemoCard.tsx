@@ -919,18 +919,28 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                         });
                       })()}
                     </div>
-                    <div className="flex justify-start mt-2">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCheckAllTodos();
-                        }}
-                        className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
-                      >
-                        <CheckIcon className="w-3 h-3" />
-                        <span>all</span>
-                      </button>
-                    </div>
+                    {(() => {
+                      const { lines } = cleanTodos(optimisticTodos ?? memo.todos ?? '');
+                      const hasUncheckedItems = lines.some(line => {
+                        const match = line.match(/^(\s*-\s*\[)\s(\]\s*.*)/);
+                        return match !== null;
+                      });
+                      
+                      return hasUncheckedItems ? (
+                        <div className="flex justify-start mt-2">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCheckAllTodos();
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                          >
+                            <CheckIcon className="w-3 h-3" />
+                            <span>all</span>
+                          </button>
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
                 )}
               </div>
