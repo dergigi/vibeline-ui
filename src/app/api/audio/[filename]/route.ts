@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { createReadStream, statSync } from 'fs';
+import { createReadStream, statSync, ReadStream } from 'fs';
 
 export async function GET(
   request: NextRequest,
@@ -36,7 +36,7 @@ export async function GET(
       
       const file = createReadStream(filePath, { start, end });
       
-      return new NextResponse(file as any, {
+      return new NextResponse(file as ReadStream, {
         status: 206,
         headers: {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
@@ -50,7 +50,7 @@ export async function GET(
       // No range request, serve the full file
       const file = createReadStream(filePath);
       
-      return new NextResponse(file as any, {
+      return new NextResponse(file as ReadStream, {
         headers: {
           'Accept-Ranges': 'bytes',
           'Content-Length': fileSize.toString(),
