@@ -30,15 +30,17 @@ export async function GET(
     const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
     const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
     const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
+    const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
 
     const { filename } = await params;
     const baseFilename = filename;
     
     // Get content from each plugin directory
-    const [transcript, summary, todos] = await Promise.all([
+    const [transcript, summary, todos, title] = await Promise.all([
       readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
       readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
-      readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`))
+      readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
+      readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`))
     ]);
 
     const memo = {
@@ -46,6 +48,7 @@ export async function GET(
       transcript,
       summary,
       todos,
+      title: title?.trim() || undefined,
       path: path.join(TODOS_DIR, `${baseFilename}.md`),
       createdAt: parseTimestampFromFilename(baseFilename),
       audioUrl: `/api/audio/${baseFilename}.m4a`
