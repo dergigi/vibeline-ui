@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { createReadStream, statSync, ReadStream } from 'fs';
+import { createReadStream, statSync } from 'fs';
 
 export async function GET(
   request: NextRequest,
@@ -36,7 +36,22 @@ export async function GET(
       
       const file = createReadStream(filePath, { start, end });
       
-      return new NextResponse(file as ReadStream, {
+      // Convert Node.js ReadStream to Web ReadableStream
+      const webStream = new ReadableStream({
+        start(controller) {
+          file.on('data', (chunk) => {
+            controller.enqueue(new Uint8Array(chunk as Buffer));
+          });
+          file.on('end', () => {
+            controller.close();
+          });
+          file.on('error', (error) => {
+            controller.error(error);
+          });
+        },
+      });
+      
+      return new NextResponse(webStream, {
         status: 206,
         headers: {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
@@ -50,7 +65,22 @@ export async function GET(
       // No range request, serve the full file
       const file = createReadStream(filePath);
       
-      return new NextResponse(file as ReadStream, {
+      // Convert Node.js ReadStream to Web ReadableStream
+      const webStream = new ReadableStream({
+        start(controller) {
+          file.on('data', (chunk) => {
+            controller.enqueue(new Uint8Array(chunk as Buffer));
+          });
+          file.on('end', () => {
+            controller.close();
+          });
+          file.on('error', (error) => {
+            controller.error(error);
+          });
+        },
+      });
+      
+      return new NextResponse(webStream, {
         headers: {
           'Accept-Ranges': 'bytes',
           'Content-Length': fileSize.toString(),
