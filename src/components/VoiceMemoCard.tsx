@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon, SparklesIcon as BroomIcon } from '@heroicons/react/24/solid';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
@@ -37,8 +37,34 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [showCleanedTranscript, setShowCleanedTranscript] = useState(true);
+  const [originalTranscript, setOriginalTranscript] = useState<string | null>(null);
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
+
+  const fetchOriginalTranscript = async (): Promise<void> => {
+    if (originalTranscript !== null) return; // Already fetched
+    
+    try {
+      const response = await fetch(`/api/transcripts/${memo.filename}/original`);
+      if (response.ok) {
+        const text = await response.text();
+        setOriginalTranscript(text);
+      }
+    } catch (error) {
+      console.error('Failed to fetch original transcript:', error);
+    }
+  };
+
+  const handleTranscriptToggle = async (): Promise<void> => {
+    if (!memo.isCleanedTranscript) return;
+    
+    if (showCleanedTranscript) {
+      // Switching to original transcript
+      await fetchOriginalTranscript();
+    }
+    setShowCleanedTranscript(!showCleanedTranscript);
+  };
 
   const hasTodos = (memo.todos?.trim().length ?? 0) > 0;
   const hasPrompts = (memo.prompts?.trim().length ?? 0) > 0;
@@ -621,12 +647,23 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Transcript
-                    {memo.isCleanedTranscript && (
-                      <span className="ml-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded">
-                        cleaned
-                      </span>
-                    )}
                   </h4>
+                  {memo.isCleanedTranscript && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTranscriptToggle();
+                      }}
+                      className={`p-1 transition-colors ${
+                        showCleanedTranscript
+                          ? 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900'
+                          : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                      } rounded`}
+                      title={showCleanedTranscript ? "Show original transcript" : "Show cleaned transcript"}
+                    >
+                      <BroomIcon className="w-3 h-3" />
+                    </button>
+                  )}
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
@@ -662,7 +699,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 </div>
               </div>
               <p className={`text-sm text-gray-600 dark:text-gray-400 text-left ${isTranscriptExpanded ? '' : 'line-clamp-5'}`}>
-                {memo.transcript}
+                {showCleanedTranscript ? memo.transcript : (originalTranscript || memo.transcript)}
               </p>
             </div>
           )}
