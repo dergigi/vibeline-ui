@@ -22,12 +22,11 @@ export async function GET(
           'Content-Type': 'text/plain',
         },
       });
-    } catch (error) {
+    } catch {
       // If .txt.orig doesn't exist, return 404
       return new NextResponse('Original transcript not found', { status: 404 });
     }
-  } catch (error) {
-    console.error('Error fetching original transcript:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch original transcript' }, { status: 500 });
   }
 }
