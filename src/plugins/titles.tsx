@@ -57,6 +57,10 @@ const TitlesPlugin: React.FC<TitlesPluginProps> = ({ files }) => {
     setDisplayedTitles([...displayedTitles, ...nextTitles]);
   };
 
+  const handleLoadAll = () => {
+    setDisplayedTitles(titles);
+  };
+
   const hasMore = displayedTitles.length < titles.length;
 
   const formatDate = (dateStr: string) => {
@@ -127,12 +131,18 @@ const TitlesPlugin: React.FC<TitlesPluginProps> = ({ files }) => {
       </div>
       
       {hasMore && (
-        <div className="flex justify-center pt-6">
+        <div className="flex justify-center gap-3 pt-6">
           <button
             onClick={handleLoadMore}
             className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
           >
             Load more
+          </button>
+          <button
+            onClick={handleLoadAll}
+            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-gray-50 dark:bg-gray-900/20 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900/30 transition-colors"
+          >
+            Load all
           </button>
         </div>
       )}
