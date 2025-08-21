@@ -122,6 +122,7 @@ async function getPluginContent(pluginId: string): Promise<{ files: PluginFile[]
 
   try {
     const entries = await fs.readdir(pluginDir, { withFileTypes: true });
+    
     const filePromises = entries
       .filter(entry => entry.isFile())
       .map(async entry => {
