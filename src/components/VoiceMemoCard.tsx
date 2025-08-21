@@ -345,6 +345,58 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
       setOptimisticTodos(null);
     }
   }, [memo.path, memo.todos, optimisticTodos]);
+
+  // Function to handle checking all todos
+  const handleCheckAllTodos = useCallback(async () => {
+    const pathParts = memo.path.split('/');
+    const filePath = pathParts.slice(-2).join('/');
+    
+    // Get all unchecked todo lines
+    const lines = (optimisticTodos ?? memo.todos ?? '').split('\n');
+    const uncheckedLines: number[] = [];
+    
+    lines.forEach((line, index) => {
+      const match = line.match(/^(\s*-\s*\[)\s(\]\s*.*)/);
+      if (match) {
+        uncheckedLines.push(index);
+      }
+    });
+    
+    if (uncheckedLines.length === 0) return;
+    
+    // Optimistic UI update - check all unchecked todos
+    const updatedLines = [...lines];
+    uncheckedLines.forEach(lineNumber => {
+      const line = updatedLines[lineNumber];
+      const match = line.match(/^(\s*-\s*\[)\s(\]\s*.*)/);
+      if (match) {
+        updatedLines[lineNumber] = `${match[1]}x${match[2]}`;
+      }
+    });
+    setOptimisticTodos(updatedLines.join('\n'));
+    
+    try {
+      // Make API calls for all unchecked todos
+      const promises = uncheckedLines.map(lineNumber =>
+        fetch('/api/todos/toggle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            filePath, 
+            lineNumber, 
+            completed: true 
+          }),
+        })
+      );
+      
+      await Promise.all(promises);
+    } catch (error) {
+      console.error('Failed to check all todos:', error);
+      setOptimisticTodos(null);
+    }
+  }, [memo.path, memo.todos, optimisticTodos]);
   
   const handleShare = async (): Promise<void> => {
     try {
@@ -834,6 +886,20 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                     </button>
                   </div>
                 </div>
+                {isTodosExpanded && (
+                  <div className="flex justify-end mb-2">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCheckAllTodos();
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                    >
+                      <CheckIcon className="w-3 h-3" />
+                      <span>all</span>
+                    </button>
+                  </div>
+                )}
                 {isTodosExpanded && (
                   <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 pl-1">
                     {(() => {
