@@ -481,16 +481,15 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               className="block hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {memo.title ? (
-                  <>
-                    {formatTimeAgo(memo.createdAt)} - {memo.title}
-                  </>
-                ) : (
-                  formatTimeAgo(memo.createdAt)
-                )}
+                {memo.title || formatTimeAgo(memo.createdAt)}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {formatShortDate(memo.createdAt)}
+                {memo.title && (
+                  <>
+                    {formatTimeAgo(memo.createdAt)} · {formatShortDate(memo.createdAt)}
+                  </>
+                )}
+                {!memo.title && formatShortDate(memo.createdAt)}
                 {duration && ` · ${formatDuration(duration)}`}
                 {memo.transcript && ` · ${countWords(memo.transcript)} words`}
               </p>
