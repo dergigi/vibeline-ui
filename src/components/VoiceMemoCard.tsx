@@ -29,7 +29,6 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSummaryRefreshing, setIsSummaryRefreshing] = useState(false);
   const [isTodosRefreshing, setIsTodosRefreshing] = useState(false);
-  const [isTitleRefreshing, setIsTitleRefreshing] = useState(false);
   const [countdown, setCountdown] = useState<{ [key: string]: number }>({});
   const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
   const deleteIntervals = useRef<{ [key: string]: NodeJS.Timeout | null }>({});

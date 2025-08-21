@@ -8,7 +8,6 @@ import Image from 'next/image';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const PLUGINS_DIR = path.join(process.cwd(), 'src', 'plugins');
-const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
 
 interface PluginFile {
   name: string;
