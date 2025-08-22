@@ -115,10 +115,10 @@ const groupBg: Record<keyof GroupedMemos, string> = {
   // No background for newest
   today: 'bg-transparent',
   // Subtle cool tint progressing to darker neutrals for age
-  yesterday: 'bg-blue-50 dark:bg-slate-800/30',
-  twoDaysAgo: 'bg-slate-100 dark:bg-slate-800/45',
-  restOfWeek: 'bg-slate-200 dark:bg-slate-800/60',
-  restOfMonth: 'bg-slate-300 dark:bg-slate-800/75',
+  yesterday: 'bg-blue-50 dark:bg-white/5',
+  twoDaysAgo: 'bg-slate-100 dark:bg-white/10',
+  restOfWeek: 'bg-slate-200 dark:bg-white/20',
+  restOfMonth: 'bg-slate-300 dark:bg-white/30',
 };
 
 const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string }> = {
