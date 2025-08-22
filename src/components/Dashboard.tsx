@@ -136,6 +136,7 @@ export default function Dashboard({ memos }: DashboardProps) {
   const [hideCompleted, setHideCompleted] = useState(false);
   const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
   const [showOnlyAllIncomplete, setShowOnlyAllIncomplete] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const sourceMemos = filteredMemos && filteredMemos.length > 0 ? filteredMemos : memos;
   const visibleMemos = useMemo(() => {
     if (showOnlyAllIncomplete) {
@@ -216,52 +217,71 @@ export default function Dashboard({ memos }: DashboardProps) {
         />
       </div>
       <div className="space-y-1">
-        {(([ 
-          ['today', groupedMemos.today],
-          ['yesterday', groupedMemos.yesterday],
-          ['twoDaysAgo', groupedMemos.twoDaysAgo],
-          ['restOfWeek', groupedMemos.restOfWeek],
-          ['restOfMonth', groupedMemos.restOfMonth],
-        ] as const) as ReadonlyArray<[keyof GroupedMemos, VoiceMemo[]]>).flatMap(([group, list]) =>
-          list.map((memo) => (
-            <div
-              key={memo.path}
-              className={`flex items-center justify-between text-xs rounded px-2 py-1 ${groupBg[group]}`}
-            >
-              <div className="flex-1 min-w-0 flex items-center gap-2">
-                <span
-                  className="text-[10px] w-3 inline-flex items-center justify-center text-gray-400 dark:text-gray-500"
-                  title={groupIndicator[group].label}
-                  aria-label={groupIndicator[group].label}
+        {(() => {
+          const groups = ([
+            ['today', groupedMemos.today],
+            ['yesterday', groupedMemos.yesterday],
+            ['twoDaysAgo', groupedMemos.twoDaysAgo],
+            ['restOfWeek', groupedMemos.restOfWeek],
+            ['restOfMonth', groupedMemos.restOfMonth],
+          ] as const) as ReadonlyArray<[keyof GroupedMemos, VoiceMemo[]]>;
+          const flat = groups.flatMap(([group, list]) => list.map(memo => ({ group, memo })));
+          const visible = isExpanded ? flat : flat.slice(0, 12);
+          return (
+            <>
+              {visible.map(({ group, memo }) => (
+                <div
+                  key={memo.path}
+                  className={`flex items-center justify-between text-xs rounded px-2 py-1 ${groupBg[group]}`}
                 >
-                  {groupIndicator[group].letter}
-                </span>
-                <button
-                  onClick={() => {
-                    const el = document.getElementById(`memo-${memo.filename}`);
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
-                  className="font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline"
-                  title="Scroll to memo"
-                >
-                  {memo.title || 'Untitled'}
-                </button>
-                <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-                  {getMemoTime(memo)}
-                </span>
-                <a
-                  href={`/memos/${memo.filename}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto"
-                  title="Open memo in new tab"
-                >
-                  <TodoProgressBar todos={memo.todos} />
-                </a>
-              </div>
-            </div>
-          ))
-        )}
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <span
+                      className="text-[10px] w-3 inline-flex items-center justify-center text-gray-400 dark:text-gray-500"
+                      title={groupIndicator[group].label}
+                      aria-label={groupIndicator[group].label}
+                    >
+                      {groupIndicator[group].letter}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById(`memo-${memo.filename}`);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline"
+                      title="Scroll to memo"
+                    >
+                      {memo.title || 'Untitled'}
+                    </button>
+                    <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                      {getMemoTime(memo)}
+                    </span>
+                    <a
+                      href={`/memos/${memo.filename}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto"
+                      title="Open memo in new tab"
+                    >
+                      <TodoProgressBar todos={memo.todos} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+              {!isExpanded && flat.length > 12 && (
+                <div className="flex justify-center pt-1">
+                  <button
+                    onClick={() => setIsExpanded(true)}
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
+                    title="Show more"
+                    aria-label="Show more"
+                  >
+                    V
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </div>
   );
