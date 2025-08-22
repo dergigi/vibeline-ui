@@ -81,18 +81,18 @@ const MemoGroup = ({ title, memos, color }: { title: string; memos: VoiceMemo[];
       <div className="space-y-1">
         {memos.map(memo => (
           <div key={memo.path} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 rounded px-2 py-1">
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
+            <div className="flex-1 min-w-0 flex items-center gap-2">
+              <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
                 {memo.title || 'Untitled'}
-              </div>
-              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <span>{getMemoTime(memo)}</span>
-                {memo.todos && countOpenTodos(memo.todos) > 0 && (
-                  <span className="text-orange-600 dark:text-orange-400">
-                    {countOpenTodos(memo.todos)} TODO{countOpenTodos(memo.todos) !== 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
+              </span>
+              <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                {getMemoTime(memo)}
+              </span>
+              {memo.todos && countOpenTodos(memo.todos) > 0 && (
+                <span className="text-orange-600 dark:text-orange-400 flex-shrink-0">
+                  {countOpenTodos(memo.todos)} TODO{countOpenTodos(memo.todos) !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
           </div>
         ))}
