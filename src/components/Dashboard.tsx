@@ -3,6 +3,7 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { useSearch } from '@/contexts/SearchContext';
 import { useMemo, useState } from 'react';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
 
 interface DashboardProps {
   memos: VoiceMemo[];
@@ -267,15 +268,19 @@ export default function Dashboard({ memos }: DashboardProps) {
                   </div>
                 </div>
               ))}
-              {!isExpanded && flat.length > 12 && (
+              {flat.length > 12 && (
                 <div className="flex justify-center pt-1">
                   <button
-                    onClick={() => setIsExpanded(true)}
-                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
-                    title="Show more"
-                    aria-label="Show more"
+                    onClick={() => setIsExpanded(v => !v)}
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                    title={isExpanded ? 'Show less' : 'Show more'}
+                    aria-label={isExpanded ? 'Show less' : 'Show more'}
                   >
-                    V
+                    {isExpanded ? (
+                      <ChevronUpIcon className="w-4 h-4" />
+                    ) : (
+                      <ChevronDownIcon className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               )}
