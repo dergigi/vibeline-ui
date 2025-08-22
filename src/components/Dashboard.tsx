@@ -110,7 +110,9 @@ const MemoGroup = ({ title, memos, color }: { title: string; memos: VoiceMemo[];
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
                 {getMemoTime(memo)}
               </span>
-              <TodoProgressBar todos={memo.todos} />
+              <div className="ml-auto">
+                <TodoProgressBar todos={memo.todos} />
+              </div>
             </div>
           </div>
         ))}
