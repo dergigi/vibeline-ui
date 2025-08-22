@@ -80,6 +80,7 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
 
     // Apply filters
     if (activeFilters.size > 0) {
+      console.log('Active filters:', Array.from(activeFilters));
       filtered = filtered.filter(memo => {
         const hasTodos = (memo.todos?.trim().length ?? 0) > 0;
         const hasPrompts = (memo.prompts?.trim().length ?? 0) > 0;
@@ -92,6 +93,7 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
         if (activeFilters.has('blossom') && !hasBlossom) return false;
         return true;
       });
+      console.log('Filtered memos count:', filtered.length);
     }
 
     return filtered;
