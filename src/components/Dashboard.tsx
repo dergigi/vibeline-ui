@@ -133,25 +133,54 @@ const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string
 export default function Dashboard({ memos }: DashboardProps) {
   const { filteredMemos } = useSearch();
   const [hideCompleted, setHideCompleted] = useState(false);
+  const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
   const sourceMemos = filteredMemos && filteredMemos.length > 0 ? filteredMemos : memos;
   const visibleMemos = useMemo(() => {
-    if (!hideCompleted) return sourceMemos;
-    return sourceMemos.filter(m => {
-      const { completed, total } = parseTodos(m.todos || '');
-      return !(total > 0 && completed === total);
-    });
-  }, [hideCompleted, sourceMemos]);
+    if (showOnlyCompleted) {
+      return sourceMemos.filter(m => {
+        const { completed, total } = parseTodos(m.todos || '');
+        return total > 0 && completed === total;
+      });
+    }
+    if (hideCompleted) {
+      return sourceMemos.filter(m => {
+        const { completed, total } = parseTodos(m.todos || '');
+        return !(total > 0 && completed === total);
+      });
+    }
+    return sourceMemos;
+  }, [hideCompleted, showOnlyCompleted, sourceMemos]);
   const groupedMemos = groupMemosByTime(visibleMemos);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
-      <div className="flex justify-end mb-1">
+      <div className="flex justify-end mb-1 gap-1">
         <button
-          onClick={() => setHideCompleted(v => !v)}
-          title={hideCompleted ? 'Showing only memos with open TODOs' : 'Show only memos with open TODOs'}
+          onClick={() => {
+            setHideCompleted(v => {
+              const next = !v;
+              if (next) setShowOnlyCompleted(false);
+              return next;
+            });
+          }}
+          title={hideCompleted ? 'Showing only memos with open TODOs' : 'Hide completed memos'}
           aria-label="Toggle hide completed memos"
           className={`w-3 h-3 rounded-[2px] border transition-colors ${
             hideCompleted ? 'bg-orange-500 border-orange-500' : 'border-orange-500'
+          }`}
+        />
+        <button
+          onClick={() => {
+            setShowOnlyCompleted(v => {
+              const next = !v;
+              if (next) setHideCompleted(false);
+              return next;
+            });
+          }}
+          title={showOnlyCompleted ? 'Showing only completed memos' : 'Show only completed memos'}
+          aria-label="Toggle show only completed memos"
+          className={`w-3 h-3 rounded-[2px] border transition-colors ${
+            showOnlyCompleted ? 'bg-green-500 border-green-500' : 'border-green-500'
           }`}
         />
       </div>
