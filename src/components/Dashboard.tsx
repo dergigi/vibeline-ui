@@ -120,6 +120,16 @@ export default function Dashboard({ memos }: DashboardProps) {
       <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
         Overview
       </h3>
+      
+      {/* Debug info - remove this later */}
+      <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+        <div>Total memos: {memos.length}</div>
+        <div>Today: {groupedMemos.today.length} | Yesterday: {groupedMemos.yesterday.length} | This Week: {groupedMemos.thisWeek.length} | This Month: {groupedMemos.thisMonth.length}</div>
+        {memos.length > 0 && (
+          <div>Sample memo date: {getMemoDate(memos[0]).toLocaleDateString()}</div>
+        )}
+      </div>
+      
       <div className="space-y-2">
         <MemoGroup title="Today" memos={groupedMemos.today} color="green" />
         <MemoGroup title="Yesterday" memos={groupedMemos.yesterday} color="blue" />
