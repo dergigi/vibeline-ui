@@ -14,11 +14,15 @@ interface GroupedMemos {
   restOfMonth: VoiceMemo[];
 }
 
-const countOpenTodos = (todos: string): number => {
-  if (!todos?.trim()) return 0;
-  return todos.trim().split('\n').filter(line => 
-    line.trim().length > 0 && !line.trim().startsWith('✓')
-  ).length;
+const parseTodos = (todos: string): { completed: number; total: number } => {
+  if (!todos?.trim()) return { completed: 0, total: 0 };
+  const lines = todos
+    .trim()
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  const completed = lines.filter(line => line.startsWith('✓') || /\[(x|X)\]/.test(line)).length;
+  return { completed, total: lines.length };
 };
 
 // Helpers kept tiny and reusable
@@ -27,6 +31,24 @@ const asDate = (value: string | Date): Date => (typeof value === 'string' ? new 
 const getMemoYmd = (memo: VoiceMemo): string => toYmd(asDate(memo.createdAt));
 const getMemoTime = (memo: VoiceMemo): string =>
   asDate(memo.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+const TodoProgressBar = ({ todos }: { todos?: string }) => {
+  if (!todos) return null;
+  const { completed, total } = parseTodos(todos);
+  if (total === 0) return null;
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className={`w-2 h-2 rounded-[2px] border ${
+            i < completed ? 'bg-green-500 border-green-500' : 'border-orange-500'
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
 
 const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   // Boundaries, same style as TODOs plugin
@@ -88,11 +110,7 @@ const MemoGroup = ({ title, memos, color }: { title: string; memos: VoiceMemo[];
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
                 {getMemoTime(memo)}
               </span>
-              {memo.todos && countOpenTodos(memo.todos) > 0 && (
-                <span className="text-orange-600 dark:text-orange-400 flex-shrink-0">
-                  {countOpenTodos(memo.todos)} TODO{countOpenTodos(memo.todos) !== 1 ? 's' : ''}
-                </span>
-              )}
+              <TodoProgressBar todos={memo.todos} />
             </div>
           </div>
         ))}
