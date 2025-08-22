@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon, ArrowUpIcon } from '@heroicons/react/24/solid';
 import { SpellCheck } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
@@ -1032,6 +1032,13 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
 
             <div className="flex justify-between items-end">
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                  title="Scroll to top"
+                >
+                  <ArrowUpIcon className="w-4 h-4" />
+                </button>
                 {memo.transcript && (
                   <div className="flex gap-1.5 flex-wrap">
                     {extractHashtags(memo.transcript).map(tag => (
