@@ -21,40 +21,22 @@ const countOpenTodos = (todos: string): number => {
   ).length;
 };
 
-const getMemoDate = (memo: VoiceMemo): Date => {
-  return memo.createdAt;
-};
-
-const getMemoTime = (memo: VoiceMemo): string => {
-  const memoDate = typeof memo.createdAt === 'string' ? new Date(memo.createdAt) : memo.createdAt;
-  return memoDate.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: false 
-  });
-};
+// Helpers kept tiny and reusable
+const toYmd = (date: Date): string => date.toISOString().split('T')[0].replace(/-/g, '');
+const asDate = (value: string | Date): Date => (typeof value === 'string' ? new Date(value) : value);
+const getMemoYmd = (memo: VoiceMemo): string => toYmd(asDate(memo.createdAt));
+const getMemoTime = (memo: VoiceMemo): string =>
+  asDate(memo.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
-  // Get date boundaries in YYYYMMDD format (like TODOs plugin)
+  // Boundaries, same style as TODOs plugin
   const now = new Date();
-  const today = now.toISOString().split('T')[0].replace(/-/g, '');
-  
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0].replace(/-/g, '');
-  
-  const twoDaysAgo = new Date(now);
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-  const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
-  
-  const threeDaysAgo = new Date(now);
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-  const threeDaysAgoStr = threeDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
-  
-  const eightDaysAgo = new Date(now);
-  eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-  const eightDaysAgoStr = eightDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
-  
+  const today = toYmd(now);
+  const yesterday = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+  const twoDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2));
+  const threeDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3));
+  const eightDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 8));
+
   const grouped: GroupedMemos = {
     today: [],
     yesterday: [],
@@ -64,19 +46,16 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   };
   
   memos.forEach(memo => {
-    // Handle both string and Date types for createdAt
-    const memoDate = typeof memo.createdAt === 'string' ? new Date(memo.createdAt) : memo.createdAt;
-    const memoDateStr = memoDate.toISOString().split('T')[0].replace(/-/g, '');
-    
+    const memoDateStr = getMemoYmd(memo);
     if (memoDateStr === today) {
       grouped.today.push(memo);
-    } else if (memoDateStr === yesterdayStr) {
+    } else if (memoDateStr === yesterday) {
       grouped.yesterday.push(memo);
-    } else if (memoDateStr === twoDaysAgoStr) {
+    } else if (memoDateStr === twoDaysAgo) {
       grouped.twoDaysAgo.push(memo);
-    } else if (memoDateStr < yesterdayStr && memoDateStr >= threeDaysAgoStr) {
+    } else if (memoDateStr < yesterday && memoDateStr >= threeDaysAgo) {
       grouped.restOfWeek.push(memo);
-    } else if (memoDateStr < threeDaysAgoStr && memoDateStr >= eightDaysAgoStr) {
+    } else if (memoDateStr < threeDaysAgo && memoDateStr >= eightDaysAgo) {
       grouped.restOfMonth.push(memo);
     }
   });
@@ -124,20 +103,7 @@ export default function Dashboard({ memos }: DashboardProps) {
         Overview
       </h3>
       
-      {/* Debug info - remove this later */}
-      <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-        <div>Total memos: {memos.length}</div>
-        <div>Today: {groupedMemos.today.length} | Yesterday: {groupedMemos.yesterday.length} | 2 Days Ago: {groupedMemos.twoDaysAgo.length} | Rest of Week: {groupedMemos.restOfWeek.length} | Rest of Month: {groupedMemos.restOfMonth.length}</div>
-        {memos.length > 0 && (
-          <div>Sample memo date: {getMemoDate(memos[0]).toLocaleDateString()}</div>
-        )}
-        <div>Current date: {new Date().toLocaleDateString()}</div>
-        <div>Today (YYYYMMDD): {new Date().toISOString().split('T')[0].replace(/-/g, '')}</div>
-        <div>Yesterday (YYYYMMDD): {new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0].replace(/-/g, '')}</div>
-        {memos.length > 0 && (
-          <div>First memo date (YYYYMMDD): {(typeof memos[0].createdAt === 'string' ? new Date(memos[0].createdAt) : memos[0].createdAt).toISOString().split('T')[0].replace(/-/g, '')}</div>
-        )}
-      </div>
+      {/* Compact, no debug */}
       
       <div className="space-y-2">
         <MemoGroup title="Today" memos={groupedMemos.today} color="green" />
