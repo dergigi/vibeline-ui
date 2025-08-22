@@ -26,7 +26,8 @@ const getMemoDate = (memo: VoiceMemo): Date => {
 };
 
 const getMemoTime = (memo: VoiceMemo): string => {
-  return memo.createdAt.toLocaleTimeString('en-US', { 
+  const memoDate = typeof memo.createdAt === 'string' ? new Date(memo.createdAt) : memo.createdAt;
+  return memoDate.toLocaleTimeString('en-US', { 
     hour: '2-digit', 
     minute: '2-digit',
     hour12: false 
@@ -63,7 +64,9 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   };
   
   memos.forEach(memo => {
-    const memoDateStr = memo.createdAt.toISOString().split('T')[0].replace(/-/g, '');
+    // Handle both string and Date types for createdAt
+    const memoDate = typeof memo.createdAt === 'string' ? new Date(memo.createdAt) : memo.createdAt;
+    const memoDateStr = memoDate.toISOString().split('T')[0].replace(/-/g, '');
     
     if (memoDateStr === today) {
       grouped.today.push(memo);
@@ -132,7 +135,7 @@ export default function Dashboard({ memos }: DashboardProps) {
         <div>Today (YYYYMMDD): {new Date().toISOString().split('T')[0].replace(/-/g, '')}</div>
         <div>Yesterday (YYYYMMDD): {new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0].replace(/-/g, '')}</div>
         {memos.length > 0 && (
-          <div>First memo date (YYYYMMDD): {memos[0].createdAt.toISOString().split('T')[0].replace(/-/g, '')}</div>
+          <div>First memo date (YYYYMMDD): {(typeof memos[0].createdAt === 'string' ? new Date(memos[0].createdAt) : memos[0].createdAt).toISOString().split('T')[0].replace(/-/g, '')}</div>
         )}
       </div>
       
