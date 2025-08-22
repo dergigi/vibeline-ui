@@ -88,6 +88,14 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
       grouped.restOfMonth.push(memo);
     }
   });
+
+  // Sort groups to match main page (newest first by filename)
+  const compareMemos = (a: VoiceMemo, b: VoiceMemo) => b.filename.localeCompare(a.filename);
+  grouped.today.sort(compareMemos);
+  grouped.yesterday.sort(compareMemos);
+  grouped.twoDaysAgo.sort(compareMemos);
+  grouped.restOfWeek.sort(compareMemos);
+  grouped.restOfMonth.sort(compareMemos);
   
   return grouped;
 };
