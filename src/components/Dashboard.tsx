@@ -1,6 +1,7 @@
 'use client';
 
 import { VoiceMemo } from '@/types/VoiceMemo';
+import { useSearch } from '@/contexts/SearchContext';
 
 interface DashboardProps {
   memos: VoiceMemo[];
@@ -130,7 +131,9 @@ const MemoGroup = ({ title, memos, color }: { title: string; memos: VoiceMemo[];
 };
 
 export default function Dashboard({ memos }: DashboardProps) {
-  const groupedMemos = groupMemosByTime(memos);
+  const { filteredMemos } = useSearch();
+  const sourceMemos = filteredMemos && filteredMemos.length > 0 ? filteredMemos : memos;
+  const groupedMemos = groupMemosByTime(sourceMemos);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
