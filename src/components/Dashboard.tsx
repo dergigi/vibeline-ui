@@ -127,6 +127,12 @@ export default function Dashboard({ memos }: DashboardProps) {
         {memos.length > 0 && (
           <div>Sample memo date: {getMemoDate(memos[0]).toLocaleDateString()}</div>
         )}
+        <div>Current date: {new Date().toLocaleDateString()}</div>
+        <div>Start of week: {new Date(new Date().setDate(new Date().getDate() - new Date().getDay())).toLocaleDateString()}</div>
+        <div>Start of month: {new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString()}</div>
+        {memos.length > 0 && (
+          <div>First memo filename: {memos[0].filename}</div>
+        )}
       </div>
       
       <div className="space-y-2">
