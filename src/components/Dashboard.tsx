@@ -26,8 +26,13 @@ const parseTodos = (todos: string): { completed: number; total: number } => {
   return { completed, total: lines.length };
 };
 
-// Helpers kept tiny and reusable
-const toYmd = (date: Date): string => date.toISOString().split('T')[0].replace(/-/g, '');
+// Helpers kept tiny and reusable (use LOCAL time to avoid UTC off-by-one)
+const toYmd = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}${m}${d}`;
+};
 const asDate = (value: string | Date): Date => (typeof value === 'string' ? new Date(value) : value);
 const getMemoYmd = (memo: VoiceMemo): string => toYmd(asDate(memo.createdAt));
 const getMemoTime = (memo: VoiceMemo): string =>
@@ -54,7 +59,7 @@ const TodoProgressBar = ({ todos }: { todos?: string }) => {
 const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   // Boundaries, same style as TODOs plugin
   const now = new Date();
-  const today = toYmd(now);
+  const today = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
   const yesterday = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
   const twoDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2));
   const threeDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3));
