@@ -22,38 +22,45 @@ const countOpenTodos = (todos: string): number => {
 };
 
 const getMemoDate = (memo: VoiceMemo): Date => {
-  return new Date(memo.filename.slice(0, 4) + '-' + 
-                  memo.filename.slice(4, 6) + '-' + 
-                  memo.filename.slice(6, 8) + ' ' + 
-                  memo.filename.slice(9, 11) + ':' + 
-                  memo.filename.slice(11, 13) + ':' + 
-                  memo.filename.slice(13, 15));
+  return memo.createdAt;
 };
 
 const getMemoTime = (memo: VoiceMemo): string => {
-  const time = memo.filename.slice(9, 11) + ':' + memo.filename.slice(11, 13);
-  return time;
+  return memo.createdAt.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false 
+  });
 };
 
 const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
+  // Get date boundaries in YYYYMMDD format (like TODOs plugin)
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today);
+  const today = now.toISOString().split('T')[0].replace(/-/g, '');
+  
+  const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  const twoDaysAgo = new Date(today);
+  const yesterdayStr = yesterday.toISOString().split('T')[0].replace(/-/g, '');
+  
+  const twoDaysAgo = new Date(now);
   twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  const twoDaysAgoStr = twoDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
   
-  // Rest of week: 3-7 days ago
-  const threeDaysAgo = new Date(today);
+  const threeDaysAgo = new Date(now);
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const threeDaysAgoStr = threeDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
   
-  // Rest of month: 8-31 days ago
-  const eightDaysAgo = new Date(today);
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
+  
+  const eightDaysAgo = new Date(now);
   eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-  const thirtyOneDaysAgo = new Date(today);
+  const eightDaysAgoStr = eightDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
+  
+  const thirtyOneDaysAgo = new Date(now);
   thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
+  const thirtyOneDaysAgoStr = thirtyOneDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
   
   const grouped: GroupedMemos = {
     today: [],
@@ -63,30 +70,19 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
     restOfMonth: []
   };
   
-  const processedMemos = new Set<string>();
-  
   memos.forEach(memo => {
-    if (processedMemos.has(memo.id)) return;
+    const memoDateStr = memo.createdAt.toISOString().split('T')[0].replace(/-/g, '');
     
-    const memoDate = getMemoDate(memo);
-    const memoDateOnly = new Date(memoDate.getFullYear(), memoDate.getMonth(), memoDate.getDate());
-    
-    // Add to the most recent time period only
-    if (memoDateOnly.getTime() === today.getTime()) {
+    if (memoDateStr === today) {
       grouped.today.push(memo);
-      processedMemos.add(memo.id);
-    } else if (memoDateOnly.getTime() === yesterday.getTime()) {
+    } else if (memoDateStr === yesterdayStr) {
       grouped.yesterday.push(memo);
-      processedMemos.add(memo.id);
-    } else if (memoDateOnly.getTime() === twoDaysAgo.getTime()) {
+    } else if (memoDateStr === twoDaysAgoStr) {
       grouped.twoDaysAgo.push(memo);
-      processedMemos.add(memo.id);
-    } else if (memoDateOnly >= threeDaysAgo && memoDateOnly <= sevenDaysAgo) {
+    } else if (memoDateStr < yesterdayStr && memoDateStr >= threeDaysAgoStr) {
       grouped.restOfWeek.push(memo);
-      processedMemos.add(memo.id);
-    } else if (memoDateOnly >= eightDaysAgo && memoDateOnly <= thirtyOneDaysAgo) {
+    } else if (memoDateStr < threeDaysAgoStr && memoDateStr >= eightDaysAgoStr) {
       grouped.restOfMonth.push(memo);
-      processedMemos.add(memo.id);
     }
   });
   
@@ -141,10 +137,10 @@ export default function Dashboard({ memos }: DashboardProps) {
           <div>Sample memo date: {getMemoDate(memos[0]).toLocaleDateString()}</div>
         )}
         <div>Current date: {new Date().toLocaleDateString()}</div>
-        <div>Start of week: {new Date(new Date().setDate(new Date().getDate() - new Date().getDay())).toLocaleDateString()}</div>
-        <div>Start of month: {new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleDateString()}</div>
+        <div>Today (YYYYMMDD): {new Date().toISOString().split('T')[0].replace(/-/g, '')}</div>
+        <div>Yesterday (YYYYMMDD): {new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0].replace(/-/g, '')}</div>
         {memos.length > 0 && (
-          <div>First memo filename: {memos[0].filename}</div>
+          <div>First memo date (YYYYMMDD): {memos[0].createdAt.toISOString().split('T')[0].replace(/-/g, '')}</div>
         )}
       </div>
       
