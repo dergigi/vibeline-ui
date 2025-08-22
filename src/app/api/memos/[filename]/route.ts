@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { BlossomData } from '@/types/VoiceMemo';
 
 async function readFileIfExists(filePath: string): Promise<string | undefined> {
   try {
@@ -10,7 +11,7 @@ async function readFileIfExists(filePath: string): Promise<string | undefined> {
   }
 }
 
-async function readBlossomDataIfExists(filePath: string): Promise<any> {
+async function readBlossomDataIfExists(filePath: string): Promise<BlossomData | null> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     if (content.trim()) {
