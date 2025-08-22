@@ -2,7 +2,7 @@
 
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { useSearch } from '@/contexts/SearchContext';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 interface DashboardProps {
   memos: VoiceMemo[];
@@ -132,78 +132,29 @@ const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string
 
 export default function Dashboard({ memos }: DashboardProps) {
   const { filteredMemos } = useSearch();
-  const sourceMemos = filteredMemos && filteredMemos.length > 0 ? filteredMemos : memos;
-
   const [hideCompleted, setHideCompleted] = useState(false);
-  const [lengthFilter, setLengthFilter] = useState<'all' | 'gte1' | 'gte5' | 'gte20'>('all');
-  const [durations, setDurations] = useState<Record<string, number>>({});
-
-  // Preload audio metadata to get durations for filtering
-  useEffect(() => {
-    sourceMemos.forEach(memo => {
-      if (durations[memo.filename] != null) return;
-      const audio = new Audio(memo.audioUrl);
-      audio.preload = 'metadata';
-      const onLoaded = () => {
-        if (!isNaN(audio.duration)) {
-          setDurations(prev => ({ ...prev, [memo.filename]: Math.floor(audio.duration) }));
-        }
-      };
-      audio.addEventListener('loadedmetadata', onLoaded, { once: true });
+  const sourceMemos = filteredMemos && filteredMemos.length > 0 ? filteredMemos : memos;
+  const visibleMemos = useMemo(() => {
+    if (!hideCompleted) return sourceMemos;
+    return sourceMemos.filter(m => {
+      const { completed, total } = parseTodos(m.todos || '');
+      return !(total > 0 && completed === total);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sourceMemos]);
-
-  const minSecs = lengthFilter === 'gte20' ? 1200 : lengthFilter === 'gte5' ? 300 : lengthFilter === 'gte1' ? 60 : 0;
-
-  const displayMemos = useMemo(() => {
-    return sourceMemos.filter(memo => {
-      if (hideCompleted) {
-        const { completed, total } = parseTodos(memo.todos || '');
-        if (total > 0 && completed === total) return false;
-      }
-      if (minSecs > 0) {
-        const d = durations[memo.filename];
-        if (d != null && d < minSecs) return false;
-      }
-      return true;
-    });
-  }, [sourceMemos, hideCompleted, minSecs, durations]);
-
-  const groupedMemos = groupMemosByTime(displayMemos);
+  }, [hideCompleted, sourceMemos]);
+  const groupedMemos = groupMemosByTime(visibleMemos);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
-      <div className="mb-2 flex justify-end gap-1">
+      <div className="flex justify-end mb-1">
         <button
           onClick={() => setHideCompleted(v => !v)}
-          className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${
-            hideCompleted
-              ? 'bg-indigo-500 text-white'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+          title={hideCompleted ? 'Showing only memos with open TODOs' : 'Show only memos with open TODOs'}
+          aria-label="Toggle hide completed memos"
+          className={`w-3 h-3 rounded-[2px] border transition-colors ${
+            hideCompleted ? 'bg-orange-500 border-orange-500' : 'border-orange-500'
           }`}
-          title="Hide memos with all TODOs completed"
-        >
-          done
-        </button>
-        {(['all','gte1','gte5','gte20'] as const).map(key => (
-          <button
-            key={key}
-            onClick={() => setLengthFilter(key)}
-            className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${
-              lengthFilter === key
-                ? 'bg-indigo-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-            }`}
-            title={
-              key === 'gte20' ? 'Only >= 20 min' : key === 'gte5' ? 'Hide < 5 min' : key === 'gte1' ? 'Hide < 1 min' : 'All lengths'
-            }
-          >
-            {key === 'gte20' ? '≥20m' : key === 'gte5' ? '≥5m' : key === 'gte1' ? '≥1m' : 'all'}
-          </button>
-        ))}
+        />
       </div>
-
       <div className="space-y-1">
         {(([ 
           ['today', groupedMemos.today],
