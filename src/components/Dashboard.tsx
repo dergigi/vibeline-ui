@@ -45,7 +45,14 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
     restOfMonth: []
   };
   
-  memos.forEach(memo => {
+  // Deduplicate by file path to avoid duplicate keys/entries
+  const uniqueMemosByPath = new Map<string, VoiceMemo>();
+  memos.forEach(m => {
+    if (!uniqueMemosByPath.has(m.path)) uniqueMemosByPath.set(m.path, m);
+  });
+  const uniqueMemos = Array.from(uniqueMemosByPath.values());
+
+  uniqueMemos.forEach(memo => {
     const memoDateStr = getMemoYmd(memo);
     if (memoDateStr === today) {
       grouped.today.push(memo);
@@ -73,7 +80,7 @@ const MemoGroup = ({ title, memos, color }: { title: string; memos: VoiceMemo[];
       </h4>
       <div className="space-y-1">
         {memos.map(memo => (
-          <div key={memo.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 rounded px-2 py-1">
+          <div key={memo.path} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 rounded px-2 py-1">
             <div className="flex-1 min-w-0">
               <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
                 {memo.title || 'Untitled'}
