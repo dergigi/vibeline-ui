@@ -120,7 +120,7 @@ const groupBg: Record<keyof GroupedMemos, string> = {
 const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string }> = {
   today: { letter: 'T', label: 'Today' },
   yesterday: { letter: 'Y', label: 'Yesterday' },
-  twoDaysAgo: { letter: '2', label: '2 days ago' },
+  twoDaysAgo: { letter: 'A', label: 'Antepenultimate (2 days ago)' },
   restOfWeek: { letter: 'W', label: 'Rest of week (3-7 days ago)' },
   restOfMonth: { letter: 'M', label: 'Rest of month (8-31 days ago)' },
 };
