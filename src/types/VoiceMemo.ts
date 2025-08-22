@@ -11,4 +11,11 @@ export interface VoiceMemo {
   title?: string;
   audioUrl: string;
   createdAt: Date;
+  blossom?: {
+    url: string;
+    sha256: string;
+    size: number;
+    type: string;
+    uploaded: number;
+  };
 }

@@ -1054,6 +1054,16 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                {memo.blossom && (
+                  <button 
+                    onClick={() => window.open(memo.blossom!.url, '_blank')}
+                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                    title="Open blossom file"
+                  >
+                    <span>🌸</span>
+                    <span className="font-mono">{memo.blossom.sha256.substring(0, 6)}</span>
+                  </button>
+                )}
                 <button 
                   onClick={handleShare}
                   className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
