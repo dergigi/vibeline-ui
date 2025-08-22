@@ -10,6 +10,22 @@ async function readFileIfExists(filePath: string): Promise<string | undefined> {
   }
 }
 
+async function readBlossomDataIfExists(filePath: string): Promise<any> {
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    if (content.trim()) {
+      const data = JSON.parse(content);
+      // Only return blossom data if it has a valid URL
+      if (data && data.url && data.url.trim()) {
+        return data;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function parseTimestampFromFilename(filename: string): string {
   const year = filename.slice(0, 4);
   const month = filename.slice(4, 6);
@@ -31,18 +47,20 @@ export async function GET(
     const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
     const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
     const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
+    const BLOSSOMS_DIR = path.join(VOICE_MEMOS_DIR, 'blossoms');
 
     const { filename } = await params;
     const baseFilename = filename;
     
     // Get content from each plugin directory
     // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
-    const [transcript, originalTranscript, summary, todos, title] = await Promise.all([
+    const [transcript, originalTranscript, summary, todos, title, blossom] = await Promise.all([
       readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
       readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
       readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
       readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
-      readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`))
+      readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`)),
+      readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`))
     ]);
 
     // If .txt.orig exists, it means the main .txt file is cleaned
@@ -55,6 +73,7 @@ export async function GET(
       summary,
       todos,
       title: title?.trim() || undefined,
+      blossom,
       path: path.join(TODOS_DIR, `${baseFilename}.md`),
       createdAt: parseTimestampFromFilename(baseFilename),
       audioUrl: `/api/audio/${baseFilename}.m4a`
