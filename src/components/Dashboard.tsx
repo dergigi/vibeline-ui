@@ -50,17 +50,9 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const threeDaysAgoStr = threeDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
   
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
-  
   const eightDaysAgo = new Date(now);
   eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
   const eightDaysAgoStr = eightDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
-  
-  const thirtyOneDaysAgo = new Date(now);
-  thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
-  const thirtyOneDaysAgoStr = thirtyOneDaysAgo.toISOString().split('T')[0].replace(/-/g, '');
   
   const grouped: GroupedMemos = {
     today: [],
