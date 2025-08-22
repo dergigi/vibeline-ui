@@ -51,6 +51,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       })
     );
 
+    // Special handling for TODOs: also delete the corresponding action_item file
+    if (plugin === 'TODOs') {
+      const actionItemsDir = path.join(VOICE_MEMOS_DIR, 'action_items');
+      const actionItemPath = path.join(actionItemsDir, `${baseFilename}.txt`);
+      
+      if (existsSync(actionItemPath)) {
+        await fs.unlink(actionItemPath);
+        console.log(`Also deleted action_item file: ${actionItemPath}`);
+      }
+    }
+
     return NextResponse.json({ 
       success: true, 
       deletedFiles: filesToDelete,
