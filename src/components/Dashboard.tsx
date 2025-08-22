@@ -9,8 +9,9 @@ interface DashboardProps {
 interface GroupedMemos {
   today: VoiceMemo[];
   yesterday: VoiceMemo[];
-  thisWeek: VoiceMemo[];
-  thisMonth: VoiceMemo[];
+  twoDaysAgo: VoiceMemo[];
+  restOfWeek: VoiceMemo[];
+  restOfMonth: VoiceMemo[];
 }
 
 const countOpenTodos = (todos: string): number => {
@@ -39,18 +40,27 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
   
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
+  // Rest of week: 3-7 days ago
+  const threeDaysAgo = new Date(today);
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Rest of month: 8-31 days ago
+  const eightDaysAgo = new Date(today);
+  eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+  const thirtyOneDaysAgo = new Date(today);
+  thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
   
   const grouped: GroupedMemos = {
     today: [],
     yesterday: [],
-    thisWeek: [],
-    thisMonth: []
+    twoDaysAgo: [],
+    restOfWeek: [],
+    restOfMonth: []
   };
   
   const processedMemos = new Set<string>();
@@ -68,11 +78,14 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
     } else if (memoDateOnly.getTime() === yesterday.getTime()) {
       grouped.yesterday.push(memo);
       processedMemos.add(memo.id);
-    } else if (memoDate >= startOfWeek) {
-      grouped.thisWeek.push(memo);
+    } else if (memoDateOnly.getTime() === twoDaysAgo.getTime()) {
+      grouped.twoDaysAgo.push(memo);
       processedMemos.add(memo.id);
-    } else if (memoDate >= startOfMonth) {
-      grouped.thisMonth.push(memo);
+    } else if (memoDateOnly >= threeDaysAgo && memoDateOnly <= sevenDaysAgo) {
+      grouped.restOfWeek.push(memo);
+      processedMemos.add(memo.id);
+    } else if (memoDateOnly >= eightDaysAgo && memoDateOnly <= thirtyOneDaysAgo) {
+      grouped.restOfMonth.push(memo);
       processedMemos.add(memo.id);
     }
   });
@@ -123,7 +136,7 @@ export default function Dashboard({ memos }: DashboardProps) {
       {/* Debug info - remove this later */}
       <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
         <div>Total memos: {memos.length}</div>
-        <div>Today: {groupedMemos.today.length} | Yesterday: {groupedMemos.yesterday.length} | This Week: {groupedMemos.thisWeek.length} | This Month: {groupedMemos.thisMonth.length}</div>
+        <div>Today: {groupedMemos.today.length} | Yesterday: {groupedMemos.yesterday.length} | 2 Days Ago: {groupedMemos.twoDaysAgo.length} | Rest of Week: {groupedMemos.restOfWeek.length} | Rest of Month: {groupedMemos.restOfMonth.length}</div>
         {memos.length > 0 && (
           <div>Sample memo date: {getMemoDate(memos[0]).toLocaleDateString()}</div>
         )}
@@ -138,8 +151,9 @@ export default function Dashboard({ memos }: DashboardProps) {
       <div className="space-y-2">
         <MemoGroup title="Today" memos={groupedMemos.today} color="green" />
         <MemoGroup title="Yesterday" memos={groupedMemos.yesterday} color="blue" />
-        <MemoGroup title="This Week" memos={groupedMemos.thisWeek} color="purple" />
-        <MemoGroup title="This Month" memos={groupedMemos.thisMonth} color="gray" />
+        <MemoGroup title="2 Days Ago" memos={groupedMemos.twoDaysAgo} color="purple" />
+        <MemoGroup title="Rest of Week" memos={groupedMemos.restOfWeek} color="indigo" />
+        <MemoGroup title="Rest of Month" memos={groupedMemos.restOfMonth} color="gray" />
       </div>
     </div>
   );
