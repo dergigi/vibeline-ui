@@ -1,178 +1,292 @@
 'use client';
 
 import { VoiceMemo } from '@/types/VoiceMemo';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useSearch } from '@/contexts/SearchContext';
+import { useMemo, useState } from 'react';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
 
 interface DashboardProps {
   memos: VoiceMemo[];
 }
 
-interface Statistics {
-  total: number;
-  thisWeek: number;
-  thisMonth: number;
+interface GroupedMemos {
+  today: VoiceMemo[];
+  yesterday: VoiceMemo[];
+  twoDaysAgo: VoiceMemo[];
+  restOfWeek: VoiceMemo[];
+  restOfMonth: VoiceMemo[];
 }
 
-interface DailyActivity {
-  date: string;
-  memos: number;
-  todos: number;
-  drafts: number;
-  prompts: number;
-}
-
-interface StatsCardProps {
-  title: string;
-  stats: Statistics;
-  color: string;
-}
-
-const countTodos = (todos: string): number => {
-  return todos.trim().split('\n').filter(line => line.trim().length > 0).length;
+const parseTodos = (todos: string): { completed: number; total: number } => {
+  if (!todos?.trim()) return { completed: 0, total: 0 };
+  const lines = todos
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  // Consider only actual checklist items or checkmark-style lines
+  const isChecklist = (line: string) => /^\s*-\s*\[( |x|X)\]/.test(line);
+  const isCheckmark = (line: string) => /^\s*✓\s+/.test(line);
+  const relevant = lines.filter(line => isChecklist(line) || isCheckmark(line));
+  const completed = relevant.filter(line => /^\s*-\s*\[(x|X)\]/.test(line) || isCheckmark(line)).length;
+  const total = relevant.length;
+  return { completed, total };
 };
 
-function StatsCard({ title, stats, color }: StatsCardProps) {
+// Helpers kept tiny and reusable (use LOCAL time to avoid UTC off-by-one)
+const toYmd = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}${m}${d}`;
+};
+const asDate = (value: string | Date): Date => (typeof value === 'string' ? new Date(value) : value);
+const getMemoYmd = (memo: VoiceMemo): string => toYmd(asDate(memo.createdAt));
+const getMemoTime = (memo: VoiceMemo): string =>
+  asDate(memo.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+const TodoProgressBar = ({ todos }: { todos?: string }) => {
+  if (!todos) return null;
+  const { completed, total } = parseTodos(todos);
+  if (total === 0) return null;
+  const incompleteBorder = completed === 0 ? 'border-red-500' : 'border-orange-500';
   return (
-    <div>
-      <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">{title}</h4>
-      <div className="grid grid-cols-3 gap-2">
-        <div className={`bg-${color}-50 dark:bg-${color}-900/20 rounded-lg p-2`}>
-          <p className={`text-xs font-medium text-${color}-600 dark:text-${color}-400`}>This Week</p>
-          <p className={`text-2xl font-bold text-${color}-700 dark:text-${color}-300`}>{stats.thisWeek}</p>
-        </div>
-        <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-          <p className="text-xs font-medium text-gray-600 dark:text-gray-400">This Month</p>
-          <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">{stats.thisMonth}</p>
-        </div>
-        <div className="bg-gray-50 dark:bg-gray-700/20 rounded-lg p-2">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total</p>
-          <p className="text-lg font-medium text-gray-600 dark:text-gray-400">{stats.total}</p>
-        </div>
-      </div>
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: total }, (_, i) => (
+        <div
+          key={i}
+          className={`w-2 h-2 rounded-[2px] border ${
+            i < completed ? 'bg-green-500 border-green-500' : incompleteBorder
+          }`}
+        />
+      ))}
     </div>
   );
-}
+};
+
+const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
+  // Boundaries, same style as TODOs plugin
+  const now = new Date();
+  const today = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  const yesterday = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+  const twoDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2));
+  const threeDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3));
+  const eightDaysAgo = toYmd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 8));
+
+  const grouped: GroupedMemos = {
+    today: [],
+    yesterday: [],
+    twoDaysAgo: [],
+    restOfWeek: [],
+    restOfMonth: []
+  };
+  
+  // Deduplicate by file path to avoid duplicate keys/entries
+  const uniqueMemosByPath = new Map<string, VoiceMemo>();
+  memos.forEach(m => {
+    if (!uniqueMemosByPath.has(m.path)) uniqueMemosByPath.set(m.path, m);
+  });
+  const uniqueMemos = Array.from(uniqueMemosByPath.values());
+
+  uniqueMemos.forEach(memo => {
+    const memoDateStr = getMemoYmd(memo);
+    if (memoDateStr === today) {
+      grouped.today.push(memo);
+    } else if (memoDateStr === yesterday) {
+      grouped.yesterday.push(memo);
+    } else if (memoDateStr === twoDaysAgo) {
+      grouped.twoDaysAgo.push(memo);
+    } else if (memoDateStr < yesterday && memoDateStr >= threeDaysAgo) {
+      grouped.restOfWeek.push(memo);
+    } else if (memoDateStr < threeDaysAgo && memoDateStr >= eightDaysAgo) {
+      grouped.restOfMonth.push(memo);
+    }
+  });
+
+  // Sort groups to match main page (newest first by filename)
+  const compareMemos = (a: VoiceMemo, b: VoiceMemo) => b.filename.localeCompare(a.filename);
+  grouped.today.sort(compareMemos);
+  grouped.yesterday.sort(compareMemos);
+  grouped.twoDaysAgo.sort(compareMemos);
+  grouped.restOfWeek.sort(compareMemos);
+  grouped.restOfMonth.sort(compareMemos);
+  
+  return grouped;
+};
+
+// Styling per group (reverse fade: newest no bg → older darker)
+const groupBg: Record<keyof GroupedMemos, string> = {
+  // No background for newest
+  today: 'bg-transparent',
+  // Subtle cool tint progressing to darker neutrals for age
+  yesterday: 'bg-blue-50 dark:bg-white/5',
+  twoDaysAgo: 'bg-slate-100 dark:bg-white/10',
+  restOfWeek: 'bg-slate-200 dark:bg-white/20',
+  restOfMonth: 'bg-slate-300 dark:bg-white/30',
+};
+
+const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string }> = {
+  today: { letter: 'T', label: 'Today' },
+  yesterday: { letter: 'Y', label: 'Yesterday' },
+  twoDaysAgo: { letter: 'A', label: 'Antepenultimate (2 days ago)' },
+  restOfWeek: { letter: 'W', label: 'Rest of week (3-7 days ago)' },
+  restOfMonth: { letter: 'M', label: 'Rest of month (8-31 days ago)' },
+};
 
 export default function Dashboard({ memos }: DashboardProps) {
-  const getStatistics = (memos: VoiceMemo[]): { 
-    memos: Statistics
-  } => {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    const stats = {
-      memos: { total: 0, thisWeek: 0, thisMonth: 0 }
-    };
-
-    memos.forEach(memo => {
-      const date = new Date(memo.filename.slice(0, 4) + '-' + 
-                          memo.filename.slice(4, 6) + '-' + 
-                          memo.filename.slice(6, 8) + ' ' + 
-                          memo.filename.slice(9, 11) + ':' + 
-                          memo.filename.slice(11, 13) + ':' + 
-                          memo.filename.slice(13, 15));
-
-      // Count memos
-      stats.memos.total++;
-      if (date >= startOfWeek) stats.memos.thisWeek++;
-      if (date >= startOfMonth) stats.memos.thisMonth++;
-    });
-
-    return stats;
-  };
-
-  const getDailyActivity = (memos: VoiceMemo[]): DailyActivity[] => {
-    const activityMap = new Map<string, DailyActivity>();
-    
-    memos.forEach(memo => {
-      const date = memo.filename.slice(0, 4) + '-' + 
-                  memo.filename.slice(4, 6) + '-' + 
-                  memo.filename.slice(6, 8);
-      
-      if (!activityMap.has(date)) {
-        activityMap.set(date, {
-          date,
-          memos: 0,
-          todos: 0,
-          drafts: 0,
-          prompts: 0
-        });
-      }
-      
-      const activity = activityMap.get(date)!;
-      activity.memos++;
-      
-      if (memo.todos?.trim()) {
-        activity.todos += countTodos(memo.todos);
-      }
-      if (memo.drafts?.trim()) {
-        activity.drafts++;
-      }
-      if (memo.prompts?.trim()) {
-        activity.prompts++;
-      }
-    });
-    
-    return Array.from(activityMap.values())
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-7); // Last 7 days
-  };
-
-  const stats = getStatistics(memos);
-  const dailyActivity = getDailyActivity(memos);
+  const { filteredMemos } = useSearch();
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
+  const [showOnlyAllIncomplete, setShowOnlyAllIncomplete] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const sourceMemos = filteredMemos && filteredMemos.length > 0 ? filteredMemos : memos;
+  const visibleMemos = useMemo(() => {
+    if (showOnlyAllIncomplete) {
+      return sourceMemos.filter(m => {
+        const { completed, total } = parseTodos(m.todos || '');
+        return total > 0 && completed === 0;
+      });
+    }
+    if (showOnlyCompleted) {
+      return sourceMemos.filter(m => {
+        const { completed, total } = parseTodos(m.todos || '');
+        return total > 0 && completed === total;
+      });
+    }
+    if (hideCompleted) {
+      return sourceMemos.filter(m => {
+        const { completed, total } = parseTodos(m.todos || '');
+        return !(total > 0 && completed === total);
+      });
+    }
+    return sourceMemos;
+  }, [hideCompleted, showOnlyCompleted, showOnlyAllIncomplete, sourceMemos]);
+  const groupedMemos = groupMemosByTime(visibleMemos);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-      {/* Stats Widget */}
-      <div className="col-span-1 md:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-          Statistics
-        </h3>
-        <div className="space-y-4">
-          {/* Activity Chart */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Daily Activity</h4>
-            <div className="h-28">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart 
-                  data={dailyActivity}
-                  margin={{ top: 5, right: 10, bottom: 5, left: -20 }}
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
+      <div className="flex justify-end mb-1 gap-1">
+        <button
+          onClick={() => {
+            setShowOnlyAllIncomplete(v => {
+              const next = !v;
+              if (next) {
+                setHideCompleted(false);
+                setShowOnlyCompleted(false);
+              }
+              return next;
+            });
+          }}
+          title={showOnlyAllIncomplete ? 'Showing only memos with all TODOs open' : 'Show only memos with all TODOs open'}
+          aria-label="Toggle show only memos with all TODOs open"
+          className={`w-3 h-3 rounded-[2px] border transition-colors ${
+            showOnlyAllIncomplete ? 'bg-red-500 border-red-500' : 'border-red-500'
+          }`}
+        />
+        <button
+          onClick={() => {
+            setHideCompleted(v => {
+              const next = !v;
+              if (next) {
+                setShowOnlyCompleted(false);
+                setShowOnlyAllIncomplete(false);
+              }
+              return next;
+            });
+          }}
+          title={hideCompleted ? 'Showing only memos with open TODOs' : 'Hide completed memos'}
+          aria-label="Toggle hide completed memos"
+          className={`w-3 h-3 rounded-[2px] border transition-colors ${
+            hideCompleted ? 'bg-orange-500 border-orange-500' : 'border-orange-500'
+          }`}
+        />
+        <button
+          onClick={() => {
+            setShowOnlyCompleted(v => {
+              const next = !v;
+              if (next) {
+                setHideCompleted(false);
+                setShowOnlyAllIncomplete(false);
+              }
+              return next;
+            });
+          }}
+          title={showOnlyCompleted ? 'Showing only completed memos' : 'Show only completed memos'}
+          aria-label="Toggle show only completed memos"
+          className={`w-3 h-3 rounded-[2px] border transition-colors ${
+            showOnlyCompleted ? 'bg-green-500 border-green-500' : 'border-green-500'
+          }`}
+        />
+      </div>
+      <div className="space-y-1">
+        {(() => {
+          const groups = ([
+            ['today', groupedMemos.today],
+            ['yesterday', groupedMemos.yesterday],
+            ['twoDaysAgo', groupedMemos.twoDaysAgo],
+            ['restOfWeek', groupedMemos.restOfWeek],
+            ['restOfMonth', groupedMemos.restOfMonth],
+          ] as const) as ReadonlyArray<[keyof GroupedMemos, VoiceMemo[]]>;
+          const flat = groups.flatMap(([group, list]) => list.map(memo => ({ group, memo })));
+          const visible = isExpanded ? flat : flat.slice(0, 12);
+          return (
+            <>
+              {visible.map(({ group, memo }) => (
+                <div
+                  key={memo.path}
+                  className={`flex items-center justify-between text-xs rounded px-2 py-1 ${groupBg[group]}`}
                 >
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#6B7280"
-                    fontSize={10}
-                    tickFormatter={(value) => value.slice(5)}
-                  />
-                  <YAxis 
-                    stroke="#6B7280" 
-                    fontSize={10}
-                    width={25}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937',
-                      border: 'none',
-                      borderRadius: '0.375rem',
-                      color: '#E5E7EB',
-                      fontSize: '12px'
-                    }}
-                  />
-                  <Line type="monotone" dataKey="memos" stroke="#3B82F6" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="todos" stroke="#10B981" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="drafts" stroke="#F59E0B" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="prompts" stroke="#EC4899" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <StatsCard title="Voice Memos" stats={stats.memos} color="blue" />
-        </div>
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <span
+                      className="text-[10px] w-3 inline-flex items-center justify-center text-gray-400 dark:text-gray-500"
+                      title={groupIndicator[group].label}
+                      aria-label={groupIndicator[group].label}
+                    >
+                      {groupIndicator[group].letter}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById(`memo-${memo.filename}`);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className="font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline"
+                      title="Scroll to memo"
+                    >
+                      {memo.title || 'Untitled'}
+                    </button>
+                    <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                      {getMemoTime(memo)}
+                    </span>
+                    <a
+                      href={`/memos/${memo.filename}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto"
+                      title="Open memo in new tab"
+                    >
+                      <TodoProgressBar todos={memo.todos} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+              {flat.length > 12 && (
+                <div className="flex justify-center pt-1">
+                  <button
+                    onClick={() => setIsExpanded(v => !v)}
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+                    title={isExpanded ? 'Show less' : 'Show more'}
+                    aria-label={isExpanded ? 'Show less' : 'Show more'}
+                  >
+                    {isExpanded ? (
+                      <ChevronUpIcon className="w-4 h-4" />
+                    ) : (
+                      <ChevronDownIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </div>
   );
