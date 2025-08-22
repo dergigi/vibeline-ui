@@ -157,15 +157,28 @@ export default function Dashboard({ memos }: DashboardProps) {
                 >
                   {groupIndicator[group].letter}
                 </span>
-                <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                <button
+                  onClick={() => {
+                    const el = document.getElementById(`memo-${memo.filename}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline"
+                  title="Scroll to memo"
+                >
                   {memo.title || 'Untitled'}
-                </span>
+                </button>
                 <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
                   {getMemoTime(memo)}
                 </span>
-                <div className="ml-auto">
+                <a
+                  href={`/memos/${memo.filename}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto"
+                  title="Open memo in new tab"
+                >
                   <TodoProgressBar todos={memo.todos} />
-                </div>
+                </a>
               </div>
             </div>
           ))
