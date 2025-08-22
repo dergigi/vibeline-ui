@@ -134,8 +134,15 @@ export default function Dashboard({ memos }: DashboardProps) {
   const { filteredMemos } = useSearch();
   const [hideCompleted, setHideCompleted] = useState(false);
   const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
+  const [showOnlyAllIncomplete, setShowOnlyAllIncomplete] = useState(false);
   const sourceMemos = filteredMemos && filteredMemos.length > 0 ? filteredMemos : memos;
   const visibleMemos = useMemo(() => {
+    if (showOnlyAllIncomplete) {
+      return sourceMemos.filter(m => {
+        const { completed, total } = parseTodos(m.todos || '');
+        return total > 0 && completed === 0;
+      });
+    }
     if (showOnlyCompleted) {
       return sourceMemos.filter(m => {
         const { completed, total } = parseTodos(m.todos || '');
@@ -149,7 +156,7 @@ export default function Dashboard({ memos }: DashboardProps) {
       });
     }
     return sourceMemos;
-  }, [hideCompleted, showOnlyCompleted, sourceMemos]);
+  }, [hideCompleted, showOnlyCompleted, showOnlyAllIncomplete, sourceMemos]);
   const groupedMemos = groupMemosByTime(visibleMemos);
 
   return (
@@ -157,9 +164,29 @@ export default function Dashboard({ memos }: DashboardProps) {
       <div className="flex justify-end mb-1 gap-1">
         <button
           onClick={() => {
+            setShowOnlyAllIncomplete(v => {
+              const next = !v;
+              if (next) {
+                setHideCompleted(false);
+                setShowOnlyCompleted(false);
+              }
+              return next;
+            });
+          }}
+          title={showOnlyAllIncomplete ? 'Showing only memos with all TODOs open' : 'Show only memos with all TODOs open'}
+          aria-label="Toggle show only memos with all TODOs open"
+          className={`w-3 h-3 rounded-[2px] border transition-colors ${
+            showOnlyAllIncomplete ? 'bg-red-500 border-red-500' : 'border-red-500'
+          }`}
+        />
+        <button
+          onClick={() => {
             setHideCompleted(v => {
               const next = !v;
-              if (next) setShowOnlyCompleted(false);
+              if (next) {
+                setShowOnlyCompleted(false);
+                setShowOnlyAllIncomplete(false);
+              }
               return next;
             });
           }}
@@ -173,7 +200,10 @@ export default function Dashboard({ memos }: DashboardProps) {
           onClick={() => {
             setShowOnlyCompleted(v => {
               const next = !v;
-              if (next) setHideCompleted(false);
+              if (next) {
+                setHideCompleted(false);
+                setShowOnlyAllIncomplete(false);
+              }
               return next;
             });
           }}
