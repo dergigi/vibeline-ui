@@ -106,13 +106,15 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   return grouped;
 };
 
-// Styling per group (subtle color + age fade)
+// Styling per group (reverse fade: newest no bg → older darker)
 const groupBg: Record<keyof GroupedMemos, string> = {
-  today: 'bg-green-50 dark:bg-green-900/20 opacity-100',
-  yesterday: 'bg-blue-50 dark:bg-blue-900/20 opacity-95',
-  twoDaysAgo: 'bg-purple-50 dark:bg-purple-900/20 opacity-90',
-  restOfWeek: 'bg-indigo-50 dark:bg-indigo-900/20 opacity-80',
-  restOfMonth: 'bg-gray-50 dark:bg-gray-800/50 opacity-70',
+  // No background for newest
+  today: 'bg-transparent',
+  // Subtle cool tint progressing to darker neutrals for age
+  yesterday: 'bg-blue-50 dark:bg-slate-800/30',
+  twoDaysAgo: 'bg-slate-100 dark:bg-slate-800/45',
+  restOfWeek: 'bg-slate-200 dark:bg-slate-800/60',
+  restOfMonth: 'bg-slate-300 dark:bg-slate-800/75',
 };
 
 export default function Dashboard({ memos }: DashboardProps) {
