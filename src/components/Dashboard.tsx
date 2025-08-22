@@ -47,13 +47,14 @@ const TodoProgressBar = ({ todos }: { todos?: string }) => {
   if (!todos) return null;
   const { completed, total } = parseTodos(todos);
   if (total === 0) return null;
+  const incompleteBorder = completed === 0 ? 'border-red-500' : 'border-orange-500';
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: total }, (_, i) => (
         <div
           key={i}
           className={`w-2 h-2 rounded-[2px] border ${
-            i < completed ? 'bg-green-500 border-green-500' : 'border-orange-500'
+            i < completed ? 'bg-green-500 border-green-500' : incompleteBorder
           }`}
         />
       ))}
