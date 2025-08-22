@@ -84,7 +84,7 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
         const hasTodos = (memo.todos?.trim().length ?? 0) > 0;
         const hasPrompts = (memo.prompts?.trim().length ?? 0) > 0;
         const hasDrafts = (memo.drafts?.trim().length ?? 0) > 0;
-        const hasBlossom = memo.blossom !== undefined;
+        const hasBlossom = memo.blossom && memo.blossom.url && memo.blossom.url.trim();
 
         if (activeFilters.has('todos') && !hasTodos) return false;
         if (activeFilters.has('prompts') && !hasPrompts) return false;

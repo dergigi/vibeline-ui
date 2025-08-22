@@ -33,7 +33,11 @@ async function readBlossomDataIfExists(filePath: string): Promise<any> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     if (content.trim()) {
-      return JSON.parse(content);
+      const data = JSON.parse(content);
+      // Only return blossom data if it has a valid URL
+      if (data && data.url && data.url.trim()) {
+        return data;
+      }
     }
     return null;
   } catch {
