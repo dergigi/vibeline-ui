@@ -106,33 +106,13 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   return grouped;
 };
 
-const MemoGroup = ({ title, memos, color }: { title: string; memos: VoiceMemo[]; color: string }) => {
-  if (memos.length === 0) return null;
-  
-  return (
-    <div className="mb-3">
-      <h4 className={`text-xs font-semibold text-${color}-600 dark:text-${color}-400 mb-1 uppercase tracking-wide`}>
-        {title} ({memos.length})
-      </h4>
-      <div className="space-y-1">
-        {memos.map(memo => (
-          <div key={memo.path} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 rounded px-2 py-1">
-            <div className="flex-1 min-w-0 flex items-center gap-2">
-              <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                {memo.title || 'Untitled'}
-              </span>
-              <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-                {getMemoTime(memo)}
-              </span>
-              <div className="ml-auto">
-                <TodoProgressBar todos={memo.todos} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+// Styling per group (subtle color + age fade)
+const groupBg: Record<keyof GroupedMemos, string> = {
+  today: 'bg-green-50 dark:bg-green-900/20 opacity-100',
+  yesterday: 'bg-blue-50 dark:bg-blue-900/20 opacity-95',
+  twoDaysAgo: 'bg-purple-50 dark:bg-purple-900/20 opacity-90',
+  restOfWeek: 'bg-indigo-50 dark:bg-indigo-900/20 opacity-80',
+  restOfMonth: 'bg-gray-50 dark:bg-gray-800/50 opacity-70',
 };
 
 export default function Dashboard({ memos }: DashboardProps) {
@@ -142,18 +122,33 @@ export default function Dashboard({ memos }: DashboardProps) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-        Overview
-      </h3>
-      
-      {/* Compact, no debug */}
-      
-      <div className="space-y-2">
-        <MemoGroup title="Today" memos={groupedMemos.today} color="green" />
-        <MemoGroup title="Yesterday" memos={groupedMemos.yesterday} color="blue" />
-        <MemoGroup title="2 Days Ago" memos={groupedMemos.twoDaysAgo} color="purple" />
-        <MemoGroup title="Rest of Week" memos={groupedMemos.restOfWeek} color="indigo" />
-        <MemoGroup title="Rest of Month" memos={groupedMemos.restOfMonth} color="gray" />
+      <div className="space-y-1">
+        {([
+          ['today', groupedMemos.today],
+          ['yesterday', groupedMemos.yesterday],
+          ['twoDaysAgo', groupedMemos.twoDaysAgo],
+          ['restOfWeek', groupedMemos.restOfWeek],
+          ['restOfMonth', groupedMemos.restOfMonth],
+        ] as const).flatMap(([group, list]) =>
+          list.map((memo) => (
+            <div
+              key={memo.path}
+              className={`flex items-center justify-between text-xs rounded px-2 py-1 ${groupBg[group]}`}
+            >
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {memo.title || 'Untitled'}
+                </span>
+                <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                  {getMemoTime(memo)}
+                </span>
+                <div className="ml-auto">
+                  <TodoProgressBar todos={memo.todos} />
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
