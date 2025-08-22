@@ -18,12 +18,16 @@ interface GroupedMemos {
 const parseTodos = (todos: string): { completed: number; total: number } => {
   if (!todos?.trim()) return { completed: 0, total: 0 };
   const lines = todos
-    .trim()
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0);
-  const completed = lines.filter(line => line.startsWith('✓') || /\[(x|X)\]/.test(line)).length;
-  return { completed, total: lines.length };
+  // Consider only actual checklist items or checkmark-style lines
+  const isChecklist = (line: string) => /^\s*-\s*\[( |x|X)\]/.test(line);
+  const isCheckmark = (line: string) => /^\s*✓\s+/.test(line);
+  const relevant = lines.filter(line => isChecklist(line) || isCheckmark(line));
+  const completed = relevant.filter(line => /^\s*-\s*\[(x|X)\]/.test(line) || isCheckmark(line)).length;
+  const total = relevant.length;
+  return { completed, total };
 };
 
 // Helpers kept tiny and reusable (use LOCAL time to avoid UTC off-by-one)
