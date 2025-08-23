@@ -9,6 +9,7 @@ import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
 import Link from 'next/link';
+import { NOSTR_PORTAL } from '@/lib/constants';
 
 interface VoiceMemoCardProps {
   memo: VoiceMemo;
@@ -1056,7 +1057,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               <div className="flex items-center gap-2">
                 {memo.yolopost && (
                   <button 
-                    onClick={() => window.open(`https://njump.me/${memo.yolopost!.id}`, '_blank')}
+                    onClick={() => window.open(`${NOSTR_PORTAL}/${memo.yolopost!.id}`, '_blank')}
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                     title="View on Nostr"
                   >

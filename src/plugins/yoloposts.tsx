@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ExternalLink, Calendar, User, MessageCircle, Heart, Share2, Copy, Check, Mic } from 'lucide-react';
 import Link from 'next/link';
+import { NOSTR_PORTAL } from '@/lib/constants';
 
 interface NostrEvent {
   kind: number;
@@ -280,7 +281,7 @@ const YoloPostsPlugin: React.FC<YoloPostsPluginProps> = ({ files }) => {
                     <span className="text-sm">Share</span>
                   </button>
                   <a
-                    href={`https://njump.me/${post.id}`}
+                    href={`${NOSTR_PORTAL}/${post.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center space-x-2 text-gray-400 hover:text-purple-500 transition-colors"
