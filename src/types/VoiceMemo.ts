@@ -23,4 +23,5 @@ export interface VoiceMemo {
   yolopost?: {
     id: string;
   };
+  durationSec?: number;
 }
