@@ -19,41 +19,6 @@ export function MemoList({ initialMemos }: MemoListProps) {
     setMemos(initialMemos);
   }, [initialMemos, setMemos]);
 
-  // Load audio durations on client and enrich memos
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadDurations(memos: VoiceMemo[]): Promise<VoiceMemo[]> {
-      const updated = await Promise.all(
-        memos.map(async (memo) => {
-          if (memo.durationSec != null) return memo;
-          try {
-            const audio = document.createElement('audio');
-            audio.src = memo.audioUrl;
-            await new Promise<void>((resolve, reject) => {
-              audio.addEventListener('loadedmetadata', () => resolve());
-              audio.addEventListener('error', () => reject(new Error('audio load error')));
-            });
-            const durationSec = isFinite(audio.duration) ? Math.round(audio.duration) : undefined;
-            return { ...memo, durationSec } as VoiceMemo;
-          } catch {
-            return memo;
-          }
-        })
-      );
-      return updated;
-    }
-
-    loadDurations(initialMemos).then((withDurations) => {
-      if (isCancelled) return;
-      setMemos(withDurations);
-    });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [initialMemos, setMemos]);
-
   useEffect(() => {
     setDisplayedMemos(filteredMemos.slice(0, ITEMS_PER_PAGE));
   }, [filteredMemos]);
