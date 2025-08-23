@@ -40,6 +40,24 @@ const containsAllPhrases = (text: string, phrases: string[]): boolean => {
   return phrases.every(phrase => lowerText.includes(phrase.toLowerCase()));
 };
 
+// Parse duration query like "<1min", ">=30s", ">1h" into an operator and seconds
+const parseDurationQuery = (query: string): { op: '<' | '>' | '<=' | '>='; seconds: number } | null => {
+  const trimmed = query.trim().toLowerCase();
+  const match = trimmed.match(/^([<>]=?)\s*(\d+(?:\.\d+)?)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)$/);
+  if (!match) return null;
+  const op = match[1] as '<' | '>' | '<=' | '>=';
+  const value = parseFloat(match[2]);
+  const unit = match[3];
+
+  let multiplier = 1; // seconds
+  if (unit.startsWith('s')) multiplier = 1;
+  else if (unit.startsWith('m')) multiplier = 60;
+  else if (unit.startsWith('h')) multiplier = 3600;
+
+  const seconds = Math.round(value * multiplier);
+  return { op, seconds };
+};
+
 export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [memos, setMemos] = useState<VoiceMemo[]>([]);
@@ -64,8 +82,22 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     // Apply text search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      
-      if (term.startsWith('#')) {
+
+      // Duration query: e.g., "<1min", ">5m", ">=1h"
+      const durationQuery = parseDurationQuery(term);
+      if (durationQuery) {
+        const { op, seconds } = durationQuery;
+        filtered = filtered.filter(memo => {
+          const d = memo.durationSec;
+          if (typeof d !== 'number') return false;
+          switch (op) {
+            case '<': return d < seconds;
+            case '<=': return d <= seconds;
+            case '>': return d > seconds;
+            case '>=': return d >= seconds;
+          }
+        });
+      } else if (term.startsWith('#')) {
         // Handle hashtag search - extract hashtags without the # symbol
         const searchTag = term.slice(1);
         filtered = filtered.filter(memo => {
