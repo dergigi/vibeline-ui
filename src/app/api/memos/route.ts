@@ -20,6 +20,9 @@ interface Memo {
     type: string;
     uploaded: number;
   };
+  yolopost?: {
+    id: string;
+  };
 }
 
 async function readFileIfExists(filePath: string): Promise<string> {
