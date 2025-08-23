@@ -1,6 +1,7 @@
 'use client';
 
 import { PencilIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { Flower } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 
 export function FilterButtons() {
@@ -40,6 +41,17 @@ export function FilterButtons() {
         title="Show blog drafts"
       >
         <PencilIcon className="w-3 h-3" />
+      </button>
+      <button
+        onClick={() => toggleFilter('blossom')}
+        className={`p-1.5 rounded-md transition-colors ${
+          activeFilters.has('blossom')
+            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+        title="Show memos with blossom files"
+      >
+        <Flower className="w-3 h-3" />
       </button>
     </div>
   );

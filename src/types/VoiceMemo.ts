@@ -1,3 +1,11 @@
+export interface BlossomData {
+  url: string;
+  sha256: string;
+  size: number;
+  type: string;
+  uploaded: number;
+}
+
 export interface VoiceMemo {
   id: string;
   filename: string;
@@ -11,4 +19,5 @@ export interface VoiceMemo {
   title?: string;
   audioUrl: string;
   createdAt: Date;
+  blossom?: BlossomData;
 }

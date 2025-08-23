@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { BlossomData } from '@/types/VoiceMemo';
 
 interface Memo {
   filename: string;
@@ -12,6 +13,13 @@ interface Memo {
   createdAt: string;
   path: string;
   audioUrl: string;
+  blossom?: {
+    url: string;
+    sha256: string;
+    size: number;
+    type: string;
+    uploaded: number;
+  };
 }
 
 async function readFileIfExists(filePath: string): Promise<string> {
@@ -19,6 +27,22 @@ async function readFileIfExists(filePath: string): Promise<string> {
     return await fs.readFile(filePath, 'utf-8');
   } catch {
     return '';
+  }
+}
+
+async function readBlossomDataIfExists(filePath: string): Promise<BlossomData | null> {
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    if (content.trim()) {
+      const data = JSON.parse(content);
+      // Only return blossom data if it has a valid URL
+      if (data && data.url && data.url.trim()) {
+        return data;
+      }
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 
@@ -48,6 +72,7 @@ export async function GET() {
     const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
     const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
     const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
+    const BLOSSOMS_DIR = path.join(VOICE_MEMOS_DIR, 'blossoms');
 
     // Ensure default directories exist
     await Promise.all([
@@ -67,12 +92,13 @@ export async function GET() {
         
         // Get content from each plugin directory
         // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
-        const [transcript, originalTranscript, summary, todos, title] = await Promise.all([
+        const [transcript, originalTranscript, summary, todos, title, blossomData] = await Promise.all([
           readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
           readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
           readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
           readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
-          readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`))
+          readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`)),
+          readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`))
         ]);
 
         // If .txt.orig exists, it means the main .txt file is cleaned
@@ -87,7 +113,8 @@ export async function GET() {
           title: title.trim() || undefined,
           path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
           createdAt: parseTimestampFromFilename(baseFilename),
-          audioUrl: `/api/audio/${baseFilename}.m4a`
+          audioUrl: `/api/audio/${baseFilename}.m4a`,
+          blossom: blossomData || undefined
         };
 
         return memo;
