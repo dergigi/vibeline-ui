@@ -268,17 +268,13 @@ const YoloPostsPlugin: React.FC<YoloPostsPluginProps> = ({ files }) => {
               {/* Post Actions */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-6">
-                  <button className="flex items-center space-x-2 text-gray-400 hover:text-red-500 transition-colors">
-                    <Heart className="w-4 h-4" />
-                    <span className="text-sm">Like</span>
-                  </button>
-                  <button className="flex items-center space-x-2 text-gray-400 hover:text-blue-500 transition-colors">
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="text-sm">Reply</span>
-                  </button>
-                  <button className="flex items-center space-x-2 text-gray-400 hover:text-green-500 transition-colors">
-                    <Share2 className="w-4 h-4" />
-                    <span className="text-sm">Share</span>
+                  <button 
+                    onClick={() => window.open(`nostr:${post.id}`, '_blank')}
+                    className="flex items-center space-x-2 text-gray-400 hover:text-purple-500 transition-colors"
+                    title="Open in native Nostr client"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="text-sm">Open Native</span>
                   </button>
                   <a
                     href={`${NOSTR_PORTAL}/${post.id}`}
