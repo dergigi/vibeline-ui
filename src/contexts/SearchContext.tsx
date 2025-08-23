@@ -92,12 +92,14 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
             const todos = memo.todos?.toLowerCase() || '';
             const prompts = memo.prompts?.toLowerCase() || '';
             const drafts = memo.drafts?.toLowerCase() || '';
+            const filename = memo.filename?.toLowerCase() || '';
             
             return transcript.includes(term) || 
                    summary.includes(term) || 
                    todos.includes(term) || 
                    prompts.includes(term) || 
-                   drafts.includes(term);
+                   drafts.includes(term) ||
+                   filename.includes(term);
           });
         }
       }
