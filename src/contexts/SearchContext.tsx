@@ -26,6 +26,20 @@ export const useSearch = () => {
   return context;
 };
 
+// Helper function to extract quoted phrases from search term
+const extractQuotedPhrases = (searchTerm: string): string[] => {
+  const matches = searchTerm.match(/"([^"]*)"/g);
+  if (!matches) return [];
+  return matches.map(match => match.slice(1, -1)); // Remove quotes
+};
+
+// Helper function to check if all phrases are present in text
+const containsAllPhrases = (text: string, phrases: string[]): boolean => {
+  if (phrases.length === 0) return true;
+  const lowerText = text.toLowerCase();
+  return phrases.every(phrase => lowerText.includes(phrase.toLowerCase()));
+};
+
 export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [memos, setMemos] = useState<VoiceMemo[]>([]);
@@ -61,20 +75,33 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
           return hashtags.includes(searchTag);
         });
       } else {
-        // Regular search
-        filtered = filtered.filter(memo => {
-          const transcript = memo.transcript?.toLowerCase() || '';
-          const summary = memo.summary?.toLowerCase() || '';
-          const todos = memo.todos?.toLowerCase() || '';
-          const prompts = memo.prompts?.toLowerCase() || '';
-          const drafts = memo.drafts?.toLowerCase() || '';
-          
-          return transcript.includes(term) || 
-                 summary.includes(term) || 
-                 todos.includes(term) || 
-                 prompts.includes(term) || 
-                 drafts.includes(term);
-        });
+        // Extract quoted phrases for exact phrase matching
+        const quotedPhrases = extractQuotedPhrases(searchTerm);
+        
+        if (quotedPhrases.length > 0) {
+          // If we have quoted phrases, require ALL phrases to be present in transcript
+          filtered = filtered.filter(memo => {
+            const transcript = memo.transcript || '';
+            return containsAllPhrases(transcript, quotedPhrases);
+          });
+        } else {
+          // Regular search (fallback to original behavior)
+          filtered = filtered.filter(memo => {
+            const transcript = memo.transcript?.toLowerCase() || '';
+            const summary = memo.summary?.toLowerCase() || '';
+            const todos = memo.todos?.toLowerCase() || '';
+            const prompts = memo.prompts?.toLowerCase() || '';
+            const drafts = memo.drafts?.toLowerCase() || '';
+            const filename = memo.filename?.toLowerCase() || '';
+            
+            return transcript.includes(term) || 
+                   summary.includes(term) || 
+                   todos.includes(term) || 
+                   prompts.includes(term) || 
+                   drafts.includes(term) ||
+                   filename.includes(term);
+          });
+        }
       }
     }
 

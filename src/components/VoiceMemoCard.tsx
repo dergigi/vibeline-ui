@@ -609,10 +609,42 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {memo.title && (
                   <>
-                    {formatTimeAgo(memo.createdAt)} · {formatShortDate(memo.createdAt)}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Extract date from filename (format: YYYYMMDD_HHMMSS)
+                        const dateMatch = memo.filename.match(/^(\d{8})/);
+                        if (dateMatch) {
+                          setSearchTerm(dateMatch[1]);
+                        }
+                      }}
+                      className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                      title="Search for this day"
+                    >
+                      {formatTimeAgo(memo.createdAt)}
+                    </button>
+                    {' · '}
+                    {formatShortDate(memo.createdAt)}
                   </>
                 )}
-                {!memo.title && formatShortDate(memo.createdAt)}
+                {!memo.title && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Extract date from filename (format: YYYYMMDD_HHMMSS)
+                      const dateMatch = memo.filename.match(/^(\d{8})/);
+                      if (dateMatch) {
+                        setSearchTerm(dateMatch[1]);
+                      }
+                    }}
+                    className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                    title="Search for this day"
+                  >
+                    {formatShortDate(memo.createdAt)}
+                  </button>
+                )}
                 {duration && ` · ${formatDuration(duration)}`}
                 {memo.transcript && ` · ${countWords(memo.transcript)} words`}
               </p>
