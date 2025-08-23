@@ -27,6 +27,22 @@ async function readBlossomDataIfExists(filePath: string): Promise<BlossomData | 
   }
 }
 
+async function readYoloPostDataIfExists(filePath: string): Promise<{ id: string } | null> {
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    if (content.trim()) {
+      const data = JSON.parse(content);
+      // Only return yolopost data if it has a valid ID
+      if (data && data.id && data.id.trim()) {
+        return { id: data.id };
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function parseTimestampFromFilename(filename: string): string {
   const year = filename.slice(0, 4);
   const month = filename.slice(4, 6);
@@ -49,19 +65,21 @@ export async function GET(
     const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
     const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
     const BLOSSOMS_DIR = path.join(VOICE_MEMOS_DIR, 'blossoms');
+    const YOLOPOSTS_DIR = path.join(VOICE_MEMOS_DIR, 'yoloposts');
 
     const { filename } = await params;
     const baseFilename = filename;
     
     // Get content from each plugin directory
     // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
-    const [transcript, originalTranscript, summary, todos, title, blossom] = await Promise.all([
+    const [transcript, originalTranscript, summary, todos, title, blossom, yolopostData] = await Promise.all([
       readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
       readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
       readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
       readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
       readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`)),
-      readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`))
+      readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`)),
+      readYoloPostDataIfExists(path.join(YOLOPOSTS_DIR, `${baseFilename}.json`))
     ]);
 
     // If .txt.orig exists, it means the main .txt file is cleaned
@@ -75,6 +93,7 @@ export async function GET(
       todos,
       title: title?.trim() || undefined,
       blossom,
+      yolopost: yolopostData,
       path: path.join(TODOS_DIR, `${baseFilename}.md`),
       createdAt: parseTimestampFromFilename(baseFilename),
       audioUrl: `/api/audio/${baseFilename}.m4a`

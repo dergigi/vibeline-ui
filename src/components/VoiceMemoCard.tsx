@@ -4,11 +4,12 @@ import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
 import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon, ArrowUpIcon } from '@heroicons/react/24/solid';
-import { SpellCheck, Flower } from 'lucide-react';
+import { SpellCheck, Flower, Waypoints } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
 import { DraftEditor } from './DraftEditor';
 import Link from 'next/link';
+import { NOSTR_PORTAL } from '@/lib/constants';
 
 interface VoiceMemoCardProps {
   memo: VoiceMemo;
@@ -1054,6 +1055,16 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                {memo.yolopost && (
+                  <button 
+                    onClick={() => window.open(`${NOSTR_PORTAL}/${memo.yolopost!.id}`, '_blank')}
+                    className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                    title="View on Nostr"
+                  >
+                    <Waypoints className="w-3 h-3" />
+                    <span className="font-mono">{memo.yolopost!.id.substring(0, 6)}</span>
+                  </button>
+                )}
                 {memo.blossom && (
                   <button 
                     onClick={() => window.open(memo.blossom!.url, '_blank')}

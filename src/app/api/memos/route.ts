@@ -20,6 +20,9 @@ interface Memo {
     type: string;
     uploaded: number;
   };
+  yolopost?: {
+    id: string;
+  };
 }
 
 async function readFileIfExists(filePath: string): Promise<string> {
@@ -38,6 +41,22 @@ async function readBlossomDataIfExists(filePath: string): Promise<BlossomData | 
       // Only return blossom data if it has a valid URL
       if (data && data.url && data.url.trim()) {
         return data;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function readYoloPostDataIfExists(filePath: string): Promise<{ id: string } | null> {
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    if (content.trim()) {
+      const data = JSON.parse(content);
+      // Only return yolopost data if it has a valid ID
+      if (data && data.id && data.id.trim()) {
+        return { id: data.id };
       }
     }
     return null;
@@ -73,6 +92,7 @@ export async function GET() {
     const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
     const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
     const BLOSSOMS_DIR = path.join(VOICE_MEMOS_DIR, 'blossoms');
+    const YOLOPOSTS_DIR = path.join(VOICE_MEMOS_DIR, 'yoloposts');
 
     // Ensure default directories exist
     await Promise.all([
@@ -92,13 +112,14 @@ export async function GET() {
         
         // Get content from each plugin directory
         // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
-        const [transcript, originalTranscript, summary, todos, title, blossomData] = await Promise.all([
+        const [transcript, originalTranscript, summary, todos, title, blossomData, yolopostData] = await Promise.all([
           readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
           readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
           readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
           readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
           readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`)),
-          readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`))
+          readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`)),
+          readYoloPostDataIfExists(path.join(YOLOPOSTS_DIR, `${baseFilename}.json`))
         ]);
 
         // If .txt.orig exists, it means the main .txt file is cleaned
@@ -114,7 +135,8 @@ export async function GET() {
           path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
           createdAt: parseTimestampFromFilename(baseFilename),
           audioUrl: `/api/audio/${baseFilename}.m4a`,
-          blossom: blossomData || undefined
+          blossom: blossomData || undefined,
+          yolopost: yolopostData || undefined
         };
 
         return memo;

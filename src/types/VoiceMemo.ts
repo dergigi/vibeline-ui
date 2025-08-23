@@ -20,4 +20,7 @@ export interface VoiceMemo {
   audioUrl: string;
   createdAt: Date;
   blossom?: BlossomData;
+  yolopost?: {
+    id: string;
+  };
 }
