@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ExternalLink, Calendar, User, MessageCircle, Heart, Share2, Copy, Check, Mic } from 'lucide-react';
+import { ExternalLink, Calendar, User, Copy, Check, Mic } from 'lucide-react';
 import Link from 'next/link';
 import { NOSTR_PORTAL } from '@/lib/constants';
 
