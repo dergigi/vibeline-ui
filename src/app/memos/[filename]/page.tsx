@@ -57,7 +57,7 @@ export default async function MemoPage({ params }: { params: Promise<{ filename:
               ← Back to all memos
             </Link>
           </div>
-          <VoiceMemoCard memo={memo} />
+          <VoiceMemoCard memo={memo} isMemoPage={true} />
         </div>
       </main>
     </SearchProvider>
