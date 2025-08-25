@@ -13,14 +13,15 @@ import { NOSTR_PORTAL } from '@/lib/constants';
 
 interface VoiceMemoCardProps {
   memo: VoiceMemo;
+  isMemoPage?: boolean;
 }
 
-export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo }) => {
+export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage = false }) => {
   const { setSearchTerm } = useSearch();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
-  const [isTodosExpanded, setIsTodosExpanded] = useState(false);
+  const [isTodosExpanded, setIsTodosExpanded] = useState(isMemoPage);
   const [isPromptsExpanded, setIsPromptsExpanded] = useState(false);
   const [isDraftsExpanded, setIsDraftsExpanded] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);

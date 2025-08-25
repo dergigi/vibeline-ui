@@ -9,7 +9,10 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Vibeline',
+  title: {
+    default: 'Vibeline',
+    template: '%s | Vibeline'
+  },
   description: 'Call 555-vibe to vibe it into existence 🤙',
 };
 
