@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider } from '@/contexts/SearchContext';
+import type { Metadata } from 'next';
 
 async function getMemo(filename: string) {
   const port = process.env.PORT || '555';
@@ -18,6 +19,22 @@ async function getMemo(filename: string) {
   }
 
   return response.json();
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ filename: string }> }): Promise<Metadata> {
+  const { filename } = await params;
+  const memo = await getMemo(filename);
+
+  if (!memo) {
+    return {
+      title: 'Memo Not Found',
+    };
+  }
+
+  const title = memo.title || filename;
+  return {
+    title: title,
+  };
 }
 
 export default async function MemoPage({ params }: { params: Promise<{ filename: string }> }) {

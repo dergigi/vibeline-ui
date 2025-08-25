@@ -5,8 +5,14 @@ import { SearchBar } from '@/components/SearchBar';
 import { MemoList } from '@/components/MemoList';
 import { FilterButtons } from '@/components/FilterButtons';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Voice Memos',
+  description: 'Call 555-vibe to vibe it into existence 🤙',
+};
 
 async function getData() {
   const port = process.env.PORT || '555';

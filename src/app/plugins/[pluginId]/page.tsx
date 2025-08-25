@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { existsSync } from 'fs';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import type { Metadata } from 'next';
 
 const VOICE_MEMOS_DIR = path.join(process.cwd(), 'VoiceMemos');
 const PLUGINS_DIR = path.join(process.cwd(), 'src', 'plugins');
@@ -196,6 +197,17 @@ function DefaultPluginUI({ files, pluginId }: { files: PluginFile[]; pluginId: s
       )}
     </div>
   );
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ pluginId: string }> }): Promise<Metadata> {
+  const { pluginId } = await params;
+  
+  // Format the plugin ID for display (capitalize and replace underscores with spaces)
+  const formattedTitle = pluginId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  
+  return {
+    title: formattedTitle,
+  };
 }
 
 export default async function PluginPage({ params }: { params: Promise<{ pluginId: string }> }) {
