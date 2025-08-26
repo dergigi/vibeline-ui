@@ -1384,7 +1384,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">
-                    ⚠️ PERMANENTLY DELETE EVERYTHING
+                    PERMANENTLY DELETE EVERYTHING
                   </h3>
                   <p className="text-sm text-red-700 dark:text-red-300">
                     This will delete ALL files including the original audio recording
@@ -1426,7 +1426,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                       </div>
                       <div>
                         <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                          ⚠️ THIS ACTION CANNOT BE UNDONE
+                          THIS ACTION CANNOT BE UNDONE
                         </p>
                         <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                           All files including the original audio recording will be permanently deleted. This action is irreversible.
