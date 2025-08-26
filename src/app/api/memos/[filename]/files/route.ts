@@ -45,7 +45,7 @@ export async function GET(
     // Convert to the expected format
     const allFiles = Object.entries(filesByCategory).flatMap(([category, files]) =>
       files.map(file => ({
-        category: category === '.' ? 'Root' : category,
+        category: category === '.' ? '.' : category,
         filename: file.filename,
         fullPath: file.fullPath,
         exists: true
