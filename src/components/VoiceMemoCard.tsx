@@ -36,6 +36,13 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
   const [isDeleting, setIsDeleting] = useState<{ [key: string]: boolean }>({});
   const deleteIntervals = useRef<{ [key: string]: NodeJS.Timeout | null }>({});
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [showRefreshDialog, setShowRefreshDialog] = useState(false);
+  const [refreshFiles, setRefreshFiles] = useState<Array<{ category: string; filename: string; fullPath: string }>>([]);
+  const [refreshStep, setRefreshStep] = useState<'list' | 'confirm' | 'deleting'>('list');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteFiles, setDeleteFiles] = useState<Array<{ category: string; filename: string; fullPath: string }>>([]);
+  const [deleteStep, setDeleteStep] = useState<'list' | 'confirm' | 'deleting'>('list');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   // Add state to manage optimistic UI updates for todos
   const [optimisticTodos, setOptimisticTodos] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -546,6 +553,130 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     
     setCountdown(prev => ({ ...prev, [plugin]: 0 }));
     setIsDeleting(prev => ({ ...prev, [plugin]: false }));
+  };
+
+  const handleRefreshAll = async (): Promise<void> => {
+    if (!memo.filename) return;
+    
+    setRefreshStep('list');
+    setShowRefreshDialog(true);
+    
+    try {
+      const response = await fetch(`/api/memos/${memo.filename}/files`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch files');
+      }
+      
+      const data = await response.json();
+      setRefreshFiles(data.files);
+      setRefreshStep('confirm');
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      setShowRefreshDialog(false);
+    }
+  };
+
+  const handleConfirmRefresh = async (): Promise<void> => {
+    if (!memo.filename) return;
+    
+    setRefreshStep('deleting');
+    
+    try {
+      const response = await fetch(`/api/memos/${memo.filename}/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh memo');
+      }
+
+      const data = await response.json();
+      console.log('Refresh completed:', data);
+      
+      // Clear all memo data to trigger re-generation
+      memo.transcript = undefined;
+      memo.summary = undefined;
+      memo.todos = undefined;
+      memo.title = undefined;
+      memo.blossom = undefined;
+      memo.yolopost = undefined;
+      
+      // Close dialog and reset state
+      setShowRefreshDialog(false);
+      setRefreshFiles([]);
+      setRefreshStep('list');
+      
+      // Reload the page to trigger regeneration
+      window.location.reload();
+    } catch (error) {
+      console.error('Error refreshing memo:', error);
+      setRefreshStep('confirm');
+    }
+  };
+
+  const handleCancelRefresh = (): void => {
+    setShowRefreshDialog(false);
+    setRefreshFiles([]);
+    setRefreshStep('list');
+  };
+
+  const handleDeleteAll = async (): Promise<void> => {
+    if (!memo.filename) return;
+    
+    setDeleteStep('list');
+    setShowDeleteDialog(true);
+    
+    try {
+      const response = await fetch(`/api/memos/${memo.filename}/files/all`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch files');
+      }
+      
+      const data = await response.json();
+      setDeleteFiles(data.files);
+      setDeleteStep('confirm');
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!memo.filename) return;
+    
+    setDeleteStep('deleting');
+    
+    try {
+      const response = await fetch(`/api/memos/${memo.filename}/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete memo');
+      }
+
+      const data = await response.json();
+      console.log('Delete completed:', data);
+      
+      // Redirect to home page since the memo is gone
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error deleting memo:', error);
+      setDeleteStep('confirm');
+    }
+  };
+
+  const handleCancelDelete = (): void => {
+    setShowDeleteDialog(false);
+    setDeleteFiles([]);
+    setDeleteStep('list');
+    setDeleteConfirmation('');
   };
 
   // Clean up intervals when component unmounts
@@ -1073,6 +1204,20 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                 >
                   <ArrowUpIcon className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={handleRefreshAll}
+                  className="p-1 rounded-md text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition-colors"
+                  title="Refresh all (delete and regenerate all files)"
+                >
+                  <ArrowPathIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleDeleteAll}
+                  className="p-1 rounded-md text-gray-400 hover:text-red-700 dark:text-gray-500 dark:hover:text-red-500 transition-colors"
+                  title="Delete everything (including audio file)"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
                 {memo.transcript && (
                   <div className="flex gap-1.5 flex-wrap">
                     {extractHashtags(memo.transcript).map(tag => (
@@ -1134,6 +1279,205 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
           initialContent={memo.drafts || ''}
           onClose={() => setShowDraftEditor(false)}
         />
+      )}
+      
+      {/* Refresh Warning Dialog */}
+      {showRefreshDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
+                  <TrashIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Refresh All Files
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    This will delete all generated files (excluding the original audio) and trigger regeneration
+                  </p>
+                </div>
+              </div>
+              
+              {refreshStep === 'list' && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">Loading files...</p>
+                </div>
+              )}
+              
+              {refreshStep === 'confirm' && (
+                <div>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                      The following <strong>{refreshFiles.length} files</strong> will be deleted:
+                    </p>
+                    <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-3 bg-gray-50 dark:bg-gray-900">
+                      {refreshFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 py-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            <span className="font-medium">{file.category}</span>
+                            <span className="text-gray-500 dark:text-gray-500"> / </span>
+                            <span className="font-mono">{file.filename}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
+                    <div className="flex items-start gap-2">
+                      <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">!</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                          Warning: This action cannot be undone
+                        </p>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                          All generated files will be permanently deleted (the original audio file is protected). The system will automatically regenerate them, but this may take some time.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleConfirmRefresh}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                    >
+                      Yes, Delete All Files
+                    </button>
+                    <button
+                      onClick={handleCancelRefresh}
+                      className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 px-4 py-2 rounded-md font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {refreshStep === 'deleting' && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">
+                    Deleting files and refreshing...
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Dangerous Delete Warning Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
+                  <TrashIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">
+                    PERMANENTLY DELETE EVERYTHING
+                  </h3>
+                  <p className="text-sm text-red-700 dark:text-red-300">
+                    This will delete ALL files including the original audio recording
+                  </p>
+                </div>
+              </div>
+              
+              {deleteStep === 'list' && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">Loading files...</p>
+                </div>
+              )}
+              
+              {deleteStep === 'confirm' && (
+                <div>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                      The following <strong>{deleteFiles.length} files</strong> will be PERMANENTLY DELETED:
+                    </p>
+                    <div className="max-h-60 overflow-y-auto border border-red-200 dark:border-red-800 rounded-md p-3 bg-red-50 dark:bg-red-900/20">
+                      {deleteFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 py-1">
+                          <div className="w-2 h-2 bg-red-600 rounded-full flex-shrink-0"></div>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            <span className="font-medium">{file.category}</span>
+                            <span className="text-gray-500 dark:text-gray-500"> / </span>
+                            <span className="font-mono">{file.filename}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mb-4">
+                    <div className="flex items-start gap-2">
+                      <div className="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">!</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                          THIS ACTION CANNOT BE UNDONE
+                        </p>
+                        <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                          All files including the original audio recording will be permanently deleted. This action is irreversible.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Type the filename to confirm deletion:
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmation}
+                      onChange={(e) => setDeleteConfirmation(e.target.value)}
+                      placeholder={memo.filename}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    />
+
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleConfirmDelete}
+                      disabled={deleteConfirmation !== memo.filename}
+                      className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md font-medium transition-colors"
+                    >
+                      PERMANENTLY DELETE EVERYTHING
+                    </button>
+                    <button
+                      onClick={handleCancelDelete}
+                      className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 px-4 py-2 rounded-md font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {deleteStep === 'deleting' && (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">
+                    Permanently deleting all files...
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
