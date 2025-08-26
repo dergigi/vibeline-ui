@@ -16,7 +16,13 @@ export async function GET(
     
     // Use glob to find all files matching the pattern
     const pattern = path.join(VOICE_MEMOS_DIR, '**', `${baseFilename}.*`);
-    const files = await glob(pattern, { nodir: true });
+    const allMatchingFiles = await glob(pattern, { nodir: true });
+    
+    // Filter out audio files - we never want to delete the original audio
+    const files = allMatchingFiles.filter(filePath => {
+      const ext = path.extname(filePath).toLowerCase();
+      return ext !== '.m4a' && ext !== '.mp3' && ext !== '.wav' && ext !== '.aac';
+    });
     
     // Group files by their parent directory (plugin/category)
     const filesByCategory: { [category: string]: Array<{ filename: string; fullPath: string }> } = {};

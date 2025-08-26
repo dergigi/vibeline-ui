@@ -1228,7 +1228,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                     Refresh All Files
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    This will delete all generated files and trigger regeneration
+                    This will delete all generated files (excluding the original audio) and trigger regeneration
                   </p>
                 </div>
               </div>
@@ -1270,7 +1270,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                           Warning: This action cannot be undone
                         </p>
                         <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                          All generated files will be permanently deleted. The system will automatically regenerate them, but this may take some time.
+                          All generated files will be permanently deleted (the original audio file is protected). The system will automatically regenerate them, but this may take some time.
                         </p>
                       </div>
                     </div>

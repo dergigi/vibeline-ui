@@ -18,11 +18,17 @@ export async function POST(
     const pattern = path.join(VOICE_MEMOS_DIR, '**', `${baseFilename}.*`);
     const files = await glob(pattern, { nodir: true });
     
-    // Delete all matching files
+    // Filter out the audio file - NEVER delete the audio file
+    const filesToDelete = files.filter(filePath => {
+      const ext = path.extname(filePath).toLowerCase();
+      return ext !== '.m4a' && ext !== '.mp3' && ext !== '.wav' && ext !== '.aac';
+    });
+    
+    // Delete all matching files (excluding audio)
     const deletedFiles: string[] = [];
     const errors: string[] = [];
     
-    for (const filePath of files) {
+    for (const filePath of filesToDelete) {
       try {
         await fs.unlink(filePath);
         deletedFiles.push(path.relative(VOICE_MEMOS_DIR, filePath));
