@@ -22,13 +22,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Get the base filename without extension
     const baseFilename = path.basename(filename, path.extname(filename));
     
-    // Construct the plugin directory path
-    const pluginDir = path.join(VOICE_MEMOS_DIR, plugin);
+    // Construct the plugin directory path (normalize common alias 'todos' -> 'TODOs')
+    const normalizedPlugin = plugin === 'todos' ? 'TODOs' : plugin;
+    const pluginDir = path.join(VOICE_MEMOS_DIR, normalizedPlugin);
     
     // Check if the plugin directory exists
     if (!existsSync(pluginDir)) {
       return NextResponse.json(
-        { error: `Plugin directory '${plugin}' does not exist` },
+        { error: `Plugin directory '${normalizedPlugin}' does not exist` },
         { status: 404 }
       );
     }
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
 
     // Special handling for TODOs: also delete the corresponding action_item file
-    if (plugin === 'TODOs') {
+    if (normalizedPlugin === 'TODOs') {
       await deleteActionItemFile(VOICE_MEMOS_DIR, baseFilename);
     }
 
