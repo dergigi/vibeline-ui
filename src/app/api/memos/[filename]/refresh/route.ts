@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
+import { deleteActionItemFile } from '@/utils/deleteUtils';
 
 export async function POST(
   request: NextRequest,
@@ -42,16 +43,9 @@ export async function POST(
     // Check if any of the deleted files were from the TODOs directory
     const deletedTodosFiles = deletedFiles.filter(file => file.startsWith('TODOs/'));
     if (deletedTodosFiles.length > 0) {
-      const actionItemsDir = path.join(VOICE_MEMOS_DIR, 'action_items');
-      const actionItemPath = path.join(actionItemsDir, `${baseFilename}.txt`);
-      
-      try {
-        await fs.unlink(actionItemPath);
-        deletedFiles.push(path.relative(VOICE_MEMOS_DIR, actionItemPath));
-        console.log(`Also deleted action_item file: ${actionItemPath}`);
-      } catch (error) {
-        // If the action_item file doesn't exist, that's fine - just log it
-        console.log(`Action item file not found: ${actionItemPath}`);
+      const deletedActionItemPath = await deleteActionItemFile(VOICE_MEMOS_DIR, baseFilename);
+      if (deletedActionItemPath) {
+        deletedFiles.push(deletedActionItemPath);
       }
     }
     

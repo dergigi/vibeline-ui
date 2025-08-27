@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
+import { deleteActionItemFile } from '@/utils/deleteUtils';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -53,13 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Special handling for TODOs: also delete the corresponding action_item file
     if (plugin === 'TODOs') {
-      const actionItemsDir = path.join(VOICE_MEMOS_DIR, 'action_items');
-      const actionItemPath = path.join(actionItemsDir, `${baseFilename}.txt`);
-      
-      if (existsSync(actionItemPath)) {
-        await fs.unlink(actionItemPath);
-        console.log(`Also deleted action_item file: ${actionItemPath}`);
-      }
+      await deleteActionItemFile(VOICE_MEMOS_DIR, baseFilename);
     }
 
     return NextResponse.json({ 
