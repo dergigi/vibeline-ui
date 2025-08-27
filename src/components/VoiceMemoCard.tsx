@@ -1003,7 +1003,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                         if (isDeleting['todos']) {
                           cancelDelete('todos');
                         } else {
-                          startDeleteCountdown('todos');
+                          startDeleteCountdown('TODOs');
                         }
                       }}
                       className={`p-1 transition-colors flex items-center gap-1 ${
