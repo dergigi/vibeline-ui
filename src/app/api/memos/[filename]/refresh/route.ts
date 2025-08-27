@@ -38,6 +38,23 @@ export async function POST(
       }
     }
     
+    // Special handling for TODOs: also delete the corresponding action_item file
+    // Check if any of the deleted files were from the TODOs directory
+    const deletedTodosFiles = deletedFiles.filter(file => file.startsWith('TODOs/'));
+    if (deletedTodosFiles.length > 0) {
+      const actionItemsDir = path.join(VOICE_MEMOS_DIR, 'action_items');
+      const actionItemPath = path.join(actionItemsDir, `${baseFilename}.txt`);
+      
+      try {
+        await fs.unlink(actionItemPath);
+        deletedFiles.push(path.relative(VOICE_MEMOS_DIR, actionItemPath));
+        console.log(`Also deleted action_item file: ${actionItemPath}`);
+      } catch (error) {
+        // If the action_item file doesn't exist, that's fine - just log it
+        console.log(`Action item file not found: ${actionItemPath}`);
+      }
+    }
+    
     return NextResponse.json({
       success: true,
       filename: baseFilename,
