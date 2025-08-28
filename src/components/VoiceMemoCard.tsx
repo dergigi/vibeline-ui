@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon, ArrowUpIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon, ArrowUpIcon, PencilIcon } from '@heroicons/react/24/solid';
 import { SpellCheck, Flower, Waypoints } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
@@ -49,6 +49,9 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
   const [isSeeking, setIsSeeking] = useState(false);
   const [showCleanedTranscript, setShowCleanedTranscript] = useState(true);
   const [originalTranscript, setOriginalTranscript] = useState<string | null>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
 
   const SPEED_OPTIONS = [1, 1.5, 2, 3];
 
@@ -313,6 +316,57 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
 
   const handleHashtagClick = (tag: string): void => {
     setSearchTerm(tag);
+  };
+
+  const handleTitleEdit = (): void => {
+    setIsEditingTitle(true);
+    setEditingTitle(memo.title || '');
+  };
+
+  const handleTitleSave = async (): Promise<void> => {
+    if (!editingTitle.trim()) return;
+    
+    setIsSavingTitle(true);
+    try {
+      const response = await fetch('/api/titles/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          filename: memo.filename,
+          title: editingTitle.trim()
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update title');
+      }
+
+      // Update the memo object optimistically
+      memo.title = editingTitle.trim();
+      setIsEditingTitle(false);
+      setEditingTitle('');
+    } catch (error) {
+      console.error('Error updating title:', error);
+    } finally {
+      setIsSavingTitle(false);
+    }
+  };
+
+  const handleTitleCancel = (): void => {
+    setIsEditingTitle(false);
+    setEditingTitle('');
+  };
+
+  const handleTitleKeyDown = (event: React.KeyboardEvent): void => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleTitleSave();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      handleTitleCancel();
+    }
   };
   
   // Function to handle toggling a todo item
@@ -706,36 +760,69 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
               className="block hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                  {memo.title || formatTimeAgo(memo.createdAt)}
-                </h3>
-                {memo.title && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (isDeleting['titles']) {
-                        cancelDelete('titles');
-                      } else {
-                        startDeleteCountdown('titles');
-                      }
-                    }}
-                    className={`p-1 transition-colors flex items-center gap-1 ${
-                      isDeleting['titles'] 
-                        ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
-                        : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                    }`}
-                    title="Refresh title (delete and regenerate)"
-                  >
-                    {isDeleting['titles'] ? (
-                      <>
-                        <TrashIcon className="w-3 h-3" />
-                        <span className="text-xs">{countdown['titles']}s</span>
-                      </>
-                    ) : (
-                      <ArrowPathIcon className="w-3 h-3" />
+                {isEditingTitle ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="text"
+                      value={editingTitle}
+                      onChange={(e) => setEditingTitle(e.target.value)}
+                      onKeyDown={handleTitleKeyDown}
+                      onBlur={handleTitleSave}
+                      className="text-lg font-medium text-gray-900 dark:text-gray-100 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none px-1 py-0.5 flex-1"
+                      autoFocus
+                      disabled={isSavingTitle}
+                    />
+                    {isSavingTitle && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
                     )}
-                  </button>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                      {memo.title || formatTimeAgo(memo.createdAt)}
+                    </h3>
+                    {memo.title && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleTitleEdit();
+                          }}
+                          className="p-1 transition-colors text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                          title="Edit title"
+                        >
+                          <PencilIcon className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (isDeleting['titles']) {
+                              cancelDelete('titles');
+                            } else {
+                              startDeleteCountdown('titles');
+                            }
+                          }}
+                          className={`p-1 transition-colors flex items-center gap-1 ${
+                            isDeleting['titles'] 
+                              ? 'text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300' 
+                              : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                          }`}
+                          title="Refresh title (delete and regenerate)"
+                        >
+                          {isDeleting['titles'] ? (
+                            <>
+                              <TrashIcon className="w-3 h-3" />
+                              <span className="text-xs">{countdown['titles']}s</span>
+                            </>
+                          ) : (
+                            <ArrowPathIcon className="w-3 h-3" />
+                          )}
+                        </button>
+                      </>
+                    )}
+                  </>
                 )}
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
