@@ -359,6 +359,12 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setEditingTitle('');
   };
 
+  const handleTitleBlur = (): void => {
+    // Don't save on blur - only save on explicit Enter key press
+    // Just cancel the editing mode
+    handleTitleCancel();
+  };
+
   const handleTitleKeyDown = (event: React.KeyboardEvent): void => {
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -767,7 +773,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                       value={editingTitle}
                       onChange={(e) => setEditingTitle(e.target.value)}
                       onKeyDown={handleTitleKeyDown}
-                      onBlur={handleTitleSave}
+                      onBlur={handleTitleBlur}
                       className="text-lg font-medium text-gray-900 dark:text-gray-100 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none px-1 py-0.5 flex-1"
                       autoFocus
                       disabled={isSavingTitle}
