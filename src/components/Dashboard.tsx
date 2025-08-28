@@ -3,7 +3,8 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { useSearch } from '@/contexts/SearchContext';
 import { useMemo, useState } from 'react';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
+import { ChevronDownIcon, ChevronUpIcon, PencilIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { Flower, Waypoints } from 'lucide-react';
 
 interface DashboardProps {
   memos: VoiceMemo[];
@@ -113,15 +114,13 @@ const groupMemosByTime = (memos: VoiceMemo[]): GroupedMemos => {
   return grouped;
 };
 
-// Styling per group (reverse fade: newest no bg → older darker)
-const groupBg: Record<keyof GroupedMemos, string> = {
-  // No background for newest
-  today: 'bg-transparent',
-  // Subtle cool tint progressing to darker neutrals for age
-  yesterday: 'bg-blue-50 dark:bg-white/5',
-  twoDaysAgo: 'bg-slate-100 dark:bg-white/10',
-  restOfWeek: 'bg-slate-200 dark:bg-white/20',
-  restOfMonth: 'bg-slate-300 dark:bg-white/30',
+// Opacity per group (fade: newest 100% → older more transparent)
+const groupOpacity: Record<keyof GroupedMemos, string> = {
+  today: 'opacity-100',
+  yesterday: 'opacity-90',
+  twoDaysAgo: 'opacity-80',
+  restOfWeek: 'opacity-50',
+  restOfMonth: 'opacity-25',
 };
 
 const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string }> = {
@@ -130,6 +129,24 @@ const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string
   twoDaysAgo: { letter: 'A', label: 'Antepenultimate (2 days ago)' },
   restOfWeek: { letter: 'W', label: 'Rest of week (3-7 days ago)' },
   restOfMonth: { letter: 'M', label: 'Rest of month (8-31 days ago)' },
+};
+
+// Function to determine which icons to show for a memo (using same logic as SearchContext)
+const getMemoIcons = (memo: VoiceMemo) => {
+  const hasTodos = (memo.todos?.trim().length ?? 0) > 0;
+  const hasPrompts = (memo.prompts?.trim().length ?? 0) > 0;
+  const hasDrafts = (memo.drafts?.trim().length ?? 0) > 0;
+  const hasBlossom = memo.blossom && memo.blossom.url && memo.blossom.url.trim();
+  const hasYoloPost = memo.yolopost && memo.yolopost.id && memo.yolopost.id.trim();
+
+  const icons = [];
+  if (hasYoloPost) icons.push(<Waypoints key="yolopost" className="w-3 h-3" />);
+  if (hasBlossom) icons.push(<Flower key="blossom" className="w-3 h-3" />);
+  if (hasDrafts) icons.push(<PencilIcon key="drafts" className="w-3 h-3" />);
+  if (hasPrompts) icons.push(<SparklesIcon key="prompts" className="w-3 h-3" />);
+  if (hasTodos) icons.push(<CheckIcon key="todos" className="w-3 h-3" />);
+  
+  return icons;
 };
 
 export default function Dashboard({ memos }: DashboardProps) {
@@ -233,7 +250,7 @@ export default function Dashboard({ memos }: DashboardProps) {
               {visible.map(({ group, memo }) => (
                 <div
                   key={memo.path}
-                  className={`flex items-center justify-between text-xs rounded px-2 py-1 ${groupBg[group]}`}
+                  className="flex items-center justify-between text-xs rounded px-2 py-1"
                 >
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <div className="flex items-center gap-1">
@@ -253,11 +270,16 @@ export default function Dashboard({ memos }: DashboardProps) {
                         const el = document.getElementById(`memo-${memo.filename}`);
                         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }}
-                      className="font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline"
+                      className={`font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline ${groupOpacity[group]}`}
                       title="Scroll to memo"
                     >
                       {memo.title || 'Untitled'}
                     </button>
+                    {getMemoIcons(memo).length > 0 && (
+                      <span className="text-gray-400 dark:text-gray-500 flex-shrink-0 flex items-center gap-0.5">
+                        {getMemoIcons(memo)}
+                      </span>
+                    )}
                     <a
                       href={`/memos/${memo.filename}`}
                       target="_blank"
