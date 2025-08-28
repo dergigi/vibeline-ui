@@ -97,9 +97,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     return result;
   };
 
-  const countTodos = (todos: string): number => {
-    return cleanTodos(todos).lines.length;
-  };
+
 
   const togglePlayPause = (): void => {
     if (audioRef.current) {
@@ -466,6 +464,34 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
       setOptimisticTodos(null);
     }
   }, [memo.path, memo.todos, optimisticTodos]);
+
+  const handleClearTodos = useCallback(async () => {
+    // Optimistic UI update - clear todos
+    setOptimisticTodos('TODOs cleared');
+    
+    try {
+      const response = await fetch('/api/todos/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          filename: memo.filename,
+          content: ''
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to clear todos');
+      }
+
+      // Update the memo object optimistically
+      memo.todos = 'TODOs cleared';
+    } catch (error) {
+      console.error('Failed to clear todos:', error);
+      setOptimisticTodos(null);
+    }
+  }, [memo]);
   
   const handleShare = async (): Promise<void> => {
     try {
@@ -1088,7 +1114,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                 >
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      TODOs ({memo.todos ? countTodos(memo.todos) : 0})
+                      TODOs
                     </h4>
                     <button 
                       onClick={(e) => {
@@ -1124,25 +1150,6 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                         <ChevronDownIcon className="w-4 h-4" />
                       )}
                     </div>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopyTodos();
-                      }}
-                      className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
-                    >
-                      {isTodosCopied ? (
-                        <>
-                          <CheckIcon className="w-3 h-3" />
-                          <span>copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <ClipboardDocumentCheckIcon className="w-3 h-3" />
-                          <span>copy</span>
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
                 {isTodosExpanded && (
@@ -1186,7 +1193,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                       });
                       
                       return hasUncheckedItems ? (
-                        <div className="flex justify-start mt-2">
+                        <div className="flex justify-start mt-2 gap-2">
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1196,6 +1203,35 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                           >
                             <CheckIcon className="w-3 h-3" />
                             <span>all</span>
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyTodos();
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                          >
+                            {isTodosCopied ? (
+                              <>
+                                <CheckIcon className="w-3 h-3" />
+                                <span>copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <ClipboardDocumentCheckIcon className="w-3 h-3" />
+                                <span>copy</span>
+                              </>
+                            )}
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleClearTodos();
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                          >
+                            <TrashIcon className="w-3 h-3" />
+                            <span>clear</span>
                           </button>
                         </div>
                       ) : null;
@@ -1327,24 +1363,28 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
               </div>
               <div className="flex items-center gap-2">
                 {memo.yolopost && (
-                  <button 
-                    onClick={() => window.open(`${NOSTR_PORTAL}/${memo.yolopost!.id}`, '_blank')}
+                  <a 
+                    href={`${NOSTR_PORTAL}/${memo.yolopost!.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                     title="View on Nostr"
                   >
                     <Waypoints className="w-3 h-3" />
                     <span className="font-mono">{memo.yolopost!.id.substring(0, 6)}</span>
-                  </button>
+                  </a>
                 )}
                 {memo.blossom && (
-                  <button 
-                    onClick={() => window.open(memo.blossom!.url, '_blank')}
+                  <a 
+                    href={memo.blossom!.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                     title="Open blossom file"
                   >
                     <Flower className="w-3 h-3" />
                     <span className="font-mono">{memo.blossom.sha256.substring(0, 6)}</span>
-                  </button>
+                  </a>
                 )}
                 <button 
                   onClick={handleShare}

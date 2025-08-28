@@ -3,7 +3,7 @@
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { useSearch } from '@/contexts/SearchContext';
 import { useMemo, useState } from 'react';
-import { ChevronDownIcon, ChevronUpIcon, PencilIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { ChevronDownIcon, ChevronUpIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { Flower, Waypoints } from 'lucide-react';
 
 interface DashboardProps {
@@ -133,7 +133,6 @@ const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string
 
 // Function to determine which icons to show for a memo (using same logic as SearchContext)
 const getMemoIcons = (memo: VoiceMemo) => {
-  const hasTodos = (memo.todos?.trim().length ?? 0) > 0;
   const hasPrompts = (memo.prompts?.trim().length ?? 0) > 0;
   const hasDrafts = (memo.drafts?.trim().length ?? 0) > 0;
   const hasBlossom = memo.blossom && memo.blossom.url && memo.blossom.url.trim();
@@ -144,7 +143,6 @@ const getMemoIcons = (memo: VoiceMemo) => {
   if (hasBlossom) icons.push(<Flower key="blossom" className="w-3 h-3" />);
   if (hasDrafts) icons.push(<PencilIcon key="drafts" className="w-3 h-3" />);
   if (hasPrompts) icons.push(<SparklesIcon key="prompts" className="w-3 h-3" />);
-  if (hasTodos) icons.push(<CheckIcon key="todos" className="w-3 h-3" />);
   
   return icons;
 };
@@ -265,16 +263,15 @@ export default function Dashboard({ memos }: DashboardProps) {
                         {getMemoTime(memo)}
                       </span>
                     </div>
-                    <button
-                      onClick={() => {
-                        const el = document.getElementById(`memo-${memo.filename}`);
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }}
+                    <a
+                      href={`/memos/${memo.filename}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={`font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline ${groupOpacity[group]}`}
-                      title="Scroll to memo"
+                      title="Open memo in new tab"
                     >
                       {memo.title || 'Untitled'}
-                    </button>
+                    </a>
                     {getMemoIcons(memo).length > 0 && (
                       <span className="text-gray-400 dark:text-gray-500 flex-shrink-0 flex items-center gap-0.5">
                         {getMemoIcons(memo)}
