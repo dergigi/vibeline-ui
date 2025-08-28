@@ -236,13 +236,18 @@ export default function Dashboard({ memos }: DashboardProps) {
                   className={`flex items-center justify-between text-xs rounded px-2 py-1 ${groupBg[group]}`}
                 >
                   <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <span
-                      className="text-[10px] w-3 inline-flex items-center justify-center text-gray-400 dark:text-gray-500"
-                      title={groupIndicator[group].label}
-                      aria-label={groupIndicator[group].label}
-                    >
-                      {groupIndicator[group].letter}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="text-[10px] w-3 inline-flex items-center justify-center text-gray-400 dark:text-gray-500"
+                        title={groupIndicator[group].label}
+                        aria-label={groupIndicator[group].label}
+                      >
+                        {groupIndicator[group].letter}
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">
+                        {getMemoTime(memo)}
+                      </span>
+                    </div>
                     <button
                       onClick={() => {
                         const el = document.getElementById(`memo-${memo.filename}`);
@@ -253,9 +258,6 @@ export default function Dashboard({ memos }: DashboardProps) {
                     >
                       {memo.title || 'Untitled'}
                     </button>
-                    <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-                      {getMemoTime(memo)}
-                    </span>
                     <a
                       href={`/memos/${memo.filename}`}
                       target="_blank"
