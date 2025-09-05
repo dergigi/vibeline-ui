@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, ExternalLink, FileText, Play, ChevronDown, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, FileText, Play } from 'lucide-react';
 
 interface ShowNote {
   id: string;
@@ -10,11 +10,6 @@ interface ShowNote {
   filename: string;
   createdAt: string;
   content: string;
-  sections: {
-    type: 'heading' | 'list' | 'text' | 'resources' | 'timestamps';
-    content: string;
-    items?: string[];
-  }[];
 }
 
 interface ShownotesPluginProps {
@@ -30,7 +25,6 @@ const ITEMS_PER_PAGE = 10;
 const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
   const [showNotes, setShowNotes] = useState<ShowNote[]>([]);
   const [displayedNotes, setDisplayedNotes] = useState<ShowNote[]>([]);
-  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Parse show notes from markdown files and fetch titles
@@ -71,57 +65,12 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
           }
         }
 
-        const lines = content.split('\n');
-        const sections: ShowNote['sections'] = [];
-        let currentSection: ShowNote['sections'][0] | null = null;
-
-        lines.forEach(line => {
-          const trimmedLine = line.trim();
-          
-          if (trimmedLine.startsWith('## ')) {
-            // Save previous section
-            if (currentSection) {
-              sections.push(currentSection);
-            }
-            
-            const sectionTitle = trimmedLine.replace('## ', '').toLowerCase();
-            let sectionType: ShowNote['sections'][0]['type'] = 'text';
-            
-            if (sectionTitle.includes('resource') || sectionTitle.includes('link')) {
-              sectionType = 'resources';
-            } else if (sectionTitle.includes('timestamp') || sectionTitle.includes('time')) {
-              sectionType = 'timestamps';
-            } else if (sectionTitle.includes('key point') || sectionTitle.includes('note')) {
-              sectionType = 'list';
-            }
-            
-            currentSection = {
-              type: sectionType,
-              content: trimmedLine.replace('## ', ''),
-              items: []
-            };
-          } else if (trimmedLine.startsWith('- ') && currentSection) {
-            // List item
-            if (!currentSection.items) currentSection.items = [];
-            currentSection.items.push(trimmedLine.replace('- ', ''));
-          } else if (trimmedLine && currentSection && currentSection.type === 'text') {
-            // Regular text content
-            currentSection.content += (currentSection.content ? '\n' : '') + trimmedLine;
-          }
-        });
-
-        // Add the last section
-        if (currentSection) {
-          sections.push(currentSection);
-        }
-
         const showNote: ShowNote = {
           id: file.name,
           title,
           filename: file.name,
           createdAt: file.name.split('_')[0], // Format: YYYYMMDD
-          content,
-          sections
+          content
         };
         
         allShowNotes.push(showNote);
@@ -145,18 +94,6 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
 
   const handleLoadAll = () => {
     setDisplayedNotes(showNotes);
-  };
-
-  const toggleExpanded = (noteId: string) => {
-    setExpandedNotes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(noteId)) {
-        newSet.delete(noteId);
-      } else {
-        newSet.add(noteId);
-      }
-      return newSet;
-    });
   };
 
   const hasMore = displayedNotes.length < showNotes.length;
@@ -184,76 +121,6 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
     return '';
   };
 
-  const renderSection = (section: ShowNote['sections'][0], index: number) => {
-    switch (section.type) {
-      case 'resources':
-        return (
-          <div key={index} className="mt-4">
-            <h4 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2 flex items-center">
-              <ExternalLink className="h-4 w-4 mr-1" />
-              {section.content}
-            </h4>
-            {section.items && (
-              <ul className="space-y-1">
-                {section.items.map((item, idx) => (
-                  <li key={idx} className="text-sm text-gray-600 dark:text-gray-400">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
-      
-      case 'timestamps':
-        return (
-          <div key={index} className="mt-4">
-            <h4 className="text-sm font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              {section.content}
-            </h4>
-            {section.items && (
-              <ul className="space-y-1">
-                {section.items.map((item, idx) => (
-                  <li key={idx} className="text-sm text-gray-600 dark:text-gray-400 font-mono">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
-      
-      case 'list':
-        return (
-          <div key={index} className="mt-4">
-            <h4 className="text-sm font-semibold text-purple-600 dark:text-purple-400 mb-2">
-              {section.content}
-            </h4>
-            {section.items && (
-              <ul className="space-y-1">
-                {section.items.map((item, idx) => (
-                  <li key={idx} className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                    <span className="text-purple-500 mr-2">•</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
-      
-      default:
-        return (
-          <div key={index} className="mt-4">
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              {section.content}
-            </h4>
-          </div>
-        );
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="mb-8">
@@ -262,24 +129,24 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
           Show Notes
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Browse and manage your podcast show notes
+          Browse your show notes
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {displayedNotes.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400">No show notes found</p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-              Create your first show notes by adding markdown files to the shownotes folder
+              Add markdown files to the shownotes folder
             </p>
           </div>
         ) : (
           displayedNotes.map((showNote) => (
             <div
               key={showNote.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -300,7 +167,7 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 ml-4">
+                  <div className="ml-4">
                     <Link
                       href={`/memos/${showNote.filename.replace('.md', '')}`}
                       className="p-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
@@ -308,26 +175,14 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
                     >
                       <Play className="h-4 w-4" />
                     </Link>
-                    <button
-                      onClick={() => toggleExpanded(showNote.id)}
-                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    >
-                      {expandedNotes.has(showNote.id) ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </button>
                   </div>
                 </div>
 
-                {expandedNotes.has(showNote.id) && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
-                      {showNote.sections.map((section, index) => renderSection(section, index))}
-                    </div>
-                  </div>
-                )}
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto">
+                    {showNote.content}
+                  </pre>
+                </div>
               </div>
             </div>
           ))
