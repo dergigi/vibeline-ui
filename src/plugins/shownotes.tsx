@@ -33,88 +33,108 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Parse show notes from markdown files
-    const allShowNotes: ShowNote[] = [];
-    
-    files.forEach(file => {
-      // Skip hidden files
-      if (file.name.startsWith('.')) {
-        return;
-      }
+    // Parse show notes from markdown files and fetch titles
+    const parseShowNotes = async () => {
+      const allShowNotes: ShowNote[] = [];
       
-      const content = file.content || '';
-      if (!content.trim()) return;
-
-      const lines = content.split('\n');
-      const sections: ShowNote['sections'] = [];
-      let currentSection: ShowNote['sections'][0] | null = null;
-      let title = '';
-
-      // Extract title from first heading
-      const titleMatch = content.match(/^#\s+(.+)$/m);
-      if (titleMatch) {
-        title = titleMatch[1];
-      } else {
-        title = file.name.replace(/\.md$/, '').replace(/_/g, ' ');
-      }
-
-      lines.forEach(line => {
-        const trimmedLine = line.trim();
-        
-        if (trimmedLine.startsWith('## ')) {
-          // Save previous section
-          if (currentSection) {
-            sections.push(currentSection);
-          }
-          
-          const sectionTitle = trimmedLine.replace('## ', '').toLowerCase();
-          let sectionType: ShowNote['sections'][0]['type'] = 'text';
-          
-          if (sectionTitle.includes('resource') || sectionTitle.includes('link')) {
-            sectionType = 'resources';
-          } else if (sectionTitle.includes('timestamp') || sectionTitle.includes('time')) {
-            sectionType = 'timestamps';
-          } else if (sectionTitle.includes('key point') || sectionTitle.includes('note')) {
-            sectionType = 'list';
-          }
-          
-          currentSection = {
-            type: sectionType,
-            content: trimmedLine.replace('## ', ''),
-            items: []
-          };
-        } else if (trimmedLine.startsWith('- ') && currentSection) {
-          // List item
-          if (!currentSection.items) currentSection.items = [];
-          currentSection.items.push(trimmedLine.replace('- ', ''));
-        } else if (trimmedLine && currentSection && currentSection.type === 'text') {
-          // Regular text content
-          currentSection.content += (currentSection.content ? '\n' : '') + trimmedLine;
+      for (const file of files) {
+        // Skip hidden files
+        if (file.name.startsWith('.')) {
+          continue;
         }
-      });
+        
+        const content = file.content || '';
+        if (!content.trim()) continue;
 
-      // Add the last section
-      if (currentSection) {
-        sections.push(currentSection);
+        // Get base filename without extension for title lookup
+        const baseFilename = file.name.replace(/\.md$/, '');
+        
+        // Try to fetch title from titles API
+        let title = '';
+        try {
+          const titleResponse = await fetch(`/api/memos/${baseFilename}`);
+          if (titleResponse.ok) {
+            const memoData = await titleResponse.json();
+            title = memoData.title || '';
+          }
+        } catch (error) {
+          console.log('Could not fetch title for', baseFilename);
+        }
+
+        // Fallback to extracting title from markdown content
+        if (!title) {
+          const titleMatch = content.match(/^#\s+(.+)$/m);
+          if (titleMatch) {
+            title = titleMatch[1];
+          } else {
+            title = baseFilename.replace(/_/g, ' ');
+          }
+        }
+
+        const lines = content.split('\n');
+        const sections: ShowNote['sections'] = [];
+        let currentSection: ShowNote['sections'][0] | null = null;
+
+        lines.forEach(line => {
+          const trimmedLine = line.trim();
+          
+          if (trimmedLine.startsWith('## ')) {
+            // Save previous section
+            if (currentSection) {
+              sections.push(currentSection);
+            }
+            
+            const sectionTitle = trimmedLine.replace('## ', '').toLowerCase();
+            let sectionType: ShowNote['sections'][0]['type'] = 'text';
+            
+            if (sectionTitle.includes('resource') || sectionTitle.includes('link')) {
+              sectionType = 'resources';
+            } else if (sectionTitle.includes('timestamp') || sectionTitle.includes('time')) {
+              sectionType = 'timestamps';
+            } else if (sectionTitle.includes('key point') || sectionTitle.includes('note')) {
+              sectionType = 'list';
+            }
+            
+            currentSection = {
+              type: sectionType,
+              content: trimmedLine.replace('## ', ''),
+              items: []
+            };
+          } else if (trimmedLine.startsWith('- ') && currentSection) {
+            // List item
+            if (!currentSection.items) currentSection.items = [];
+            currentSection.items.push(trimmedLine.replace('- ', ''));
+          } else if (trimmedLine && currentSection && currentSection.type === 'text') {
+            // Regular text content
+            currentSection.content += (currentSection.content ? '\n' : '') + trimmedLine;
+          }
+        });
+
+        // Add the last section
+        if (currentSection) {
+          sections.push(currentSection);
+        }
+
+        const showNote: ShowNote = {
+          id: file.name,
+          title,
+          filename: file.name,
+          createdAt: file.name.split('_')[0], // Format: YYYYMMDD
+          content,
+          sections
+        };
+        
+        allShowNotes.push(showNote);
       }
 
-      const showNote: ShowNote = {
-        id: file.name,
-        title,
-        filename: file.name,
-        createdAt: file.name.split('_')[0], // Format: YYYYMMDD
-        content,
-        sections
-      };
+      // Sort by creation date (newest first)
+      allShowNotes.sort((a, b) => b.filename.localeCompare(a.filename));
       
-      allShowNotes.push(showNote);
-    });
+      setShowNotes(allShowNotes);
+      setDisplayedNotes(allShowNotes.slice(0, ITEMS_PER_PAGE));
+    };
 
-    // Sort by creation date (newest first)
-    allShowNotes.sort((a, b) => b.filename.localeCompare(a.filename));
-    
-    setShowNotes(allShowNotes);
-    setDisplayedNotes(allShowNotes.slice(0, ITEMS_PER_PAGE));
+    parseShowNotes();
   }, [files]);
 
   const handleLoadMore = () => {
