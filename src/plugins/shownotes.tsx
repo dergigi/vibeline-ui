@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, Clock, FileText, Play } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface ShowNote {
   id: string;
@@ -178,10 +179,8 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
                   </div>
                 </div>
 
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto">
-                    {showNote.content}
-                  </pre>
+                <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-code:text-gray-800 dark:prose-code:text-gray-200 prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-pre:bg-gray-50 dark:prose-pre:bg-gray-900">
+                  <ReactMarkdown>{showNote.content}</ReactMarkdown>
                 </div>
               </div>
             </div>
