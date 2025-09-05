@@ -123,21 +123,8 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
   };
 
   return (
-    <>
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-lg">
             <FileText className="h-8 w-8 text-white" />
@@ -167,10 +154,9 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
             {displayedNotes.map((showNote, index) => (
               <div
                 key={showNote.id}
-                className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700 overflow-hidden"
+                className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in slide-in-from-bottom-4"
                 style={{
-                  animationDelay: `${index * 100}ms`,
-                  animation: 'fadeInUp 0.6s ease-out forwards'
+                  animationDelay: `${index * 100}ms`
                 }}
               >
                 {/* Gradient accent bar */}
@@ -252,9 +238,8 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
             </button>
           </div>
         )}
-        </div>
       </div>
-    </>
+    </div>
   );
 };
 
