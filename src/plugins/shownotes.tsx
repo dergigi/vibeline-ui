@@ -174,9 +174,14 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                        {showNote.title}
-                      </h3>
+                      <Link
+                        href={`/memos/${showNote.filename.replace('.md', '')}`}
+                        className="block hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
+                      >
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                          {showNote.title}
+                        </h3>
+                      </Link>
                       <div className="flex items-center space-x-6 text-sm">
                         <div className="flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full">
                           <Calendar className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
