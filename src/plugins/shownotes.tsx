@@ -54,7 +54,7 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
             title = memoData.title || '';
           }
         } catch (error) {
-          console.log('Could not fetch title for', baseFilename);
+          console.log('Could not fetch title for', baseFilename, error);
         }
 
         // Fallback to extracting title from markdown content
