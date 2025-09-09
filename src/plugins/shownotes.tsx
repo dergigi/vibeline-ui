@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, FileText, Play, Share } from 'lucide-react';
+import { Calendar, Clock, FileText, Play } from 'lucide-react';
+import { ShareIcon } from '@heroicons/react/24/solid';
 import ReactMarkdown from 'react-markdown';
 
 interface ShowNote {
@@ -241,7 +242,7 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
                       className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
                       title="Open file in Finder"
                     >
-                      <Share className="w-3 h-3" />
+                      <ShareIcon className="w-3 h-3" />
                       <span>file</span>
                     </button>
                   </div>
