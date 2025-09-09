@@ -25,6 +25,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
       filePath = path.join(TRANSCRIPTS_DIR, `${filename}.txt`);
       normalizedPath = path.normalize(filePath);
+    } else if (fileType === 'shownotes') {
+      // For shownotes files, look in the shownotes directory with .md extension
+      const SHOWNOTES_DIR = path.join(VOICE_MEMOS_DIR, 'shownotes');
+      filePath = path.join(SHOWNOTES_DIR, filename);
+      normalizedPath = path.normalize(filePath);
     } else {
       // For audio files (default behavior)
       filePath = path.join(VOICE_MEMOS_DIR, filename);
