@@ -232,7 +232,25 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
                     prose-table:border-collapse prose-table:w-full
                     prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-600 prose-th:bg-gray-50 dark:prose-th:bg-gray-800 prose-th:px-4 prose-th:py-2
                     prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-600 prose-td:px-4 prose-td:py-2">
-                    <ReactMarkdown>{showNote.content}</ReactMarkdown>
+                    <ReactMarkdown 
+                      components={{
+                        // Custom component overrides if needed
+                        h1: ({children}) => <h1 className="text-3xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100">{children}</h1>,
+                        h2: ({children}) => <h2 className="text-2xl font-semibold mb-4 mt-6 text-gray-900 dark:text-gray-100">{children}</h2>,
+                        h3: ({children}) => <h3 className="text-xl font-semibold mb-3 mt-5 text-gray-900 dark:text-gray-100">{children}</h3>,
+                        p: ({children}) => <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">{children}</p>,
+                        ul: ({children}) => <ul className="my-4 list-disc list-inside">{children}</ul>,
+                        ol: ({children}) => <ol className="my-4 list-decimal list-inside">{children}</ol>,
+                        li: ({children}) => <li className="text-gray-700 dark:text-gray-300 mb-2">{children}</li>,
+                        strong: ({children}) => <strong className="text-gray-900 dark:text-gray-100 font-semibold">{children}</strong>,
+                        code: ({children}) => <code className="text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md text-sm">{children}</code>,
+                        pre: ({children}) => <pre className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-x-auto">{children}</pre>,
+                        blockquote: ({children}) => <blockquote className="border-l-4 border-blue-500 pl-6 italic">{children}</blockquote>,
+                        a: ({children, href}) => <a href={href} className="text-blue-600 dark:text-blue-400 no-underline hover:underline">{children}</a>,
+                      }}
+                    >
+                      {showNote.content}
+                    </ReactMarkdown>
                   </div>
 
                   {/* Action buttons */}
