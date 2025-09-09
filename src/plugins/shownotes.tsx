@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, FileText, Play } from 'lucide-react';
+import { Calendar, Clock, FileText, Play, Share } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 interface ShowNote {
@@ -122,6 +122,24 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
     return '';
   };
 
+  const handleOpenInFinder = async (filename: string): Promise<void> => {
+    try {
+      const response = await fetch('/api/open-in-finder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filename }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to open file in Finder');
+      }
+    } catch (error) {
+      console.error('Error opening file in Finder:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-6xl mx-auto px-6 py-12">
@@ -214,6 +232,18 @@ const ShownotesPlugin: React.FC<ShownotesPluginProps> = ({ files }) => {
                     prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-600 prose-th:bg-gray-50 dark:prose-th:bg-gray-800 prose-th:px-4 prose-th:py-2
                     prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-600 prose-td:px-4 prose-td:py-2">
                     <ReactMarkdown>{showNote.content}</ReactMarkdown>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex justify-end mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <button
+                      onClick={() => handleOpenInFinder(showNote.filename)}
+                      className="text-xs px-3 py-1.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1 min-w-[80px] justify-center"
+                      title="Open file in Finder"
+                    >
+                      <Share className="w-3 h-3" />
+                      <span>file</span>
+                    </button>
                   </div>
                 </div>
               </div>
