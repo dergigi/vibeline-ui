@@ -14,6 +14,7 @@ interface SearchContextType {
 
 interface SearchProviderProps {
   children: React.ReactNode;
+  isArchiveView?: boolean;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
@@ -40,7 +41,7 @@ const containsAllPhrases = (text: string, phrases: string[]): boolean => {
   return phrases.every(phrase => lowerText.includes(phrase.toLowerCase()));
 };
 
-export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
+export const SearchProvider: React.FC<SearchProviderProps> = ({ children, isArchiveView = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [memos, setMemos] = useState<VoiceMemo[]>([]);
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
@@ -60,6 +61,11 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   // Filter memos based on search term and active filters
   const filteredMemos = useMemo(() => {
     let filtered = memos;
+    
+    // By default, hide archived memos on the main view (not on archive pages)
+    if (!isArchiveView && !activeFilters.has('archived')) {
+      filtered = filtered.filter(memo => !memo.archivePath);
+    }
     
     // Apply text search
     if (searchTerm) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { PencilIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/solid';
+import { PencilIcon, SparklesIcon, CheckIcon, ArchiveBoxIcon } from '@heroicons/react/24/solid';
 import { Flower, Waypoints } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 
@@ -9,6 +9,17 @@ export function FilterButtons() {
 
   return (
     <div className="flex gap-2">
+      <button
+        onClick={() => toggleFilter('archived')}
+        className={`p-1.5 rounded-md transition-colors ${
+          activeFilters.has('archived')
+            ? 'bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+        title="Include archived memos"
+      >
+        <ArchiveBoxIcon className="w-3 h-3" />
+      </button>
       <button
         onClick={() => toggleFilter('todos')}
         className={`p-1.5 rounded-md transition-colors ${

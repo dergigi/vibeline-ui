@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { BlossomData } from '@/types/VoiceMemo';
+import { getBasePath, buildAudioUrl } from '@/lib/archivePaths';
 
 interface Memo {
   filename: string;
@@ -13,6 +14,7 @@ interface Memo {
   createdAt: string;
   path: string;
   audioUrl: string;
+  archivePath?: string;
   blossom?: {
     url: string;
     sha256: string;
@@ -83,72 +85,103 @@ function parseTimestampFromFilename(filename: string): string {
   ).toISOString();
 }
 
+async function getMemosFromDir(voiceMemosDir: string, archivePath?: string): Promise<Memo[]> {
+  const baseDir = getBasePath(voiceMemosDir, archivePath);
+  
+  const TRANSCRIPTS_DIR = path.join(baseDir, 'transcripts');
+  const SUMMARIES_DIR = path.join(baseDir, 'summaries');
+  const TODOS_DIR = path.join(baseDir, 'TODOs');
+  const TITLES_DIR = path.join(baseDir, 'titles');
+  const BLOSSOMS_DIR = path.join(baseDir, 'blossoms');
+  const YOLOPOSTS_DIR = path.join(baseDir, 'yoloposts');
+
+  // Get all audio files from the directory
+  let audioFiles: string[];
+  try {
+    audioFiles = (await fs.readdir(baseDir))
+      .filter(file => file.endsWith('.m4a'));
+  } catch {
+    return []; // Directory doesn't exist or can't be read
+  }
+
+  // Process each audio file and gather related content
+  const memos = await Promise.all(
+    audioFiles.map(async (audioFile) => {
+      const baseFilename = path.basename(audioFile, '.m4a');
+      
+      // Get content from each plugin directory
+      // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
+      const [transcript, originalTranscript, summary, todos, title, blossomData, yolopostData] = await Promise.all([
+        readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
+        readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
+        readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
+        readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
+        readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`)),
+        readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`)),
+        readYoloPostDataIfExists(path.join(YOLOPOSTS_DIR, `${baseFilename}.json`))
+      ]);
+
+      // If .txt.orig exists, it means the main .txt file is cleaned
+      const isCleanedTranscript = !!originalTranscript;
+
+      const memo: Memo = {
+        filename: baseFilename,
+        transcript,
+        isCleanedTranscript,
+        summary,
+        todos,
+        title: title.trim() || undefined,
+        path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
+        createdAt: parseTimestampFromFilename(baseFilename),
+        audioUrl: buildAudioUrl(baseFilename, archivePath),
+        archivePath,
+        blossom: blossomData || undefined,
+        yolopost: yolopostData || undefined
+      };
+
+      return memo;
+    })
+  );
+
+  return memos;
+}
+
 export async function GET() {
   try {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
-    const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
-    const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
-    const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
-    const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
-    const BLOSSOMS_DIR = path.join(VOICE_MEMOS_DIR, 'blossoms');
-    const YOLOPOSTS_DIR = path.join(VOICE_MEMOS_DIR, 'yoloposts');
+    const ARCHIVE_DIR = path.join(VOICE_MEMOS_DIR, 'archive');
 
-    // Ensure default directories exist
+    // Ensure default directories exist for root
     await Promise.all([
-      fs.mkdir(TRANSCRIPTS_DIR, { recursive: true }),
-      fs.mkdir(SUMMARIES_DIR, { recursive: true }),
-      fs.mkdir(TODOS_DIR, { recursive: true })
+      fs.mkdir(path.join(VOICE_MEMOS_DIR, 'transcripts'), { recursive: true }),
+      fs.mkdir(path.join(VOICE_MEMOS_DIR, 'summaries'), { recursive: true }),
+      fs.mkdir(path.join(VOICE_MEMOS_DIR, 'TODOs'), { recursive: true })
     ]);
 
-    // Get all audio files as the source of truth
-    const audioFiles = (await fs.readdir(VOICE_MEMOS_DIR))
-      .filter(file => file.endsWith('.m4a'));
+    // Get current (non-archived) memos
+    const currentMemos = await getMemosFromDir(VOICE_MEMOS_DIR);
 
-    // Process each audio file and gather related content
-    const memos = await Promise.all(
-      audioFiles.map(async (audioFile) => {
-        const baseFilename = path.basename(audioFile, '.m4a');
-        
-        // Get content from each plugin directory
-        // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
-        const [transcript, originalTranscript, summary, todos, title, blossomData, yolopostData] = await Promise.all([
-          readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
-          readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
-          readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
-          readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
-          readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`)),
-          readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`)),
-          readYoloPostDataIfExists(path.join(YOLOPOSTS_DIR, `${baseFilename}.json`))
-        ]);
+    // Get archived memos from all archive folders
+    let archivedMemos: Memo[] = [];
+    try {
+      const archiveFolders = await fs.readdir(ARCHIVE_DIR);
+      const archiveResults = await Promise.all(
+        archiveFolders.map(folder => getMemosFromDir(VOICE_MEMOS_DIR, folder))
+      );
+      archivedMemos = archiveResults.flat();
+    } catch {
+      // Archive directory doesn't exist yet, that's fine
+    }
 
-        // If .txt.orig exists, it means the main .txt file is cleaned
-        const isCleanedTranscript = !!originalTranscript;
-
-        const memo: Memo = {
-          filename: baseFilename,
-          transcript,
-          isCleanedTranscript,
-          summary,
-          todos,
-          title: title.trim() || undefined,
-          path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
-          createdAt: parseTimestampFromFilename(baseFilename),
-          audioUrl: `/api/audio/${baseFilename}.m4a`,
-          blossom: blossomData || undefined,
-          yolopost: yolopostData || undefined
-        };
-
-        return memo;
-      })
-    );
+    const allMemos = [...currentMemos, ...archivedMemos];
 
     // Sort by creation date (newest first)
-    memos.sort((a, b) => b.filename.localeCompare(a.filename));
+    allMemos.sort((a, b) => b.filename.localeCompare(a.filename));
 
-    return NextResponse.json(memos);
+    return NextResponse.json(allMemos);
   } catch (error) {
     console.error('Error processing memos:', error);
     return NextResponse.json({ error: 'Failed to process memos' }, { status: 500 });
   }
-} 
+}

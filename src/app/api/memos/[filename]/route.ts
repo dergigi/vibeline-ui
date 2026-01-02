@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { BlossomData } from '@/types/VoiceMemo';
+import { getBasePath, buildAudioUrl } from '@/lib/archivePaths';
 
 async function readFileIfExists(filePath: string): Promise<string | undefined> {
   try {
@@ -60,12 +61,18 @@ export async function GET(
   try {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
-    const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
-    const SUMMARIES_DIR = path.join(VOICE_MEMOS_DIR, 'summaries');
-    const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
-    const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
-    const BLOSSOMS_DIR = path.join(VOICE_MEMOS_DIR, 'blossoms');
-    const YOLOPOSTS_DIR = path.join(VOICE_MEMOS_DIR, 'yoloposts');
+    
+    // Check for archive query param
+    const url = new URL(request.url);
+    const archivePath = url.searchParams.get('archive') || undefined;
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    
+    const TRANSCRIPTS_DIR = path.join(baseDir, 'transcripts');
+    const SUMMARIES_DIR = path.join(baseDir, 'summaries');
+    const TODOS_DIR = path.join(baseDir, 'TODOs');
+    const TITLES_DIR = path.join(baseDir, 'titles');
+    const BLOSSOMS_DIR = path.join(baseDir, 'blossoms');
+    const YOLOPOSTS_DIR = path.join(baseDir, 'yoloposts');
 
     const { filename } = await params;
     const baseFilename = filename;
@@ -96,7 +103,8 @@ export async function GET(
       yolopost: yolopostData,
       path: path.join(TODOS_DIR, `${baseFilename}.md`),
       createdAt: parseTimestampFromFilename(baseFilename),
-      audioUrl: `/api/audio/${baseFilename}.m4a`
+      audioUrl: buildAudioUrl(baseFilename, archivePath),
+      archivePath
     };
 
     return NextResponse.json(memo);
@@ -104,4 +112,4 @@ export async function GET(
     console.error('Error processing memo:', error);
     return NextResponse.json({ error: 'Failed to process memo' }, { status: 500 });
   }
-} 
+}
