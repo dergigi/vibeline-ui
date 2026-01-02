@@ -27,16 +27,12 @@ function formatMonthName(folderName: string): string {
 const ITEMS_PER_PAGE = 10;
 
 function MonthlySummaryCard({ summary }: { summary: string }) {
-  // Parse markdown sections for better display
+  // Skip the title line and get the content
   const lines = summary.split('\n');
-  const title = lines[0]?.replace(/^#\s*/, '') || 'Monthly Summary';
   const content = lines.slice(1).join('\n').trim();
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
-      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-        {title}
-      </h4>
       <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
         {content.replace(/\*\*/g, '').replace(/-{3,}/g, '')}
       </div>
