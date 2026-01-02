@@ -264,7 +264,7 @@ export default function Dashboard({ memos }: DashboardProps) {
                       </span>
                     </div>
                     <a
-                      href={`/memos/${memo.filename}`}
+                      href={`/memos/${memo.filename}${memo.archivePath ? `?archive=${memo.archivePath}` : ''}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`font-medium text-gray-900 dark:text-gray-100 truncate text-left hover:underline ${groupOpacity[group]}`}
@@ -278,7 +278,7 @@ export default function Dashboard({ memos }: DashboardProps) {
                       </span>
                     )}
                     <a
-                      href={`/memos/${memo.filename}`}
+                      href={`/memos/${memo.filename}${memo.archivePath ? `?archive=${memo.archivePath}` : ''}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ml-auto"

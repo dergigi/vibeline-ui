@@ -788,7 +788,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <Link
-              href={`/memos/${memo.filename}`}
+              href={`/memos/${memo.filename}${memo.archivePath ? `?archive=${memo.archivePath}` : ''}`}
               className="block hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
               <div className="flex items-center gap-2">

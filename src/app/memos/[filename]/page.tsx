@@ -4,15 +4,18 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider } from '@/contexts/SearchContext';
 import type { Metadata } from 'next';
 
-async function getMemo(filename: string) {
+async function getMemo(filename: string, archivePath?: string) {
   const port = process.env.PORT || '555';
-  const response = await fetch(
-    new URL(
-      `/api/memos/${filename}`,
-      typeof window !== 'undefined' ? window.location.protocol + '//' + window.location.host : `http://localhost:${port}`
-    ),
-    { cache: 'no-store' }
+  const url = new URL(
+    `/api/memos/${filename}`,
+    typeof window !== 'undefined' ? window.location.protocol + '//' + window.location.host : `http://localhost:${port}`
   );
+  
+  if (archivePath) {
+    url.searchParams.set('archive', archivePath);
+  }
+  
+  const response = await fetch(url, { cache: 'no-store' });
 
   if (!response.ok) {
     return null;
@@ -21,9 +24,15 @@ async function getMemo(filename: string) {
   return response.json();
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ filename: string }> }): Promise<Metadata> {
+interface PageProps {
+  params: Promise<{ filename: string }>;
+  searchParams: Promise<{ archive?: string }>;
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { filename } = await params;
-  const memo = await getMemo(filename);
+  const { archive } = await searchParams;
+  const memo = await getMemo(filename, archive);
 
   if (!memo) {
     return {
@@ -37,24 +46,29 @@ export async function generateMetadata({ params }: { params: Promise<{ filename:
   };
 }
 
-export default async function MemoPage({ params }: { params: Promise<{ filename: string }> }) {
+export default async function MemoPage({ params, searchParams }: PageProps) {
   const { filename } = await params;
-  const memo = await getMemo(filename);
+  const { archive } = await searchParams;
+  const memo = await getMemo(filename, archive);
 
   if (!memo) {
     notFound();
   }
 
+  // Determine back link based on whether it's an archived memo
+  const backHref = archive ? `/archive/${archive}` : '/';
+  const backText = archive ? `← Back to ${archive}` : '← Back to all memos';
+
   return (
-    <SearchProvider>
+    <SearchProvider isArchiveView={!!archive}>
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="mb-8">
             <Link
-              href="/"
+              href={backHref}
               className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
             >
-              ← Back to all memos
+              {backText}
             </Link>
           </div>
           <VoiceMemoCard memo={memo} isMemoPage={true} />
@@ -62,4 +76,4 @@ export default async function MemoPage({ params }: { params: Promise<{ filename:
       </main>
     </SearchProvider>
   );
-} 
+}
