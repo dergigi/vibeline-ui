@@ -33,36 +33,12 @@ function MonthlySummaryCard({ summary }: { summary: string }) {
   const content = lines.slice(1).join('\n').trim();
   
   return (
-    <div className="mb-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-800 overflow-hidden">
-      <div className="p-4 flex items-center gap-3 border-b border-amber-200 dark:border-amber-800">
-        <div className="w-10 h-10 rounded-lg bg-amber-500 dark:bg-amber-600 flex items-center justify-center">
-          <ArchiveBoxIcon className="w-5 h-5 text-white" />
-        </div>
-        <h2 className="font-semibold text-gray-900 dark:text-white">{title}</h2>
-      </div>
-      
-      <div className="px-4 pb-4 pt-2">
-        <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-          {content.split('\n\n').map((paragraph, idx) => {
-            if (paragraph.startsWith('**')) {
-              // Bold headings
-              const heading = paragraph.replace(/\*\*/g, '');
-              return <h3 key={idx} className="text-base font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">{heading}</h3>;
-            }
-            if (paragraph.startsWith('* ')) {
-              // Bullet list
-              const items = paragraph.split('\n').filter(line => line.startsWith('* '));
-              return (
-                <ul key={idx} className="list-disc list-inside space-y-1 my-2">
-                  {items.map((item, i) => (
-                    <li key={i} className="text-sm">{item.replace(/^\*\s+/, '').replace(/\*\*/g, '')}</li>
-                  ))}
-                </ul>
-              );
-            }
-            return <p key={idx} className="text-sm my-2">{paragraph}</p>;
-          })}
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
+      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+        {title}
+      </h4>
+      <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+        {content.replace(/\*\*/g, '').replace(/-{3,}/g, '')}
       </div>
     </div>
   );
