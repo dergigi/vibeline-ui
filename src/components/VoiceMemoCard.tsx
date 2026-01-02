@@ -3,7 +3,7 @@
 import React from 'react';
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { motion } from 'framer-motion';
-import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon, ArrowUpIcon, PencilIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PauseIcon, ChevronDownIcon, ChevronUpIcon, ArrowPathIcon, CheckIcon, ShareIcon, SparklesIcon, ClipboardDocumentCheckIcon, PencilSquareIcon, TrashIcon, ForwardIcon, BackwardIcon, ArrowUpIcon, PencilIcon, ArchiveBoxIcon } from '@heroicons/react/24/solid';
 import { SpellCheck, Flower, Waypoints } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearch } from '@/contexts/SearchContext';
@@ -813,6 +813,14 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                       {memo.title || formatTimeAgo(memo.createdAt)}
                     </h3>
+                    {memo.archivePath && (
+                      <span 
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300"
+                        title={`Archived: ${memo.archivePath}`}
+                      >
+                        <ArchiveBoxIcon className="w-3 h-3" />
+                      </span>
+                    )}
                     {memo.title && (
                       <>
                         <button

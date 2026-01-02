@@ -23,4 +23,5 @@ export interface VoiceMemo {
   yolopost?: {
     id: string;
   };
+  archivePath?: string; // e.g. "2025-12" or undefined for current
 }

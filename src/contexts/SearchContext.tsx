@@ -61,6 +61,11 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const filteredMemos = useMemo(() => {
     let filtered = memos;
     
+    // By default, hide archived memos unless 'archived' filter is active
+    if (!activeFilters.has('archived')) {
+      filtered = filtered.filter(memo => !memo.archivePath);
+    }
+    
     // Apply text search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
