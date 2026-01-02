@@ -7,7 +7,7 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterButtons } from '@/components/FilterButtons';
-import { ArrowLeftIcon, ArchiveBoxIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
 
 interface ApiVoiceMemo extends Omit<VoiceMemo, 'createdAt'> {
   createdAt: string;
@@ -27,8 +27,6 @@ function formatMonthName(folderName: string): string {
 const ITEMS_PER_PAGE = 10;
 
 function MonthlySummaryCard({ summary }: { summary: string }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
   // Parse markdown sections for better display
   const lines = summary.split('\n');
   const title = lines[0]?.replace(/^#\s*/, '') || 'Monthly Summary';
@@ -36,51 +34,36 @@ function MonthlySummaryCard({ summary }: { summary: string }) {
   
   return (
     <div className="mb-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-800 overflow-hidden">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-amber-100/50 dark:hover:bg-amber-800/20 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-500 dark:bg-amber-600 flex items-center justify-center">
-            <ArchiveBoxIcon className="w-5 h-5 text-white" />
-          </div>
-          <div className="text-left">
-            <h2 className="font-semibold text-gray-900 dark:text-white">{title}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Click to {isExpanded ? 'collapse' : 'expand'}</p>
-          </div>
+      <div className="p-4 flex items-center gap-3 border-b border-amber-200 dark:border-amber-800">
+        <div className="w-10 h-10 rounded-lg bg-amber-500 dark:bg-amber-600 flex items-center justify-center">
+          <ArchiveBoxIcon className="w-5 h-5 text-white" />
         </div>
-        {isExpanded ? (
-          <ChevronUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        ) : (
-          <ChevronDownIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        )}
-      </button>
+        <h2 className="font-semibold text-gray-900 dark:text-white">{title}</h2>
+      </div>
       
-      {isExpanded && (
-        <div className="px-4 pb-4">
-          <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-            {content.split('\n\n').map((paragraph, idx) => {
-              if (paragraph.startsWith('**')) {
-                // Bold headings
-                const heading = paragraph.replace(/\*\*/g, '');
-                return <h3 key={idx} className="text-base font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">{heading}</h3>;
-              }
-              if (paragraph.startsWith('* ')) {
-                // Bullet list
-                const items = paragraph.split('\n').filter(line => line.startsWith('* '));
-                return (
-                  <ul key={idx} className="list-disc list-inside space-y-1 my-2">
-                    {items.map((item, i) => (
-                      <li key={i} className="text-sm">{item.replace(/^\*\s+/, '').replace(/\*\*/g, '')}</li>
-                    ))}
-                  </ul>
-                );
-              }
-              return <p key={idx} className="text-sm my-2">{paragraph}</p>;
-            })}
-          </div>
+      <div className="px-4 pb-4 pt-2">
+        <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+          {content.split('\n\n').map((paragraph, idx) => {
+            if (paragraph.startsWith('**')) {
+              // Bold headings
+              const heading = paragraph.replace(/\*\*/g, '');
+              return <h3 key={idx} className="text-base font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">{heading}</h3>;
+            }
+            if (paragraph.startsWith('* ')) {
+              // Bullet list
+              const items = paragraph.split('\n').filter(line => line.startsWith('* '));
+              return (
+                <ul key={idx} className="list-disc list-inside space-y-1 my-2">
+                  {items.map((item, i) => (
+                    <li key={i} className="text-sm">{item.replace(/^\*\s+/, '').replace(/\*\*/g, '')}</li>
+                  ))}
+                </ul>
+              );
+            }
+            return <p key={idx} className="text-sm my-2">{paragraph}</p>;
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
