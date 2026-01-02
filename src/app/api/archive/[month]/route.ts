@@ -19,6 +19,11 @@ interface Memo {
   yolopost?: { id: string };
 }
 
+interface ArchiveMonthResponse {
+  memos: Memo[];
+  monthlySummary?: string;
+}
+
 async function readFileIfExists(filePath: string): Promise<string> {
   try {
     return await fs.readFile(filePath, 'utf-8');
@@ -137,7 +142,15 @@ export async function GET(
     // Sort by filename descending (newest first)
     memos.sort((a, b) => b.filename.localeCompare(a.filename));
 
-    return NextResponse.json(memos);
+    // Read monthly summary if it exists
+    const monthlySummary = await readFileIfExists(path.join(baseDir, 'MONTHLY_SUMMARY.md'));
+
+    const response: ArchiveMonthResponse = {
+      memos,
+      monthlySummary: monthlySummary || undefined
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching archive memos:', error);
     return NextResponse.json({ error: 'Failed to fetch archive memos' }, { status: 500 });
