@@ -7,15 +7,22 @@ async function readMonthlySummary(folderPath: string): Promise<{ hasSummary: boo
     const summaryPath = path.join(folderPath, 'MONTHLY_SUMMARY.md');
     const content = await fs.readFile(summaryPath, 'utf-8');
     if (content.trim()) {
-      // Get a preview - skip the title line and get meaningful content
-      const lines = content.split('\n').filter(line => line.trim() && !line.startsWith('#') && !line.startsWith('**'));
+      // Split into paragraphs and get the last one
+      const paragraphs = content.split('\n\n')
+        .map(p => p.trim())
+        .filter(p => p && !p.startsWith('#'));
+      
+      const lastParagraph = paragraphs[paragraphs.length - 1] || '';
+      
       // Strip markdown formatting for cleaner preview
-      const preview = lines.join(' ')
+      const preview = lastParagraph
         .replace(/\*\*/g, '')
         .replace(/\*/g, '')
         .replace(/-{3,}/g, '')
-        .slice(0, 200).trim();
-      return { hasSummary: true, summaryPreview: preview + (preview.length >= 200 ? '...' : '') };
+        .replace(/\n/g, ' ')
+        .trim();
+      
+      return { hasSummary: true, summaryPreview: preview };
     }
     return { hasSummary: false };
   } catch {
