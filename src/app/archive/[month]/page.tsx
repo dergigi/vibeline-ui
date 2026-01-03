@@ -34,6 +34,13 @@ function formatMonthName(folderName: string): string {
 }
 
 
+const MOOD_COLOR_CLASSES = {
+  yellow: 'text-amber-600 dark:text-amber-400',
+  green: 'text-emerald-600 dark:text-emerald-400',
+  blue: 'text-blue-600 dark:text-blue-400',
+  red: 'text-red-600 dark:text-red-400',
+} as const;
+
 function MonthlySummaryCard({ summary, stats, mood }: { summary?: string; stats: MonthlyStats | null; mood: MoodAnalysis | null }) {
   // Skip the title line and get the content
   const content = summary 
@@ -48,13 +55,23 @@ function MonthlySummaryCard({ summary, stats, mood }: { summary?: string; stats:
           {stats.totalDuration > 0 && ` · ${formatTotalDuration(stats.totalDuration)} recording`}
           {stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
           {stats.openTodos > 0 && ` · ${stats.openTodos} open ${stats.openTodos === 1 ? 'todo' : 'todos'}`}
-          {mood && mood.topEmotions.length > 0 && ` · Feeling: ${mood.topEmotions.join(', ')}`}
         </p>
       )}
       {content && (
         <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
           {content.replace(/\*\*/g, '').replace(/-{3,}/g, '')}
         </div>
+      )}
+      {mood && mood.topEmotions.length > 0 && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+          Feeling{' '}
+          {mood.topEmotions.map((e, i) => (
+            <span key={e.emotion}>
+              <span className={MOOD_COLOR_CLASSES[e.color]}>{e.emotion}</span>
+              {i < mood.topEmotions.length - 1 && ', '}
+            </span>
+          ))}
+        </p>
       )}
     </div>
   );

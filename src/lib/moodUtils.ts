@@ -137,9 +137,26 @@ export const EMOTIONS: EmotionsType = {
   }
 };
 
+export interface EmotionWithColor {
+  emotion: string;
+  color: MoodColor;
+}
+
 export interface MoodAnalysis {
   dominant: MoodColor | null;
-  topEmotions: string[];
+  topEmotions: EmotionWithColor[];
+}
+
+/**
+ * Returns the mood color for a given emotion, or null if not found.
+ */
+export function getEmotionColor(emotion: string): MoodColor | null {
+  for (const [color, category] of Object.entries(EMOTIONS)) {
+    if (Object.keys(category.emotions).some(e => e.toLowerCase() === emotion.toLowerCase())) {
+      return color as MoodColor;
+    }
+  }
+  return null;
 }
 
 /**
@@ -180,11 +197,14 @@ export function analyzeEmotions(text: string): MoodAnalysis {
   const dominant = (Object.entries(quadrantCounts) as [MoodColor, number][])
     .sort((a, b) => b[1] - a[1])[0][0];
 
-  // Get top 3 emotions
-  const topEmotions = Object.entries(emotionCounts)
+  // Get top 3 emotions with their colors
+  const topEmotions: EmotionWithColor[] = Object.entries(emotionCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(([emotion]) => emotion);
+    .map(([emotion]) => ({
+      emotion,
+      color: getEmotionColor(emotion)!
+    }));
 
   return { dominant, topEmotions };
 }
