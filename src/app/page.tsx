@@ -70,25 +70,28 @@ export default async function Home() {
             ))}
           </div>
 
-          {archiveFolders.length > 0 && (
-            <div className="mb-8 flex flex-wrap gap-1.5">
-              {archiveFolders.slice(0, 5).map((folder: { name: string; memoCount: number }) => (
-                <Link
-                  key={folder.name}
-                  href={`/archive/${folder.name}`}
-                  className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
-                >
-                  {folder.name}
-                </Link>
-              ))}
+          <div className="mb-8 flex flex-wrap gap-1.5">
+            <span className="px-2 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
+              {new Date().toISOString().slice(0, 7)}
+            </span>
+            {archiveFolders.slice(0, 5).map((folder: { name: string; memoCount: number }) => (
+              <Link
+                key={folder.name}
+                href={`/archive/${folder.name}`}
+                className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              >
+                {folder.name}
+              </Link>
+            ))}
+            {archiveFolders.length > 0 && (
               <Link
                 href="/archive"
                 className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
               >
                 ...
               </Link>
-            </div>
-          )}
+            )}
+          </div>
 
           <Dashboard memos={memos} />
 
