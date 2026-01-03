@@ -123,6 +123,7 @@ const groupOpacity: Record<keyof GroupedMemos, string> = {
   restOfMonth: 'opacity-25',
 };
 
+
 const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string }> = {
   today: { letter: 'T', label: 'Today' },
   yesterday: { letter: 'Y', label: 'Yesterday' },

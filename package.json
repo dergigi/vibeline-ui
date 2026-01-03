@@ -26,6 +26,7 @@
     "framer-motion": "^12.5.0",
     "glob": "^11.0.3",
     "lucide-react": "^0.488.0",
+    "music-metadata": "^11.10.4",
     "next": "15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
