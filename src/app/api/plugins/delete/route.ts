@@ -23,9 +23,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Get the base filename without extension
     const baseFilename = path.basename(filename, path.extname(filename));
 
-    // Get the base filename without extension
-    const baseFilename = path.basename(filename, path.extname(filename));
-
     // Auto-detect location by convention
     const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, baseFilename);
     

@@ -130,7 +130,7 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children, isArch
     }
 
     return filtered;
-  }, [searchTerm, memos, activeFilters]);
+  }, [searchTerm, memos, activeFilters, isArchiveView]);
 
   const value = {
     searchTerm,

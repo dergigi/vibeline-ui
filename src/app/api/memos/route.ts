@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { BlossomData } from '@/types/VoiceMemo';
-import { getBasePath, buildAudioUrl, getArchiveMonthFromFilename } from '@/lib/archivePaths';
+import { getBasePath, buildAudioUrl } from '@/lib/archivePaths';
 
 interface Memo {
   filename: string;
