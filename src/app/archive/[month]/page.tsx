@@ -228,7 +228,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
               title={formatMonthName(prevMonth)}
             >
               <ArrowLeftIcon className="w-5 h-5" />
-              <span className="text-sm hidden sm:inline">{formatMonthName(prevMonth)}</span>
+              <span className="text-sm hidden sm:inline">{prevMonth}</span>
             </Link>
           ) : (
             <div className="p-2 w-9" /> 
@@ -248,7 +248,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
               className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-1"
               title={formatMonthName(nextMonth)}
             >
-              <span className="text-sm hidden sm:inline">{formatMonthName(nextMonth)}</span>
+              <span className="text-sm hidden sm:inline">{nextMonth}</span>
               <ArrowRightIcon className="w-5 h-5" />
             </Link>
           ) : (
