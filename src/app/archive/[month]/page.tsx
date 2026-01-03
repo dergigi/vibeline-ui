@@ -256,14 +256,14 @@ function ArchiveMonthContent({ month }: { month: string }) {
           )}
         </div>
 
-        {stats && <MonthlySummaryCard summary={monthlySummary} stats={stats} mood={moodAnalysis} />}
-
         <div className="flex items-center justify-end gap-4 mb-6">
           <FilterButtons />
           <div className="w-64">
             <SearchBar />
           </div>
         </div>
+
+        {stats && <MonthlySummaryCard summary={monthlySummary} stats={stats} mood={moodAnalysis} />}
 
         <ArchiveTodoOverview memos={allMemos} />
 
