@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArchiveBoxIcon, FolderIcon } from '@heroicons/react/24/outline';
+import { ArchiveBoxIcon, FolderIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
 interface ArchiveFolder {
   name: string;
   memoCount: number;
+  hasSummary: boolean;
+  summaryPreview?: string;
 }
 
 function formatMonthName(folderName: string): string {
@@ -65,22 +67,32 @@ export default function ArchivePage() {
             <p className="text-gray-500 dark:text-gray-400">No archived memos yet</p>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {folders.map((folder) => (
               <Link
                 key={folder.name}
                 href={`/archive/${folder.name}`}
-                className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                className="block p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700"
               >
-                <div className="flex items-center gap-3">
-                  <FolderIcon className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {formatMonthName(folder.name)}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <FolderIcon className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatMonthName(folder.name)}
+                    </span>
+                    {folder.hasSummary && (
+                      <DocumentTextIcon className="w-4 h-4 text-emerald-500 dark:text-emerald-400" title="Has monthly summary" />
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {folder.memoCount} {folder.memoCount === 1 ? 'memo' : 'memos'}
                   </span>
                 </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {folder.memoCount} {folder.memoCount === 1 ? 'memo' : 'memos'}
-                </span>
+                {folder.summaryPreview && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-2 pl-8">
+                    {folder.summaryPreview}
+                  </p>
+                )}
               </Link>
             ))}
           </div>

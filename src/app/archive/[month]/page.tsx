@@ -13,6 +13,11 @@ interface ApiVoiceMemo extends Omit<VoiceMemo, 'createdAt'> {
   createdAt: string;
 }
 
+interface ArchiveMonthResponse {
+  memos: ApiVoiceMemo[];
+  monthlySummary?: string;
+}
+
 function formatMonthName(folderName: string): string {
   const [year, month] = folderName.split('-');
   const date = new Date(parseInt(year), parseInt(month) - 1);
@@ -21,7 +26,21 @@ function formatMonthName(folderName: string): string {
 
 const ITEMS_PER_PAGE = 10;
 
-function ArchiveMemoList({ month }: { month: string }) {
+function MonthlySummaryCard({ summary }: { summary: string }) {
+  // Skip the title line and get the content
+  const lines = summary.split('\n');
+  const content = lines.slice(1).join('\n').trim();
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
+      <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+        {content.replace(/\*\*/g, '').replace(/-{3,}/g, '')}
+      </div>
+    </div>
+  );
+}
+
+function ArchiveMemoList({ month, onSummaryLoaded }: { month: string; onSummaryLoaded: (summary: string | undefined) => void }) {
   const { setMemos, filteredMemos } = useSearch();
   const [displayedMemos, setDisplayedMemos] = useState<VoiceMemo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,12 +50,13 @@ function ArchiveMemoList({ month }: { month: string }) {
       try {
         const response = await fetch(`/api/archive/${month}`);
         if (response.ok) {
-          const data: ApiVoiceMemo[] = await response.json();
-          const memos = data.map((memo) => ({
+          const data: ArchiveMonthResponse = await response.json();
+          const memos = data.memos.map((memo) => ({
             ...memo,
             createdAt: new Date(memo.createdAt)
           }));
           setMemos(memos);
+          onSummaryLoaded(data.monthlySummary);
         }
       } catch (error) {
         console.error('Error fetching archive memos:', error);
@@ -46,7 +66,7 @@ function ArchiveMemoList({ month }: { month: string }) {
     }
 
     fetchMemos();
-  }, [month, setMemos]);
+  }, [month, setMemos, onSummaryLoaded]);
 
   useEffect(() => {
     setDisplayedMemos(filteredMemos.slice(0, ITEMS_PER_PAGE));
@@ -96,36 +116,46 @@ function ArchiveMemoList({ month }: { month: string }) {
   );
 }
 
+function ArchiveMonthContent({ month }: { month: string }) {
+  const [monthlySummary, setMonthlySummary] = useState<string | undefined>(undefined);
+
+  return (
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Link
+            href="/archive"
+            className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+          </Link>
+          <ArchiveBoxIcon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            {formatMonthName(month)}
+          </h1>
+        </div>
+
+        {monthlySummary && <MonthlySummaryCard summary={monthlySummary} />}
+
+        <div className="flex items-center justify-end gap-4 mb-8">
+          <FilterButtons />
+          <div className="w-64">
+            <SearchBar />
+          </div>
+        </div>
+
+        <ArchiveMemoList month={month} onSummaryLoaded={setMonthlySummary} />
+      </div>
+    </main>
+  );
+}
+
 export default function ArchiveMonthPage({ params }: { params: Promise<{ month: string }> }) {
   const { month } = use(params);
 
   return (
     <SearchProvider isArchiveView>
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-6">
-            <Link
-              href="/archive"
-              className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <ArrowLeftIcon className="w-5 h-5" />
-            </Link>
-            <ArchiveBoxIcon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              {formatMonthName(month)}
-            </h1>
-          </div>
-
-          <div className="flex items-center justify-end gap-4 mb-8">
-            <FilterButtons />
-            <div className="w-64">
-              <SearchBar />
-            </div>
-          </div>
-
-          <ArchiveMemoList month={month} />
-        </div>
-      </main>
+      <ArchiveMonthContent month={month} />
     </SearchProvider>
   );
 }
