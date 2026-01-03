@@ -8,6 +8,7 @@ import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterButtons } from '@/components/FilterButtons';
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import ArchiveTodoOverview from '@/components/ArchiveTodoOverview';
 
 interface ApiVoiceMemo extends Omit<VoiceMemo, 'createdAt'> {
   createdAt: string;
@@ -81,10 +82,11 @@ function formatTotalDuration(seconds: number): string {
   return `${minutes}m`;
 }
 
-function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded }: { 
+function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded, onMemosLoaded }: { 
   month: string; 
   onSummaryLoaded: (summary: string | undefined) => void;
   onStatsLoaded: (stats: MonthlyStats) => void;
+  onMemosLoaded: (memos: VoiceMemo[]) => void;
 }) {
   const { setMemos, filteredMemos } = useSearch();
   const [displayedMemos, setDisplayedMemos] = useState<VoiceMemo[]>([]);
@@ -102,6 +104,7 @@ function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded }: {
           }));
           setMemos(memos);
           onSummaryLoaded(data.monthlySummary);
+          onMemosLoaded(memos);
           
           // Calculate stats
           const stats: MonthlyStats = {
@@ -120,7 +123,7 @@ function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded }: {
     }
 
     fetchMemos();
-  }, [month, setMemos, onSummaryLoaded, onStatsLoaded]);
+  }, [month, setMemos, onSummaryLoaded, onStatsLoaded, onMemosLoaded]);
 
   useEffect(() => {
     setDisplayedMemos(filteredMemos.slice(0, ITEMS_PER_PAGE));
@@ -175,6 +178,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
   const [prevMonth, setPrevMonth] = useState<string | null>(null);
   const [nextMonth, setNextMonth] = useState<string | null>(null);
   const [stats, setStats] = useState<MonthlyStats | null>(null);
+  const [allMemos, setAllMemos] = useState<VoiceMemo[]>([]);
 
   useEffect(() => {
     async function fetchArchiveFolders() {
@@ -245,14 +249,16 @@ function ArchiveMonthContent({ month }: { month: string }) {
 
         {stats && <MonthlySummaryCard summary={monthlySummary} stats={stats} />}
 
-        <div className="flex items-center justify-end gap-4 mb-8">
+        <div className="flex items-center justify-end gap-4 mb-6">
           <FilterButtons />
           <div className="w-64">
             <SearchBar />
           </div>
         </div>
 
-        <ArchiveMemoList month={month} onSummaryLoaded={setMonthlySummary} onStatsLoaded={setStats} />
+        <ArchiveTodoOverview memos={allMemos} />
+
+        <ArchiveMemoList month={month} onSummaryLoaded={setMonthlySummary} onStatsLoaded={setStats} onMemosLoaded={setAllMemos} />
       </div>
     </main>
   );
