@@ -60,7 +60,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="mb-2 flex flex-wrap gap-1.5 justify-end">
+          <div className="mb-4 flex flex-wrap gap-1.5 justify-end">
             <Link
               href={archiveFolders.length > 12 ? `/archive/${archiveFolders[12].name}` : '/archive'}
               className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors flex items-center"
