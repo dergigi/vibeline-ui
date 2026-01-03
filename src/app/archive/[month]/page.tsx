@@ -7,7 +7,7 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterButtons } from '@/components/FilterButtons';
-import { ArrowLeftIcon, ArrowRightIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 
 interface ApiVoiceMemo extends Omit<VoiceMemo, 'createdAt'> {
   createdAt: string;
@@ -202,12 +202,6 @@ function ArchiveMonthContent({ month }: { month: string }) {
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-2">
-          <Link
-            href="/archive"
-            className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            <ArchiveBoxIcon className="w-5 h-5" />
-          </Link>
           {prevMonth ? (
             <Link
               href={`/archive/${prevMonth}`}
@@ -220,9 +214,15 @@ function ArchiveMonthContent({ month }: { month: string }) {
           ) : (
             <div className="p-2 w-9" /> 
           )}
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex-1 text-center">
-            {formatMonthName(month)}
-          </h1>
+          <Link 
+            href="/archive"
+            className="flex-1 text-center"
+            title="Back to archive"
+          >
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+              {formatMonthName(month)}
+            </h1>
+          </Link>
           {nextMonth ? (
             <Link
               href={`/archive/${nextMonth}`}
