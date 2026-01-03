@@ -118,6 +118,7 @@ function ArchiveMemoList({ month, onSummaryLoaded }: { month: string; onSummaryL
 
 function ArchiveMonthContent({ month }: { month: string }) {
   const [monthlySummary, setMonthlySummary] = useState<string | undefined>(undefined);
+  const [prevMonth, setPrevMonth] = useState<string | null>(null);
   const [nextMonth, setNextMonth] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,10 +127,19 @@ function ArchiveMonthContent({ month }: { month: string }) {
         const response = await fetch('/api/archive');
         if (response.ok) {
           const folders: { name: string }[] = await response.json();
-          // Folders are sorted newest first, so we need to find the previous one in the list
+          // Folders are sorted newest first
           const currentIndex = folders.findIndex(f => f.name === month);
+          // Next month (newer) is at a lower index
           if (currentIndex > 0) {
             setNextMonth(folders[currentIndex - 1].name);
+          } else {
+            setNextMonth(null);
+          }
+          // Previous month (older) is at a higher index
+          if (currentIndex >= 0 && currentIndex < folders.length - 1) {
+            setPrevMonth(folders[currentIndex + 1].name);
+          } else {
+            setPrevMonth(null);
           }
         }
       } catch (error) {
@@ -147,13 +157,24 @@ function ArchiveMonthContent({ month }: { month: string }) {
             href="/archive"
             className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            <ArrowLeftIcon className="w-5 h-5" />
+            <ArchiveBoxIcon className="w-5 h-5" />
           </Link>
-          <ArchiveBoxIcon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex-1">
+          {prevMonth ? (
+            <Link
+              href={`/archive/${prevMonth}`}
+              className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-1"
+              title={formatMonthName(prevMonth)}
+            >
+              <ArrowLeftIcon className="w-5 h-5" />
+              <span className="text-sm hidden sm:inline">{formatMonthName(prevMonth)}</span>
+            </Link>
+          ) : (
+            <div className="p-2 w-9" /> 
+          )}
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex-1 text-center">
             {formatMonthName(month)}
           </h1>
-          {nextMonth && (
+          {nextMonth ? (
             <Link
               href={`/archive/${nextMonth}`}
               className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-1"
@@ -162,6 +183,8 @@ function ArchiveMonthContent({ month }: { month: string }) {
               <span className="text-sm hidden sm:inline">{formatMonthName(nextMonth)}</span>
               <ArrowRightIcon className="w-5 h-5" />
             </Link>
+          ) : (
+            <div className="p-2 w-9" />
           )}
         </div>
 
