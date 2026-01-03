@@ -18,6 +18,12 @@ interface ArchiveMonthResponse {
   monthlySummary?: string;
 }
 
+interface MonthlyStats {
+  memoCount: number;
+  totalWords: number;
+  memosWithTodos: number;
+}
+
 function formatMonthName(folderName: string): string {
   const [year, month] = folderName.split('-');
   const date = new Date(parseInt(year), parseInt(month) - 1);
@@ -40,7 +46,15 @@ function MonthlySummaryCard({ summary }: { summary: string }) {
   );
 }
 
-function ArchiveMemoList({ month, onSummaryLoaded }: { month: string; onSummaryLoaded: (summary: string | undefined) => void }) {
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+}
+
+function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded }: { 
+  month: string; 
+  onSummaryLoaded: (summary: string | undefined) => void;
+  onStatsLoaded: (stats: MonthlyStats) => void;
+}) {
   const { setMemos, filteredMemos } = useSearch();
   const [displayedMemos, setDisplayedMemos] = useState<VoiceMemo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +71,14 @@ function ArchiveMemoList({ month, onSummaryLoaded }: { month: string; onSummaryL
           }));
           setMemos(memos);
           onSummaryLoaded(data.monthlySummary);
+          
+          // Calculate stats
+          const stats: MonthlyStats = {
+            memoCount: memos.length,
+            totalWords: memos.reduce((sum, memo) => sum + (memo.transcript ? countWords(memo.transcript) : 0), 0),
+            memosWithTodos: memos.filter(memo => memo.todos && memo.todos.trim().length > 0).length,
+          };
+          onStatsLoaded(stats);
         }
       } catch (error) {
         console.error('Error fetching archive memos:', error);
@@ -66,7 +88,7 @@ function ArchiveMemoList({ month, onSummaryLoaded }: { month: string; onSummaryL
     }
 
     fetchMemos();
-  }, [month, setMemos, onSummaryLoaded]);
+  }, [month, setMemos, onSummaryLoaded, onStatsLoaded]);
 
   useEffect(() => {
     setDisplayedMemos(filteredMemos.slice(0, ITEMS_PER_PAGE));
@@ -120,6 +142,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
   const [monthlySummary, setMonthlySummary] = useState<string | undefined>(undefined);
   const [prevMonth, setPrevMonth] = useState<string | null>(null);
   const [nextMonth, setNextMonth] = useState<string | null>(null);
+  const [stats, setStats] = useState<MonthlyStats | null>(null);
 
   useEffect(() => {
     async function fetchArchiveFolders() {
@@ -152,7 +175,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-2">
           <Link
             href="/archive"
             className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -188,6 +211,14 @@ function ArchiveMonthContent({ month }: { month: string }) {
           )}
         </div>
 
+        {stats && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+            {stats.memoCount} {stats.memoCount === 1 ? 'memo' : 'memos'}
+            {stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
+            {stats.memosWithTodos > 0 && ` · ${stats.memosWithTodos} with todos`}
+          </p>
+        )}
+
         {monthlySummary && <MonthlySummaryCard summary={monthlySummary} />}
 
         <div className="flex items-center justify-end gap-4 mb-8">
@@ -197,7 +228,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
           </div>
         </div>
 
-        <ArchiveMemoList month={month} onSummaryLoaded={setMonthlySummary} />
+        <ArchiveMemoList month={month} onSummaryLoaded={setMonthlySummary} onStatsLoaded={setStats} />
       </div>
     </main>
   );
