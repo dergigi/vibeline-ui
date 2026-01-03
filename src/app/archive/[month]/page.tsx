@@ -22,7 +22,7 @@ interface MonthlyStats {
   memoCount: number;
   totalWords: number;
   totalDuration: number; // in seconds
-  memosWithTodos: number;
+  openTodos: number;
 }
 
 function formatMonthName(folderName: string): string {
@@ -46,7 +46,7 @@ function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: Month
           {stats.memoCount} {stats.memoCount === 1 ? 'memo' : 'memos'}
           {stats.totalDuration > 0 && ` · ${formatTotalDuration(stats.totalDuration)} recording`}
           {stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
-          {stats.memosWithTodos > 0 && ` · ${stats.memosWithTodos} with todos`}
+          {stats.openTodos > 0 && ` · ${stats.openTodos} open ${stats.openTodos === 1 ? 'todo' : 'todos'}`}
         </p>
       )}
       {content && (
@@ -60,6 +60,12 @@ function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: Month
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+}
+
+function countOpenTodos(todos: string): number {
+  // Count unchecked todos: lines matching "- [ ]" pattern
+  const matches = todos.match(/^\s*-\s*\[\s\]/gm);
+  return matches ? matches.length : 0;
 }
 
 function formatTotalDuration(seconds: number): string {
@@ -102,7 +108,7 @@ function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded }: {
             memoCount: memos.length,
             totalWords: memos.reduce((sum, memo) => sum + (memo.transcript ? countWords(memo.transcript) : 0), 0),
             totalDuration: memos.reduce((sum, memo) => sum + (memo.duration || 0), 0),
-            memosWithTodos: memos.filter(memo => memo.todos && memo.todos.trim().length > 0).length,
+            openTodos: memos.reduce((sum, memo) => sum + (memo.todos ? countOpenTodos(memo.todos) : 0), 0),
           };
           onStatsLoaded(stats);
         }
