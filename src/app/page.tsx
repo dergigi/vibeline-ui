@@ -58,12 +58,12 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="mb-8 flex flex-wrap gap-2">
+          <div className="mb-8 flex flex-wrap gap-1.5">
             {plugins.map((plugin: { id: string; name: string; path: string }) => (
               <Link
                 key={plugin.id}
                 href={plugin.path}
-                className="px-3 py-1 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                className="px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
               >
                 /{plugin.id}
               </Link>
