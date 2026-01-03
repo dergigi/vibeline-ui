@@ -21,16 +21,6 @@ export function Navigation() {
           
           <div className="flex items-center space-x-4">
             <Link
-              href="/"
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                pathname === '/'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-            >
-              Home
-            </Link>
-            <Link
               href="/archive"
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 pathname.startsWith('/archive')
