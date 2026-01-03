@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { FilterButtons } from '@/components/FilterButtons';
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import ArchiveTodoOverview from '@/components/ArchiveTodoOverview';
+import { analyzeEmotions, MoodAnalysis } from '@/lib/moodUtils';
 
 interface ApiVoiceMemo extends Omit<VoiceMemo, 'createdAt'> {
   createdAt: string;
@@ -33,7 +34,7 @@ function formatMonthName(folderName: string): string {
 }
 
 
-function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: MonthlyStats | null }) {
+function MonthlySummaryCard({ summary, stats, mood }: { summary?: string; stats: MonthlyStats | null; mood: MoodAnalysis | null }) {
   // Skip the title line and get the content
   const content = summary 
     ? summary.split('\n').slice(1).join('\n').trim()
@@ -47,6 +48,7 @@ function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: Month
           {stats.totalDuration > 0 && ` · ${formatTotalDuration(stats.totalDuration)} recording`}
           {stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
           {stats.openTodos > 0 && ` · ${stats.openTodos} open ${stats.openTodos === 1 ? 'todo' : 'todos'}`}
+          {mood && mood.topEmotions.length > 0 && ` · Feeling: ${mood.topEmotions.join(', ')}`}
         </p>
       )}
       {content && (
@@ -154,6 +156,19 @@ function ArchiveMonthContent({ month }: { month: string }) {
   const [nextMonth, setNextMonth] = useState<string | null>(null);
   const [stats, setStats] = useState<MonthlyStats | null>(null);
   const [allMemos, setAllMemos] = useState<VoiceMemo[]>([]);
+  const [moodAnalysis, setMoodAnalysis] = useState<MoodAnalysis | null>(null);
+
+  // Compute mood analysis when memos change
+  useEffect(() => {
+    if (allMemos.length === 0) {
+      setMoodAnalysis(null);
+      return;
+    }
+    const combinedText = allMemos
+      .map(memo => `${memo.transcript || ''} ${memo.summary || ''}`)
+      .join(' ');
+    setMoodAnalysis(analyzeEmotions(combinedText));
+  }, [allMemos]);
 
   useEffect(() => {
     async function fetchArchiveFolders() {
@@ -222,7 +237,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
           )}
         </div>
 
-        {stats && <MonthlySummaryCard summary={monthlySummary} stats={stats} />}
+        {stats && <MonthlySummaryCard summary={monthlySummary} stats={stats} mood={moodAnalysis} />}
 
         <div className="flex items-center justify-end gap-4 mb-6">
           <FilterButtons />

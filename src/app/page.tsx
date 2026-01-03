@@ -4,7 +4,7 @@ import { SearchProvider } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { MemoList } from '@/components/MemoList';
 import { FilterButtons } from '@/components/FilterButtons';
-import CollapsibleLinks from '@/components/CollapsibleLinks';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -58,7 +58,40 @@ export default async function Home() {
             </div>
           </div>
 
-          <CollapsibleLinks plugins={plugins} archiveFolders={archiveFolders} />
+          <div className="mb-8 flex flex-wrap gap-1.5">
+            {plugins.map((plugin: { id: string; name: string; path: string }) => (
+              <Link
+                key={plugin.id}
+                href={plugin.path}
+                className="px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+              >
+                /{plugin.id}
+              </Link>
+            ))}
+          </div>
+
+          <div className="mb-8 flex flex-wrap gap-1.5">
+            <span className="px-2 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
+              {new Date().toISOString().slice(0, 7)}
+            </span>
+            {archiveFolders.slice(0, 5).map((folder: { name: string; memoCount: number }) => (
+              <Link
+                key={folder.name}
+                href={`/archive/${folder.name}`}
+                className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              >
+                {folder.name}
+              </Link>
+            ))}
+            {archiveFolders.length > 0 && (
+              <Link
+                href="/archive"
+                className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              >
+                ...
+              </Link>
+            )}
+          </div>
 
           <Dashboard memos={memos} />
 
