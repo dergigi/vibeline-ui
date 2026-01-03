@@ -59,7 +59,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     if (originalTranscript !== null) return; // Already fetched
     
     try {
-      const response = await fetch(`/api/transcripts/${memo.filename}/original`);
+      const url = memo.archivePath 
+        ? `/api/transcripts/${memo.filename}/original?archive=${memo.archivePath}`
+        : `/api/transcripts/${memo.filename}/original`;
+      const response = await fetch(url);
       if (response.ok) {
         const text = await response.text();
         setOriginalTranscript(text);
@@ -333,7 +336,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         },
         body: JSON.stringify({ 
           filename: memo.filename,
-          title: editingTitle.trim()
+          title: editingTitle.trim(),
+          archivePath: memo.archivePath
         }),
       });
 
@@ -479,7 +483,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         },
         body: JSON.stringify({ 
           filename: memo.filename,
-          content: ''
+          content: '',
+          archivePath: memo.archivePath
         }),
       });
 
@@ -558,7 +563,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         },
         body: JSON.stringify({ 
           filename: memo.filename,
-          plugin
+          plugin,
+          archivePath: memo.archivePath
         }),
       });
 
@@ -650,7 +656,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setShowRefreshDialog(true);
     
     try {
-      const response = await fetch(`/api/memos/${memo.filename}/files`);
+      const url = memo.archivePath 
+        ? `/api/memos/${memo.filename}/files?archive=${memo.archivePath}`
+        : `/api/memos/${memo.filename}/files`;
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch files');
       }
@@ -670,7 +679,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setRefreshStep('deleting');
     
     try {
-      const response = await fetch(`/api/memos/${memo.filename}/refresh`, {
+      const url = memo.archivePath 
+        ? `/api/memos/${memo.filename}/refresh?archive=${memo.archivePath}`
+        : `/api/memos/${memo.filename}/refresh`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -718,7 +730,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setShowDeleteDialog(true);
     
     try {
-      const response = await fetch(`/api/memos/${memo.filename}/files/all`);
+      const url = memo.archivePath 
+        ? `/api/memos/${memo.filename}/files/all?archive=${memo.archivePath}`
+        : `/api/memos/${memo.filename}/files/all`;
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch files');
       }
@@ -738,7 +753,10 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setDeleteStep('deleting');
     
     try {
-      const response = await fetch(`/api/memos/${memo.filename}/delete`, {
+      const url = memo.archivePath 
+        ? `/api/memos/${memo.filename}/delete?archive=${memo.archivePath}`
+        : `/api/memos/${memo.filename}/delete`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

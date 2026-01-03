@@ -3,13 +3,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
 import { deleteActionItemFile } from '@/utils/deleteUtils';
+import { getBasePath } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
-    const { filename, plugin } = await request.json();
+    const { filename, plugin, archivePath } = await request.json();
     
     if (!filename) {
       return new NextResponse('Filename is required', { status: 400 });
@@ -19,12 +20,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return new NextResponse('Plugin name is required', { status: 400 });
     }
 
+    // Get the base directory (handles archive paths)
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+
     // Get the base filename without extension
     const baseFilename = path.basename(filename, path.extname(filename));
     
     // Construct the plugin directory path (normalize common alias 'todos' -> 'TODOs')
     const normalizedPlugin = plugin === 'todos' ? 'TODOs' : plugin;
-    const pluginDir = path.join(VOICE_MEMOS_DIR, normalizedPlugin);
+    const pluginDir = path.join(baseDir, normalizedPlugin);
     
     // Check if the plugin directory exists
     if (!existsSync(pluginDir)) {
@@ -55,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Special handling for TODOs: also delete the corresponding action_item file
     if (normalizedPlugin === 'TODOs') {
-      await deleteActionItemFile(VOICE_MEMOS_DIR, baseFilename);
+      await deleteActionItemFile(baseDir, baseFilename);
     }
 
     return NextResponse.json({ 

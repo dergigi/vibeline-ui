@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { getBasePath } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { filename, title } = await request.json();
+    const { filename, title, archivePath } = await request.json();
     
     if (!filename) {
       return new NextResponse('Filename is required', { status: 400 });
@@ -16,7 +17,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
-    const TITLES_DIR = path.join(VOICE_MEMOS_DIR, 'titles');
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    const TITLES_DIR = path.join(baseDir, 'titles');
     
     // Construct the title file path
     const titleFilePath = path.join(TITLES_DIR, `${filename}.txt`);

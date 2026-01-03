@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
+import { getBasePath } from '@/lib/archivePaths';
 
 export async function POST(
   request: NextRequest,
@@ -12,10 +13,13 @@ export async function POST(
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
     const { filename } = await params;
+    const { searchParams } = new URL(request.url);
+    const archivePath = searchParams.get('archive') || undefined;
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
     const baseFilename = filename;
     
     // Use glob to find ALL files matching the pattern (including audio)
-    const pattern = path.join(VOICE_MEMOS_DIR, '**', `${baseFilename}.*`);
+    const pattern = path.join(baseDir, '**', `${baseFilename}.*`);
     const files = await glob(pattern, { nodir: true });
     
     // Delete ALL matching files (including audio files)
@@ -25,10 +29,10 @@ export async function POST(
     for (const filePath of files) {
       try {
         await fs.unlink(filePath);
-        deletedFiles.push(path.relative(VOICE_MEMOS_DIR, filePath));
+        deletedFiles.push(path.relative(baseDir, filePath));
       } catch (error) {
         console.error(`Error deleting file ${filePath}:`, error);
-        errors.push(path.relative(VOICE_MEMOS_DIR, filePath));
+        errors.push(path.relative(baseDir, filePath));
       }
     }
     

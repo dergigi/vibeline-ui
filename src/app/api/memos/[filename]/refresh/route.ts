@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
 import { deleteActionItemFile } from '@/utils/deleteUtils';
+import { getBasePath } from '@/lib/archivePaths';
 
 export async function POST(
   request: NextRequest,
@@ -13,10 +14,13 @@ export async function POST(
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
     const { filename } = await params;
+    const { searchParams } = new URL(request.url);
+    const archivePath = searchParams.get('archive') || undefined;
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
     const baseFilename = filename;
     
     // Use glob to find all files matching the pattern
-    const pattern = path.join(VOICE_MEMOS_DIR, '**', `${baseFilename}.*`);
+    const pattern = path.join(baseDir, '**', `${baseFilename}.*`);
     const files = await glob(pattern, { nodir: true });
     
     // Filter out the audio file - NEVER delete the audio file
@@ -32,10 +36,10 @@ export async function POST(
     for (const filePath of filesToDelete) {
       try {
         await fs.unlink(filePath);
-        deletedFiles.push(path.relative(VOICE_MEMOS_DIR, filePath));
+        deletedFiles.push(path.relative(baseDir, filePath));
       } catch (error) {
         console.error(`Error deleting file ${filePath}:`, error);
-        errors.push(path.relative(VOICE_MEMOS_DIR, filePath));
+        errors.push(path.relative(baseDir, filePath));
       }
     }
     
@@ -43,7 +47,7 @@ export async function POST(
     // Check if any of the deleted files were from the TODOs directory
     const deletedTodosFiles = deletedFiles.filter(file => file.startsWith('TODOs/'));
     if (deletedTodosFiles.length > 0) {
-      const deletedActionItemPath = await deleteActionItemFile(VOICE_MEMOS_DIR, baseFilename);
+      const deletedActionItemPath = await deleteActionItemFile(baseDir, baseFilename);
       if (deletedActionItemPath) {
         deletedFiles.push(deletedActionItemPath);
       }

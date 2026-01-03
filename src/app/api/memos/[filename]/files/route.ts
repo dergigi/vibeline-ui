@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
+import { getBasePath } from '@/lib/archivePaths';
 
 export async function GET(
   request: Request,
@@ -12,10 +13,13 @@ export async function GET(
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
     const { filename } = await params;
+    const { searchParams } = new URL(request.url);
+    const archivePath = searchParams.get('archive') || undefined;
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
     const baseFilename = filename;
     
     // Use glob to find all files matching the pattern
-    const pattern = path.join(VOICE_MEMOS_DIR, '**', `${baseFilename}.*`);
+    const pattern = path.join(baseDir, '**', `${baseFilename}.*`);
     const allMatchingFiles = await glob(pattern, { nodir: true });
     
     // Filter out audio files - we never want to delete the original audio
@@ -28,7 +32,7 @@ export async function GET(
     const filesByCategory: { [category: string]: Array<{ filename: string; fullPath: string }> } = {};
     
     for (const filePath of files) {
-      const relativePath = path.relative(VOICE_MEMOS_DIR, filePath);
+      const relativePath = path.relative(baseDir, filePath);
       const category = path.dirname(relativePath);
       const filename = path.basename(filePath);
       
