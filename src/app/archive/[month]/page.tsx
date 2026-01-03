@@ -32,16 +32,26 @@ function formatMonthName(folderName: string): string {
 
 const ITEMS_PER_PAGE = 10;
 
-function MonthlySummaryCard({ summary }: { summary: string }) {
+function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: MonthlyStats | null }) {
   // Skip the title line and get the content
-  const lines = summary.split('\n');
-  const content = lines.slice(1).join('\n').trim();
+  const content = summary 
+    ? summary.split('\n').slice(1).join('\n').trim()
+    : null;
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
-      <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
-        {content.replace(/\*\*/g, '').replace(/-{3,}/g, '')}
-      </div>
+      {stats && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          {stats.memoCount} {stats.memoCount === 1 ? 'memo' : 'memos'}
+          {stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
+          {stats.memosWithTodos > 0 && ` · ${stats.memosWithTodos} with todos`}
+        </p>
+      )}
+      {content && (
+        <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+          {content.replace(/\*\*/g, '').replace(/-{3,}/g, '')}
+        </div>
+      )}
     </div>
   );
 }
@@ -211,15 +221,7 @@ function ArchiveMonthContent({ month }: { month: string }) {
           )}
         </div>
 
-        {stats && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
-            {stats.memoCount} {stats.memoCount === 1 ? 'memo' : 'memos'}
-            {stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
-            {stats.memosWithTodos > 0 && ` · ${stats.memosWithTodos} with todos`}
-          </p>
-        )}
-
-        {monthlySummary && <MonthlySummaryCard summary={monthlySummary} />}
+        {stats && <MonthlySummaryCard summary={monthlySummary} stats={stats} />}
 
         <div className="flex items-center justify-end gap-4 mb-8">
           <FilterButtons />
