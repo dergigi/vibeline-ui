@@ -81,7 +81,7 @@ export default async function Home() {
             </span>
           </div>
 
-          <div className="mb-8 flex flex-wrap gap-1.5 justify-end">
+          <div className="mb-8 flex flex-wrap gap-1.5">
             {plugins.map((plugin: { id: string; name: string; path: string }) => (
               <Link
                 key={plugin.id}
