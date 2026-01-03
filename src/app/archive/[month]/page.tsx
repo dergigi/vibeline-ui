@@ -8,6 +8,8 @@ import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterButtons } from '@/components/FilterButtons';
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMasksTheater } from '@fortawesome/free-solid-svg-icons';
 import ArchiveTodoOverview from '@/components/ArchiveTodoOverview';
 import { analyzeEmotions, MoodAnalysis } from '@/lib/moodUtils';
 
@@ -63,8 +65,8 @@ function MonthlySummaryCard({ summary, stats, mood }: { summary?: string; stats:
         </div>
       )}
       {mood && mood.topEmotions.length > 0 && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-          Feeling{' '}
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-2">
+          <FontAwesomeIcon icon={faMasksTheater} className="w-4 h-4" />
           {mood.topEmotions.map((e, i) => (
             <span key={e.emotion}>
               <span className={MOOD_COLOR_CLASSES[e.color]}>{e.emotion}</span>
