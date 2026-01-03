@@ -23,11 +23,10 @@ export function PluginLinks({ plugins }: PluginLinksProps) {
     <div className="mb-8 flex flex-wrap gap-1.5">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors flex items-center gap-0.5"
+        className="px-1.5 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors flex items-center"
         title={isExpanded ? 'Collapse plugins' : 'Expand plugins'}
       >
         <ChevronRightIcon className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-        plugins
       </button>
       {isExpanded && plugins.map((plugin) => (
         <Link
