@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Dashboard from '@/components/Dashboard';
+import MoodSummary from '@/components/MoodSummary';
 import { SearchProvider } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { MemoList } from '@/components/MemoList';
@@ -94,6 +95,8 @@ export default async function Home() {
           </div>
 
           <Dashboard memos={memos} />
+
+          <MoodSummary memos={memos} />
 
           <Suspense fallback={<div>Loading...</div>}>
             <MemoList initialMemos={memos} />
