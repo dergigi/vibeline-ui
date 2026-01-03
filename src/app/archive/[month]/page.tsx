@@ -32,7 +32,6 @@ function formatMonthName(folderName: string): string {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
-const ITEMS_PER_PAGE = 10;
 
 function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: MonthlyStats | null }) {
   // Skip the title line and get the content
@@ -89,7 +88,6 @@ function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded, onMemosLoaded 
   onMemosLoaded: (memos: VoiceMemo[]) => void;
 }) {
   const { setMemos, filteredMemos } = useSearch();
-  const [displayedMemos, setDisplayedMemos] = useState<VoiceMemo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -125,18 +123,6 @@ function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded, onMemosLoaded 
     fetchMemos();
   }, [month, setMemos, onSummaryLoaded, onStatsLoaded, onMemosLoaded]);
 
-  useEffect(() => {
-    setDisplayedMemos(filteredMemos.slice(0, ITEMS_PER_PAGE));
-  }, [filteredMemos]);
-
-  const handleLoadMore = () => {
-    const currentLength = displayedMemos.length;
-    const nextMemos = filteredMemos.slice(currentLength, currentLength + ITEMS_PER_PAGE);
-    setDisplayedMemos([...displayedMemos, ...nextMemos]);
-  };
-
-  const hasMore = displayedMemos.length < filteredMemos.length;
-
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -148,27 +134,16 @@ function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded, onMemosLoaded 
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-1">
-        {displayedMemos.length === 0 ? (
+        {filteredMemos.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">No voice memos found</p>
           </div>
         ) : (
-          displayedMemos.map((memo) => (
+          filteredMemos.map((memo) => (
             <VoiceMemoCard key={memo.filename} memo={memo} />
           ))
         )}
       </div>
-      
-      {hasMore && (
-        <div className="flex justify-center">
-          <button
-            onClick={handleLoadMore}
-            className="px-4 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-md hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
-          >
-            Load more
-          </button>
-        </div>
-      )}
     </div>
   );
 }
