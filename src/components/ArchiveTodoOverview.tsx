@@ -95,8 +95,7 @@ export default function ArchiveTodoOverview({ memos }: ArchiveTodoOverviewProps)
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">TODOs</h3>
+      <div className="flex justify-end mb-1">
         <div className="flex gap-1">
           <button
             onClick={() => {
