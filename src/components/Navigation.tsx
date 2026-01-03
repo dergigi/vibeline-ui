@@ -31,16 +31,6 @@ export function Navigation() {
               Home
             </Link>
             <Link
-              href="/plugins"
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                pathname.startsWith('/plugins')
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-            >
-              Plugins
-            </Link>
-            <Link
               href="/archive"
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 pathname.startsWith('/archive')
@@ -49,6 +39,16 @@ export function Navigation() {
               }`}
             >
               Archive
+            </Link>
+            <Link
+              href="/plugins"
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname.startsWith('/plugins')
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              Plugins
             </Link>
           </div>
         </div>
