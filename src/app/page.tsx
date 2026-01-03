@@ -5,6 +5,7 @@ import { SearchProvider } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { MemoList } from '@/components/MemoList';
 import { FilterButtons } from '@/components/FilterButtons';
+import { PluginLinks } from '@/components/PluginLinks';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import type { Metadata } from 'next';
@@ -82,17 +83,7 @@ export default async function Home() {
             </span>
           </div>
 
-          <div className="mb-8 flex flex-wrap gap-1.5">
-            {plugins.map((plugin: { id: string; name: string; path: string }) => (
-              <Link
-                key={plugin.id}
-                href={plugin.path}
-                className="px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
-              >
-                /{plugin.id}
-              </Link>
-            ))}
-          </div>
+          <PluginLinks plugins={plugins} />
 
           <Dashboard memos={memos} />
 
