@@ -400,7 +400,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         body: JSON.stringify({ 
           filePath, 
           lineNumber, 
-          completed: newChecked 
+          completed: newChecked
         }),
       });
   
@@ -453,7 +453,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
           body: JSON.stringify({ 
             filePath, 
             lineNumber, 
-            completed: true 
+            completed: true
           }),
         })
       );

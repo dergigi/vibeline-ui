@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
 import { deleteActionItemFile } from '@/utils/deleteUtils';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -21,10 +22,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Get the base filename without extension
     const baseFilename = path.basename(filename, path.extname(filename));
+
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, baseFilename);
     
     // Construct the plugin directory path (normalize common alias 'todos' -> 'TODOs')
     const normalizedPlugin = plugin === 'todos' ? 'TODOs' : plugin;
-    const pluginDir = path.join(VOICE_MEMOS_DIR, normalizedPlugin);
+    const pluginDir = path.join(baseDir, normalizedPlugin);
     
     // Check if the plugin directory exists
     if (!existsSync(pluginDir)) {
@@ -55,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Special handling for TODOs: also delete the corresponding action_item file
     if (normalizedPlugin === 'TODOs') {
-      await deleteActionItemFile(VOICE_MEMOS_DIR, baseFilename);
+      await deleteActionItemFile(baseDir, baseFilename);
     }
 
     return NextResponse.json({ 

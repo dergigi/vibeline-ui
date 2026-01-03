@@ -133,7 +133,7 @@ async function getMemosFromDir(voiceMemosDir: string, archivePath?: string): Pro
         title: title.trim() || undefined,
         path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
         createdAt: parseTimestampFromFilename(baseFilename),
-        audioUrl: buildAudioUrl(baseFilename, archivePath),
+        audioUrl: buildAudioUrl(baseFilename),
         archivePath,
         blossom: blossomData || undefined,
         yolopost: yolopostData || undefined

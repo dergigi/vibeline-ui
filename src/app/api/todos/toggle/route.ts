@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -10,11 +11,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       throw new Error('filePath is required');
     }
     
+    // Extract filename from filePath (e.g., "TODOs/20251203_143022.md" -> "20251203_143022")
+    const filename = path.basename(filePath, path.extname(filePath));
+    
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, filename);
+    
     // Read the file using the real path
-    const fullPath = path.join(VOICE_MEMOS_DIR, filePath);
+    const fullPath = path.join(baseDir, filePath);
     const content = await fs.readFile(fullPath, 'utf-8');
     const lines = content.split('\n');
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function GET(
   request: Request,
@@ -14,15 +15,18 @@ export async function GET(
     const { filename } = await params;
     const baseFilename = filename;
     
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, baseFilename);
+    
     // Use glob to find ALL files matching the pattern (including audio)
-    const pattern = path.join(VOICE_MEMOS_DIR, '**', `${baseFilename}.*`);
+    const pattern = path.join(baseDir, '**', `${baseFilename}.*`);
     const files = await glob(pattern, { nodir: true });
     
     // Group files by their parent directory (plugin/category)
     const filesByCategory: { [category: string]: Array<{ filename: string; fullPath: string }> } = {};
     
     for (const filePath of files) {
-      const relativePath = path.relative(VOICE_MEMOS_DIR, filePath);
+      const relativePath = path.relative(baseDir, filePath);
       const category = path.dirname(relativePath);
       const filename = path.basename(filePath);
       

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -12,7 +13,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
-    const TODOS_DIR = path.join(VOICE_MEMOS_DIR, 'TODOs');
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, filename);
+    const TODOS_DIR = path.join(baseDir, 'TODOs');
     
     // Construct the todo file path
     const todoFilePath = path.join(TODOS_DIR, `${filename}.md`);
