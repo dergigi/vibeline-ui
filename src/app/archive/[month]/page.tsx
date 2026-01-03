@@ -7,7 +7,7 @@ import { VoiceMemoCard } from '@/components/VoiceMemoCard';
 import { SearchProvider, useSearch } from '@/contexts/SearchContext';
 import { SearchBar } from '@/components/SearchBar';
 import { FilterButtons } from '@/components/FilterButtons';
-import { ArrowLeftIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ArrowRightIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
 
 interface ApiVoiceMemo extends Omit<VoiceMemo, 'createdAt'> {
   createdAt: string;
@@ -118,6 +118,26 @@ function ArchiveMemoList({ month, onSummaryLoaded }: { month: string; onSummaryL
 
 function ArchiveMonthContent({ month }: { month: string }) {
   const [monthlySummary, setMonthlySummary] = useState<string | undefined>(undefined);
+  const [nextMonth, setNextMonth] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchArchiveFolders() {
+      try {
+        const response = await fetch('/api/archive');
+        if (response.ok) {
+          const folders: { name: string }[] = await response.json();
+          // Folders are sorted newest first, so we need to find the previous one in the list
+          const currentIndex = folders.findIndex(f => f.name === month);
+          if (currentIndex > 0) {
+            setNextMonth(folders[currentIndex - 1].name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching archive folders:', error);
+      }
+    }
+    fetchArchiveFolders();
+  }, [month]);
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -130,9 +150,19 @@ function ArchiveMonthContent({ month }: { month: string }) {
             <ArrowLeftIcon className="w-5 h-5" />
           </Link>
           <ArchiveBoxIcon className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white flex-1">
             {formatMonthName(month)}
           </h1>
+          {nextMonth && (
+            <Link
+              href={`/archive/${nextMonth}`}
+              className="p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-1"
+              title={formatMonthName(nextMonth)}
+            >
+              <span className="text-sm hidden sm:inline">{formatMonthName(nextMonth)}</span>
+              <ArrowRightIcon className="w-5 h-5" />
+            </Link>
+          )}
         </div>
 
         {monthlySummary && <MonthlySummaryCard summary={monthlySummary} />}
