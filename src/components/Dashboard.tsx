@@ -5,6 +5,9 @@ import { useSearch } from '@/contexts/SearchContext';
 import { useMemo, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { Flower, Waypoints } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMasksTheater } from '@fortawesome/free-solid-svg-icons';
+import { analyzeEmotions, MoodColor } from '@/lib/moodUtils';
 
 interface DashboardProps {
   memos: VoiceMemo[];
@@ -123,6 +126,13 @@ const groupOpacity: Record<keyof GroupedMemos, string> = {
   restOfMonth: 'opacity-25',
 };
 
+const MOOD_COLOR_CLASSES: Record<MoodColor, string> = {
+  yellow: 'text-amber-600 dark:text-amber-400',
+  green: 'text-emerald-600 dark:text-emerald-400',
+  blue: 'text-blue-600 dark:text-blue-400',
+  red: 'text-red-600 dark:text-red-400',
+};
+
 const groupIndicator: Record<keyof GroupedMemos, { letter: string; label: string }> = {
   today: { letter: 'T', label: 'Today' },
   yesterday: { letter: 'Y', label: 'Yesterday' },
@@ -176,6 +186,14 @@ export default function Dashboard({ memos }: DashboardProps) {
     return sourceMemos;
   }, [hideCompleted, showOnlyCompleted, showOnlyAllIncomplete, sourceMemos]);
   const groupedMemos = groupMemosByTime(visibleMemos);
+
+  // Compute mood analysis from all source memos
+  const moodAnalysis = useMemo(() => {
+    const combinedText = sourceMemos
+      .map(memo => `${memo.transcript || ''} ${memo.summary || ''}`)
+      .join(' ');
+    return analyzeEmotions(combinedText);
+  }, [sourceMemos]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
@@ -309,6 +327,17 @@ export default function Dashboard({ memos }: DashboardProps) {
           );
         })()}
       </div>
+      {moodAnalysis.topEmotions.length > 0 && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-2 px-2">
+          <FontAwesomeIcon icon={faMasksTheater} className="w-4 h-4" />
+          {moodAnalysis.topEmotions.map((e, i) => (
+            <span key={e.emotion}>
+              <span className={MOOD_COLOR_CLASSES[e.color]}>{e.emotion}</span>
+              {i < moodAnalysis.topEmotions.length - 1 && ', '}
+            </span>
+          ))}
+        </p>
+      )}
     </div>
   );
 }
