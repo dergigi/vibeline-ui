@@ -84,24 +84,14 @@ export default async function Home() {
                 {folder.name}
               </Link>
             ))}
-            {archiveFolders.length > 0 && (
-              <>
-                <Link
-                  href="/archive"
-                  className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
-                >
-                  ...
-                </Link>
-                {archiveFolders.length > 5 && (
-                  <Link
-                    href={`/archive/${archiveFolders[5].name}`}
-                    className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors flex items-center"
-                    title={archiveFolders[5].name}
-                  >
-                    <ArrowRightIcon className="w-3 h-3" />
-                  </Link>
-                )}
-              </>
+            {archiveFolders.length > 5 && (
+              <Link
+                href={`/archive/${archiveFolders[5].name}`}
+                className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors flex items-center"
+                title={archiveFolders[5].name}
+              >
+                <ArrowRightIcon className="w-3 h-3" />
+              </Link>
             )}
           </div>
 
