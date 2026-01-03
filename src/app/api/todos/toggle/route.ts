@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { getBasePath } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { filePath, lineNumber, completed } = await request.json();
+    const { filePath, lineNumber, completed, archivePath } = await request.json();
     
     if (!filePath) {
       throw new Error('filePath is required');
@@ -13,8 +14,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
+    // Get the base directory (handles archive paths)
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    
     // Read the file using the real path
-    const fullPath = path.join(VOICE_MEMOS_DIR, filePath);
+    const fullPath = path.join(baseDir, filePath);
     const content = await fs.readFile(fullPath, 'utf-8');
     const lines = content.split('\n');
 

@@ -400,7 +400,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         body: JSON.stringify({ 
           filePath, 
           lineNumber, 
-          completed: newChecked 
+          completed: newChecked,
+          archivePath: memo.archivePath
         }),
       });
   
@@ -411,7 +412,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
       console.error('Failed to toggle todo:', error);
       setOptimisticTodos(null);
     }
-  }, [memo.path, memo.todos, optimisticTodos]);
+  }, [memo.path, memo.todos, memo.archivePath, optimisticTodos]);
 
   // Function to handle checking all todos
   const handleCheckAllTodos = useCallback(async () => {
@@ -453,7 +454,8 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
           body: JSON.stringify({ 
             filePath, 
             lineNumber, 
-            completed: true 
+            completed: true,
+            archivePath: memo.archivePath
           }),
         })
       );
@@ -463,7 +465,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
       console.error('Failed to check all todos:', error);
       setOptimisticTodos(null);
     }
-  }, [memo.path, memo.todos, optimisticTodos]);
+  }, [memo.path, memo.todos, memo.archivePath, optimisticTodos]);
 
   const handleClearTodos = useCallback(async () => {
     // Optimistic UI update - clear todos
