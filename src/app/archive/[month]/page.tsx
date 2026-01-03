@@ -21,6 +21,7 @@ interface ArchiveMonthResponse {
 interface MonthlyStats {
   memoCount: number;
   totalWords: number;
+  totalDuration: number; // in seconds
   memosWithTodos: number;
 }
 
@@ -43,6 +44,7 @@ function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: Month
       {stats && (
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           {stats.memoCount} {stats.memoCount === 1 ? 'memo' : 'memos'}
+          {stats.totalDuration > 0 && ` · ${formatTotalDuration(stats.totalDuration)} recording`}
           {stats.totalWords > 0 && ` · ${stats.totalWords.toLocaleString()} words`}
           {stats.memosWithTodos > 0 && ` · ${stats.memosWithTodos} with todos`}
         </p>
@@ -58,6 +60,19 @@ function MonthlySummaryCard({ summary, stats }: { summary?: string; stats: Month
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+}
+
+function formatTotalDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  if (hours > 0) {
+    if (minutes > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${hours}h`;
+  }
+  return `${minutes}m`;
 }
 
 function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded }: { 
@@ -86,6 +101,7 @@ function ArchiveMemoList({ month, onSummaryLoaded, onStatsLoaded }: {
           const stats: MonthlyStats = {
             memoCount: memos.length,
             totalWords: memos.reduce((sum, memo) => sum + (memo.transcript ? countWords(memo.transcript) : 0), 0),
+            totalDuration: memos.reduce((sum, memo) => sum + (memo.duration || 0), 0),
             memosWithTodos: memos.filter(memo => memo.todos && memo.todos.trim().length > 0).length,
           };
           onStatsLoaded(stats);

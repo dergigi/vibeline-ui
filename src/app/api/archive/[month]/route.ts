@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { parseFile } from 'music-metadata';
 import { BlossomData } from '@/types/VoiceMemo';
 import { getBasePath, buildAudioUrl } from '@/lib/archivePaths';
 
@@ -17,6 +18,7 @@ interface Memo {
   archivePath?: string;
   blossom?: BlossomData;
   yolopost?: { id: string };
+  duration?: number; // in seconds
 }
 
 interface ArchiveMonthResponse {
@@ -59,6 +61,15 @@ async function readYoloPostDataIfExists(filePath: string): Promise<{ id: string 
     return null;
   } catch {
     return null;
+  }
+}
+
+async function getAudioDuration(filePath: string): Promise<number | undefined> {
+  try {
+    const metadata = await parseFile(filePath);
+    return metadata.format.duration;
+  } catch {
+    return undefined;
   }
 }
 
@@ -107,15 +118,17 @@ export async function GET(
     const memos = await Promise.all(
       audioFiles.map(async (audioFile) => {
         const baseFilename = path.basename(audioFile, '.m4a');
+        const audioPath = path.join(baseDir, audioFile);
         
-        const [transcript, originalTranscript, summary, todos, title, blossomData, yolopostData] = await Promise.all([
+        const [transcript, originalTranscript, summary, todos, title, blossomData, yolopostData, duration] = await Promise.all([
           readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt`)),
           readFileIfExists(path.join(TRANSCRIPTS_DIR, `${baseFilename}.txt.orig`)),
           readFileIfExists(path.join(SUMMARIES_DIR, `${baseFilename}.txt`)),
           readFileIfExists(path.join(TODOS_DIR, `${baseFilename}.md`)),
           readFileIfExists(path.join(TITLES_DIR, `${baseFilename}.txt`)),
           readBlossomDataIfExists(path.join(BLOSSOMS_DIR, `${baseFilename}.json`)),
-          readYoloPostDataIfExists(path.join(YOLOPOSTS_DIR, `${baseFilename}.json`))
+          readYoloPostDataIfExists(path.join(YOLOPOSTS_DIR, `${baseFilename}.json`)),
+          getAudioDuration(audioPath)
         ]);
 
         const isCleanedTranscript = !!originalTranscript;
@@ -132,7 +145,8 @@ export async function GET(
           audioUrl: buildAudioUrl(baseFilename),
           archivePath: month,
           blossom: blossomData || undefined,
-          yolopost: yolopostData || undefined
+          yolopost: yolopostData || undefined,
+          duration
         };
 
         return memo;
