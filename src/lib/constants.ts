@@ -5,9 +5,4 @@ export const NOSTR_PORTAL = process.env.NEXT_PUBLIC_NOSTR_PORTAL || "https://nju
 export const RESERVED_DIRS = [
   'archive',
   'transcripts',
-  'summaries',
-  'TODOs',
-  'titles',
-  'blossoms',
-  'yoloposts',
 ];
