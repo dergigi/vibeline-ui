@@ -129,7 +129,7 @@ export async function GET(
           title: title.trim() || undefined,
           path: path.join(TODOS_DIR, `${baseFilename}.md`),
           createdAt: parseTimestampFromFilename(baseFilename),
-          audioUrl: buildAudioUrl(baseFilename, month),
+          audioUrl: buildAudioUrl(baseFilename),
           archivePath: month,
           blossom: blossomData || undefined,
           yolopost: yolopostData || undefined

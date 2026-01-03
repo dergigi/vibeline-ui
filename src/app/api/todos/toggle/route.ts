@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
-import { getBasePath } from '@/lib/archivePaths';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { filePath, lineNumber, completed, archivePath } = await request.json();
+    const { filePath, lineNumber, completed } = await request.json();
     
     if (!filePath) {
       throw new Error('filePath is required');
     }
     
+    // Extract filename from filePath (e.g., "TODOs/20251203_143022.md" -> "20251203_143022")
+    const filename = path.basename(filePath, path.extname(filePath));
+    
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
-    // Get the base directory (handles archive paths)
-    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, filename);
     
     // Read the file using the real path
     const fullPath = path.join(baseDir, filePath);

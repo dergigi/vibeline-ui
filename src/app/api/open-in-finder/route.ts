@@ -4,7 +4,7 @@ import { promisify } from 'util';
 import path from 'path';
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
-import { getBasePath } from '@/lib/archivePaths';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 const execAsync = promisify(exec);
 
@@ -13,13 +13,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
-    const { filename, fileType = 'audio', archivePath } = await request.json();
+    const { filename, fileType = 'audio' } = await request.json();
     if (!filename) {
       return new NextResponse('Filename is required', { status: 400 });
     }
 
-    // Get the base directory (handles archive paths)
-    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, filename);
 
     let filePath: string;
     let normalizedPath: string;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { createReadStream, statSync } from 'fs';
-import { getBasePath } from '@/lib/archivePaths';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function GET(
   request: NextRequest,
@@ -15,9 +15,11 @@ export async function GET(
     const { filename } = await params;
     const decodedFilename = decodeURIComponent(filename);
     
-    // Check for archive query param
-    const archivePath = request.nextUrl.searchParams.get('archive') || undefined;
-    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    // Extract base filename without extension for location detection
+    const baseFilename = path.basename(decodedFilename, path.extname(decodedFilename));
+    
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, baseFilename);
     const filePath = path.join(baseDir, decodedFilename);
     
     // Verify file exists and is within the voice memos directory

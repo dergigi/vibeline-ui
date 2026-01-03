@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { BlossomData } from '@/types/VoiceMemo';
-import { getBasePath, buildAudioUrl } from '@/lib/archivePaths';
+import { getBasePath, buildAudioUrl, getArchiveMonthFromFilename } from '@/lib/archivePaths';
 
 interface Memo {
   filename: string;
@@ -133,7 +133,7 @@ async function getMemosFromDir(voiceMemosDir: string, archivePath?: string): Pro
         title: title.trim() || undefined,
         path: path.join(TODOS_DIR, `${baseFilename}.md`), // Keep the TODOs path for editing
         createdAt: parseTimestampFromFilename(baseFilename),
-        audioUrl: buildAudioUrl(baseFilename, archivePath),
+        audioUrl: buildAudioUrl(baseFilename),
         archivePath,
         blossom: blossomData || undefined,
         yolopost: yolopostData || undefined

@@ -59,10 +59,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     if (originalTranscript !== null) return; // Already fetched
     
     try {
-      const url = memo.archivePath 
-        ? `/api/transcripts/${memo.filename}/original?archive=${memo.archivePath}`
-        : `/api/transcripts/${memo.filename}/original`;
-      const response = await fetch(url);
+      const response = await fetch(`/api/transcripts/${memo.filename}/original`);
       if (response.ok) {
         const text = await response.text();
         setOriginalTranscript(text);
@@ -336,8 +333,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         },
         body: JSON.stringify({ 
           filename: memo.filename,
-          title: editingTitle.trim(),
-          archivePath: memo.archivePath
+          title: editingTitle.trim()
         }),
       });
 
@@ -404,8 +400,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         body: JSON.stringify({ 
           filePath, 
           lineNumber, 
-          completed: newChecked,
-          archivePath: memo.archivePath
+          completed: newChecked
         }),
       });
   
@@ -416,7 +411,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
       console.error('Failed to toggle todo:', error);
       setOptimisticTodos(null);
     }
-  }, [memo.path, memo.todos, memo.archivePath, optimisticTodos]);
+  }, [memo.path, memo.todos, optimisticTodos]);
 
   // Function to handle checking all todos
   const handleCheckAllTodos = useCallback(async () => {
@@ -458,8 +453,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
           body: JSON.stringify({ 
             filePath, 
             lineNumber, 
-            completed: true,
-            archivePath: memo.archivePath
+            completed: true
           }),
         })
       );
@@ -469,7 +463,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
       console.error('Failed to check all todos:', error);
       setOptimisticTodos(null);
     }
-  }, [memo.path, memo.todos, memo.archivePath, optimisticTodos]);
+  }, [memo.path, memo.todos, optimisticTodos]);
 
   const handleClearTodos = useCallback(async () => {
     // Optimistic UI update - clear todos
@@ -483,8 +477,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         },
         body: JSON.stringify({ 
           filename: memo.filename,
-          content: '',
-          archivePath: memo.archivePath
+          content: ''
         }),
       });
 
@@ -507,7 +500,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filename: memo.filename, archivePath: memo.archivePath }),
+        body: JSON.stringify({ filename: memo.filename }),
       });
   
       if (!response.ok) {
@@ -525,7 +518,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filename: memo.filename, fileType: 'transcript', archivePath: memo.archivePath }),
+        body: JSON.stringify({ filename: memo.filename, fileType: 'transcript' }),
       });
   
       if (!response.ok) {
@@ -563,8 +556,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         },
         body: JSON.stringify({ 
           filename: memo.filename,
-          plugin,
-          archivePath: memo.archivePath
+          plugin
         }),
       });
 
@@ -656,10 +648,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setShowRefreshDialog(true);
     
     try {
-      const url = memo.archivePath 
-        ? `/api/memos/${memo.filename}/files?archive=${memo.archivePath}`
-        : `/api/memos/${memo.filename}/files`;
-      const response = await fetch(url);
+      const response = await fetch(`/api/memos/${memo.filename}/files`);
       if (!response.ok) {
         throw new Error('Failed to fetch files');
       }
@@ -679,10 +668,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setRefreshStep('deleting');
     
     try {
-      const url = memo.archivePath 
-        ? `/api/memos/${memo.filename}/refresh?archive=${memo.archivePath}`
-        : `/api/memos/${memo.filename}/refresh`;
-      const response = await fetch(url, {
+      const response = await fetch(`/api/memos/${memo.filename}/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -730,10 +716,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setShowDeleteDialog(true);
     
     try {
-      const url = memo.archivePath 
-        ? `/api/memos/${memo.filename}/files/all?archive=${memo.archivePath}`
-        : `/api/memos/${memo.filename}/files/all`;
-      const response = await fetch(url);
+      const response = await fetch(`/api/memos/${memo.filename}/files/all`);
       if (!response.ok) {
         throw new Error('Failed to fetch files');
       }
@@ -753,10 +736,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
     setDeleteStep('deleting');
     
     try {
-      const url = memo.archivePath 
-        ? `/api/memos/${memo.filename}/delete?archive=${memo.archivePath}`
-        : `/api/memos/${memo.filename}/delete`;
-      const response = await fetch(url, {
+      const response = await fetch(`/api/memos/${memo.filename}/delete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

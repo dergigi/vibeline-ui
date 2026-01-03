@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { BlossomData } from '@/types/VoiceMemo';
-import { getBasePath, buildAudioUrl } from '@/lib/archivePaths';
+import { findMemoBaseDir, buildAudioUrl, getArchiveMonthFromFilename } from '@/lib/archivePaths';
 
 async function readFileIfExists(filePath: string): Promise<string | undefined> {
   try {
@@ -62,10 +62,15 @@ export async function GET(
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
-    // Check for archive query param
-    const url = new URL(request.url);
-    const archivePath = url.searchParams.get('archive') || undefined;
-    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    const { filename } = await params;
+    const baseFilename = filename;
+    
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, baseFilename);
+    
+    // Determine archivePath for UI display (if file is in archive)
+    const isInArchive = baseDir.includes('/archive/');
+    const archivePath = isInArchive ? getArchiveMonthFromFilename(baseFilename) : undefined;
     
     const TRANSCRIPTS_DIR = path.join(baseDir, 'transcripts');
     const SUMMARIES_DIR = path.join(baseDir, 'summaries');
@@ -73,9 +78,6 @@ export async function GET(
     const TITLES_DIR = path.join(baseDir, 'titles');
     const BLOSSOMS_DIR = path.join(baseDir, 'blossoms');
     const YOLOPOSTS_DIR = path.join(baseDir, 'yoloposts');
-
-    const { filename } = await params;
-    const baseFilename = filename;
     
     // Get content from each plugin directory
     // Check for cleaned transcript (main .txt file) and original (.txt.orig file)
@@ -103,7 +105,7 @@ export async function GET(
       yolopost: yolopostData,
       path: path.join(TODOS_DIR, `${baseFilename}.md`),
       createdAt: parseTimestampFromFilename(baseFilename),
-      audioUrl: buildAudioUrl(baseFilename, archivePath),
+      audioUrl: buildAudioUrl(baseFilename),
       archivePath
     };
 

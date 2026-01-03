@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
 import { deleteActionItemFile } from '@/utils/deleteUtils';
-import { getBasePath } from '@/lib/archivePaths';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function POST(
   request: NextRequest,
@@ -14,10 +14,10 @@ export async function POST(
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
     const { filename } = await params;
-    const { searchParams } = new URL(request.url);
-    const archivePath = searchParams.get('archive') || undefined;
-    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
     const baseFilename = filename;
+    
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, baseFilename);
     
     // Use glob to find all files matching the pattern
     const pattern = path.join(baseDir, '**', `${baseFilename}.*`);

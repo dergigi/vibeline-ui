@@ -3,14 +3,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
 import { deleteActionItemFile } from '@/utils/deleteUtils';
-import { getBasePath } from '@/lib/archivePaths';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
-    const { filename, plugin, archivePath } = await request.json();
+    const { filename, plugin } = await request.json();
     
     if (!filename) {
       return new NextResponse('Filename is required', { status: 400 });
@@ -20,11 +20,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return new NextResponse('Plugin name is required', { status: 400 });
     }
 
-    // Get the base directory (handles archive paths)
-    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    // Get the base filename without extension
+    const baseFilename = path.basename(filename, path.extname(filename));
 
     // Get the base filename without extension
     const baseFilename = path.basename(filename, path.extname(filename));
+
+    // Auto-detect location by convention
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, baseFilename);
     
     // Construct the plugin directory path (normalize common alias 'todos' -> 'TODOs')
     const normalizedPlugin = plugin === 'todos' ? 'TODOs' : plugin;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { getBasePath } from '@/lib/archivePaths';
+import { findMemoBaseDir } from '@/lib/archivePaths';
 
 export async function GET(
   request: Request,
@@ -9,12 +9,10 @@ export async function GET(
 ) {
   try {
     const { filename } = await params;
-    const { searchParams } = new URL(request.url);
-    const archivePath = searchParams.get('archive') || undefined;
     
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
-    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
+    const baseDir = findMemoBaseDir(VOICE_MEMOS_DIR, filename);
     const TRANSCRIPTS_DIR = path.join(baseDir, 'transcripts');
     
     const originalTranscriptPath = path.join(TRANSCRIPTS_DIR, `${filename}.txt.orig`);
