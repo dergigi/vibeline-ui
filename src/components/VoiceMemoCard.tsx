@@ -502,7 +502,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filename: memo.filename }),
+        body: JSON.stringify({ filename: memo.filename, archivePath: memo.archivePath }),
       });
   
       if (!response.ok) {
@@ -520,7 +520,7 @@ export const VoiceMemoCard: React.FC<VoiceMemoCardProps> = ({ memo, isMemoPage =
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filename: memo.filename, fileType: 'transcript' }),
+        body: JSON.stringify({ filename: memo.filename, fileType: 'transcript', archivePath: memo.archivePath }),
       });
   
       if (!response.ok) {

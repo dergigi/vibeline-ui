@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import path from 'path';
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
+import { getBasePath } from '@/lib/archivePaths';
 
 const execAsync = promisify(exec);
 
@@ -12,32 +13,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Resolve the symlink to get the actual path
     const VOICE_MEMOS_DIR = await fs.realpath(path.join(process.cwd(), 'VoiceMemos'));
     
-    const { filename, fileType = 'audio' } = await request.json();
+    const { filename, fileType = 'audio', archivePath } = await request.json();
     if (!filename) {
       return new NextResponse('Filename is required', { status: 400 });
     }
+
+    // Get the base directory (handles archive paths)
+    const baseDir = getBasePath(VOICE_MEMOS_DIR, archivePath);
 
     let filePath: string;
     let normalizedPath: string;
 
     if (fileType === 'transcript') {
       // For transcript files, look in the transcripts directory with .txt extension
-      const TRANSCRIPTS_DIR = path.join(VOICE_MEMOS_DIR, 'transcripts');
+      const TRANSCRIPTS_DIR = path.join(baseDir, 'transcripts');
       filePath = path.join(TRANSCRIPTS_DIR, `${filename}.txt`);
       normalizedPath = path.normalize(filePath);
     } else if (fileType === 'shownotes') {
       // For shownotes files, look in the shownotes directory with .md extension
-      const SHOWNOTES_DIR = path.join(VOICE_MEMOS_DIR, 'shownotes');
+      const SHOWNOTES_DIR = path.join(baseDir, 'shownotes');
       filePath = path.join(SHOWNOTES_DIR, filename);
       normalizedPath = path.normalize(filePath);
     } else {
       // For audio files (default behavior)
-      filePath = path.join(VOICE_MEMOS_DIR, filename);
+      filePath = path.join(baseDir, filename);
       normalizedPath = path.normalize(filePath);
       
       // If the file doesn't exist, try adding .m4a extension
       if (!existsSync(normalizedPath)) {
-        filePath = path.join(VOICE_MEMOS_DIR, `${filename}.m4a`);
+        filePath = path.join(baseDir, `${filename}.m4a`);
         normalizedPath = path.normalize(filePath);
       }
     }
