@@ -197,10 +197,10 @@ export function analyzeEmotions(text: string): MoodAnalysis {
   const dominant = (Object.entries(quadrantCounts) as [MoodColor, number][])
     .sort((a, b) => b[1] - a[1])[0][0];
 
-  // Get top 3 emotions with their colors
+  // Get top 5 emotions with their colors (sorted by frequency)
   const topEmotions: EmotionWithColor[] = Object.entries(emotionCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
+    .slice(0, 5)
     .map(([emotion]) => ({
       emotion,
       color: getEmotionColor(emotion)!
