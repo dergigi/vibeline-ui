@@ -72,7 +72,7 @@ export default async function Home() {
 
           {archiveFolders.length > 0 && (
             <div className="mb-8 flex flex-wrap gap-1.5">
-              {archiveFolders.slice(0, 6).map((folder: { name: string; memoCount: number }) => (
+              {archiveFolders.slice(0, 5).map((folder: { name: string; memoCount: number }) => (
                 <Link
                   key={folder.name}
                   href={`/archive/${folder.name}`}
@@ -81,6 +81,12 @@ export default async function Home() {
                   {folder.name}
                 </Link>
               ))}
+              <Link
+                href="/archive"
+                className="px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+              >
+                older
+              </Link>
             </div>
           )}
 
