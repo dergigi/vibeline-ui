@@ -2,7 +2,7 @@
 
 import { VoiceMemo } from '@/types/VoiceMemo';
 import { useSearch } from '@/contexts/SearchContext';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { Flower, Waypoints } from 'lucide-react';
 
@@ -150,6 +150,12 @@ const getMemoIcons = (memo: VoiceMemo) => {
 
 export default function Dashboard({ memos }: DashboardProps) {
   const { filteredMemos } = useSearch();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const [hideCompleted, setHideCompleted] = useState(false);
   const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
   const [showOnlyAllIncomplete, setShowOnlyAllIncomplete] = useState(false);
@@ -176,7 +182,9 @@ export default function Dashboard({ memos }: DashboardProps) {
     }
     return sourceMemos;
   }, [hideCompleted, showOnlyCompleted, showOnlyAllIncomplete, sourceMemos]);
-  const groupedMemos = groupMemosByTime(visibleMemos);
+  // Local dates and times must wait until hydration so server and browser
+  // time zones (or a midnight rollover) cannot produce different markup.
+  const groupedMemos = isMounted ? groupMemosByTime(visibleMemos) : null;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-8">
@@ -235,6 +243,10 @@ export default function Dashboard({ memos }: DashboardProps) {
       </div>
       <div className="space-y-1">
         {(() => {
+          if (!groupedMemos) {
+            return <p role="status" className="text-xs text-gray-500 dark:text-gray-400">Loading dashboard...</p>;
+          }
+
           const groups = ([
             ['today', groupedMemos.today],
             ['yesterday', groupedMemos.yesterday],
